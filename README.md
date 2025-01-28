@@ -1,2 +1,2 @@
 # E-commerce-Project
-Angular and nodeJs E-commerce website
+NodeJs E-commerce website
