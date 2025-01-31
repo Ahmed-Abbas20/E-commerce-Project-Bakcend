@@ -1,14 +1,8 @@
 const mongoose = require("mongoose");
 
-const connectToMongo = async ({dpoptions, callback }) => {
+const connectToMongo = async (url, callback) => {
   try {
-    await mongoose.connect(dpoptions.url, {
-      dbName: dpoptions.databaseName,
-      auth: {
-        username: dpoptions.username,
-        password: dpoptions.password
-      }
-    });
+    await mongoose.connect(url);
     process.nextTick(() => {
       callback();
     });
@@ -16,7 +10,7 @@ const connectToMongo = async ({dpoptions, callback }) => {
     console.log(error?.message);
     throw new Error("Internal server error, can't connect to mongodb");
   }
-}; 
+};
 
 module.exports.DATA_BASE = {
   connectToMongo,

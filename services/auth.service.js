@@ -1,16 +1,15 @@
 const { signToken } = require("../utils/jwttoken.manager");
 const { createUser, getUserByEmail } = require("../services/user.service");
-// register user
 
-const registerUser = async ({ username, email, password ,profilePicture,user_id,first_name,last_name }) => {
+// Register user
+const registerUser = async ({ firstName, lastName, email, password, phone1, userType = "Customer", role }) => {
   try {
-    // Hash the password before saving the user
-    const claims = await createUser({ username, email, password ,profilePicture,user_id,first_name,last_name });
+
+    // Create the user
+    const claims = await createUser({ firstName, lastName, email, password, phone1, userType, role });
 
     // Generate a token for the new user
-    const token = signToken({
-      claims,
-    });
+    const token = signToken({ claims });
 
     return { token };
   } catch (error) {
@@ -18,8 +17,8 @@ const registerUser = async ({ username, email, password ,profilePicture,user_id,
   }
 };
 
-// login user
 
+// Login user
 const loginUser = async ({ email, password }) => {
   try {
     // Find the user by email
@@ -34,14 +33,11 @@ const loginUser = async ({ email, password }) => {
 
     // Generate a token for the user
     const claims = {
-      sub: user.user_id,
-      username: user.username,
+      sub: user._id,
       email: user.email,
-      userType: user.user_type,
+      userType: user.userType,
     };
-    const token = signToken({
-      claims,
-    });
+    const token = signToken({ claims });
 
     return { token };
   } catch (error) {
