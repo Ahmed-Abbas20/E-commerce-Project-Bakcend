@@ -1,49 +1,54 @@
-const { getUsers, createUser, updateUser, deleteUser } = require("../services/user.service");
+const express = require("express");
+const router = express.Router();
+const {
+  getUsers,
+  getUserByEmail,
+  updateUser,
+  deleteUser,
+} = require("../services/user.service");
 
-module.exports = (() => {
-    const router = require("express").Router();
+// Get all users
+router.get("/", async (req, res) => {
+  try {
+    const users = await getUsers();
+    res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    router.get("/users", async (req, res) => {
-        try {
-            const users = await getUsers();
-            res.status(200).json(users);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    });
+// Get a user by email
+router.get("/email", async (req, res) => {
+  try {
+    const { email } = req.query;
+    const user = await getUserByEmail({ email });
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    // router.post("/users", async (req, res) => {
-    //     try {
-    //         const newUser = await createUser(req.body);
-    //         res.status(201).json(newUser);
-    //     } catch (error) {
-    //         res.status(500).json({ error: error.message });
-    //     }
-    // });
+// Update a user
+router.put("/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const updatedData = req.body;
+    const updatedUser = await updateUser(userId, updatedData);
+    res.status(200).json({ success: true, data: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    router.put("/users/:id", async (req, res) => {
-        try {
-            const updatedUser = await updateUser(req.params.id, req.body);
-            if (!updatedUser) {
-                return res.status(404).json({ error: "User not found" });
-            }
-            res.status(200).json(updatedUser);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    });
+// Delete a user
+router.delete("/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const deletedUser = await deleteUser(userId);
+    res.status(200).json({ success: true, data: deletedUser });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    router.delete("/users/:id", async (req, res) => {
-        try {
-            const deletedUser = await deleteUser(req.params.id);
-            if (!deletedUser) {
-                return res.status(404).json({ error: "User not found" });
-            }
-            res.status(200).json({ message: "User deleted successfully", user: deletedUser });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    });
-
-    return router;
-})();
+module.exports = router;

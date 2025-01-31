@@ -1,24 +1,32 @@
 const { loginUser, registerUser } = require("../services/auth.service");
-
 const router = require("express").Router();
+
+
 
 router.post("/register", async (req, res) => {
   try {
-    const { username, email, password ,profilePicture,user_id,first_name,last_name } = req.body;
+    const { firstName, lastName, email, password, phone1, userType = "Customer", role } = req.body;
+    // Validate role for staff members
+    if (userType === "Staff" && !role) {
+      return res.status(400).json({ message: "Role is required for staff members" });
+    }
+
     const { token } = await registerUser({
+      firstName,
+      lastName,
       email,
       password,
-      username,
-      profilePicture,
-      user_id,
-      first_name,
-      last_name,
+      phone1,
+      userType,
+      role,
     });
+
     res.status(201).json({ success: true, token });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 router.post("/login", async (req, res) => {
   try {
@@ -32,6 +40,5 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 module.exports = router;
