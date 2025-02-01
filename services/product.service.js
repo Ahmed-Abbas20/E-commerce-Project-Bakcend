@@ -1,14 +1,13 @@
-const {createProduct,getProductById,getAllProducts,updateProduct,deleteProduct,searchProducts,filterByPrice, getByCategory } = require('../repos/product.repo');
+const { createProduct, getProductById, getAllProducts, updateProduct, deleteProduct, searchProducts, filterByPrice, getByCategory } = require('../repos/product.repo');
 const { getCategoryById } = require('../repos/category.repo');
-const Product = require('../models/product.model'); // Ensure correct model import
+const Product = require('../models/product.model'); 
+const {AppError} = require('../utils/errorHandler'); 
 
 exports.createProduct = async (productData) => {
   // 1. Validate category exists
   const category = await getCategoryById(productData.categoryId);
   if (!category) {
-    const error = new Error('Category not found');
-    error.statusCode = 404;
-    throw error;
+    throw new AppError('Category not found', 404);  
   }
 
   // 2. Check for existing product WITH SAME NAME AND SELLER
@@ -18,9 +17,7 @@ exports.createProduct = async (productData) => {
   });
 
   if (existingProduct) {
-    const error = new Error('You already have a product with this name');
-    error.statusCode = 409;
-    throw error;
+    throw new AppError('You already have a product with this name', 409);  
   }
 
   // 3. Create product with trimmed name and category name
@@ -30,33 +27,29 @@ exports.createProduct = async (productData) => {
     categoryName: category.name
   });
 };
-  
-  exports.getProduct = async (id) => {
-    const product = await getProductById(id);
-    if (!product) {
-      const error = new Error('Product not found');
-      error.statusCode = 404;
-      throw error;
+
+exports.getProduct = async (id) => {
+  const product = await getProductById(id);
+  if (!product) {
+    throw new AppError('Product not found', 404); 
+  }
+  return product;
+};
+
+exports.getAllProducts = getAllProducts;
+
+exports.updateProduct = async (id, updateData) => {
+  if (updateData.categoryId) {
+    const category = await getCategoryById(updateData.categoryId);
+    if (!category) {
+      throw new AppError('Category not found', 404);
     }
-    return product;
-  };
-  
-  exports.getAllProducts = getAllProducts;
-  
-  exports.updateProduct = async (id, updateData) => {
-    if (updateData.categoryId) {
-      const category = await getCategoryById(updateData.categoryId);
-      if (!category) {
-        const error = new Error('Category not found');
-        error.statusCode = 404;
-        throw error;
-      }
-      updateData.categoryName = category.name;
-    }
-    return updateProduct(id, updateData);
-  };
-  
-  exports.deleteProduct = deleteProduct;
-  exports.searchProducts = searchProducts;
-  exports.filterByPrice = filterByPrice;
-  exports.getByCategory = getByCategory;
+    updateData.categoryName = category.name;
+  }
+  return updateProduct(id, updateData);
+};
+
+exports.deleteProduct = deleteProduct;
+exports.searchProducts = searchProducts;
+exports.filterByPrice = filterByPrice;
+exports.getByCategory = getByCategory;

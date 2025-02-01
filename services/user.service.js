@@ -1,6 +1,7 @@
 const User = require("../models/base.model");
 const Staff = require("../models/staff.model");
 const bcrypt = require("bcrypt");
+const {AppError} = require("../utils/errorHandler"); 
 
 // Get all users
 module.exports.getUsers = async () => {
@@ -8,8 +9,7 @@ module.exports.getUsers = async () => {
     const users = await User.find({});
     return users;
   } catch (error) {
-    console.error("Error fetching users:", error);
-    throw new Error("Error fetching users");
+    throw new AppError("Error fetching users: " + error.message, 500); 
   }
 };
 
@@ -17,7 +17,6 @@ module.exports.getUsers = async () => {
 module.exports.createUser = async ({ firstName, lastName, email, password, phone1, userType = "customer", role }) => {
   try {
     // Hash the password
-    
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -36,25 +35,15 @@ module.exports.createUser = async ({ firstName, lastName, email, password, phone
     // Add role for staff members
     if (userType === "staff") {
       if (!role) {
-        throw new Error("Role is required for staff members");
+        throw new AppError("Role is required for staff members", 400); 
       }
-      userData.role = role; // Ensure role is added to userData
+      userData.role = role; 
       user = new Staff(userData);
-      
     }
 
-
-    // console.log("User Data Before Save:", userData); // Debugging: Log the user data before saving
-
     // Save the user to the database
-   
-    
-   
     await user.save();
 
-    // console.log("User Data After Save:", user); // Debugging: Log the user data after saving
-
-    
     // Prepare claims for the token
     const claims = {
       sub: user._id,
@@ -65,8 +54,7 @@ module.exports.createUser = async ({ firstName, lastName, email, password, phone
 
     return claims;
   } catch (error) {
-    console.error("Error in createUser:", error); // Debugging: Log the error
-    throw new Error("Error creating user: " + error.message);
+    throw new AppError("Error creating user: " + error.message, 500); 
   }
 };
 
@@ -74,10 +62,12 @@ module.exports.createUser = async ({ firstName, lastName, email, password, phone
 module.exports.updateUser = async (userId, updatedData) => {
   try {
     const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true });
+    if (!updatedUser) {
+      throw new AppError("User not found", 404); 
+    }
     return updatedUser;
   } catch (error) {
-    console.error("Error updating user:", error);
-    throw new Error("Error updating user");
+    throw new AppError("Error updating user: " + error.message, 500); 
   }
 };
 
@@ -85,10 +75,12 @@ module.exports.updateUser = async (userId, updatedData) => {
 module.exports.deleteUser = async (userId) => {
   try {
     const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      throw new AppError("User not found", 404); 
+    }
     return deletedUser;
   } catch (error) {
-    console.error("Error deleting user:", error);
-    throw new Error("Error deleting user");
+    throw new AppError("Error deleting user: " + error.message, 500); 
   }
 };
 
@@ -98,12 +90,11 @@ module.exports.getUserByEmail = async ({ email }) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404); 
     }
 
     return user;
   } catch (error) {
-    console.error("Error fetching user by email:", error);
-    throw new Error("Error fetching user by email");
+    throw new AppError("Error fetching user by email: " + error.message, 500); 
   }
 };

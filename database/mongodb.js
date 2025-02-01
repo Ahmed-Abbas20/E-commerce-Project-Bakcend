@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const AppError = require("../utils/errorHandler");  // Import the custom error class from utils
+const {AppError} = require("../utils/errorHandler");  // Import the custom error class from utils
 
 
 
