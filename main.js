@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { DATA_BASE } = require("./database/mongo/index");
+const { DATA_BASE } = require("./database/mongodb");
 const { APP_CONFIG } = require("./config/app.config");
 const connectMemoApp = require("./index");
 const seedPermissions = require("./utils/seedPermissions");  // Ensure this points to your seed permissions file
@@ -23,3 +23,4 @@ const seedPermissions = require("./utils/seedPermissions");  // Ensure this poin
     },
   });
 })();
+
