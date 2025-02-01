@@ -4,7 +4,7 @@ const { APP_CONFIG } = require("./config/app.config");
 const app = require("./index");
 
 (async function () {
-  await DATA_BASE.connectToMongo(APP_CONFIG.MONGO_LOCAL_URI, () => {
+  await DATA_BASE.connectToMongo(APP_CONFIG.MONGO_CLUSTER_URI, () => {
     console.log("App database has connected successfully");
     app.listen(APP_CONFIG.HTTP_PORT, "0.0.0.0", () => {
       console.log(`App is up and running on port ${APP_CONFIG.HTTP_PORT}`);
