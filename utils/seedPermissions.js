@@ -252,7 +252,18 @@ const uniquePermissions = [
           IN: ["customer", "seller"]
         }
       }
-    }
+    },
+    {
+      effect: "allow",
+      resource: "staff",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin to manage staff",
+      condition: {
+        role: {
+          IN: ["superAdmin", "manager"]
+        }
+      }
+    },
   ];
   
   
