@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Permission = require("../models/permisssion.model");  // Assuming your Permission model is at this path
+const Permission = require("../models/permisssion.model");  
 
 const uniquePermissions = [
     // Super Admin Permissions
@@ -10,7 +10,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage managers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -21,7 +21,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage cashiers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -32,7 +32,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage customers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -43,7 +43,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage products",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -54,7 +54,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage sellers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -65,7 +65,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage suppliers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -76,7 +76,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage seller inventories",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -87,7 +87,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage supplier inventories",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -98,7 +98,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage customer orders",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -109,7 +109,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage supplier orders",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -120,7 +120,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage product categories",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] // SuperAdmin and Manager
+          IN: ["superAdmin", "manager"] 
         }
       }
     },
@@ -166,7 +166,7 @@ const uniquePermissions = [
     {
       effect: "allow",
       resource: "products",
-      action: ["create", "read", "update", "delete"], // CRUD his own products
+      action: ["create", "read", "update", "delete"], 
       description: "Allows seller to manage his own products",
       condition: {
         role: {
@@ -260,14 +260,14 @@ const uniquePermissions = [
 // Function to seed permissions
 async function seedPermissions() {
     try {
-      const permissionExists = await Permission.countDocuments();  // Check if permissions are already in the database
+      const permissionExists = await Permission.countDocuments();  
   
       if (permissionExists > 0) {
         console.log("Permissions already seeded, skipping...");
-        return;  // Skip seeding if permissions already exist
+        return;  
       }
   
-      // Seed permissions for all roles
+      
       await Permission.insertMany(uniquePermissions);
   
       console.log("Permissions successfully seeded!");

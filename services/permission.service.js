@@ -7,13 +7,13 @@ const {
     getPermissionByResourceName
   } = require("../repos/permission.repo");
   
-  const {AppError} = require("../utils/appError"); // Importing the custom error class
+  const {AppError} = require("../utils/appError"); 
   
   module.exports.getPermissions = async () => {
     try {
       return await getPermissions();
     } catch (error) {
-      throw new AppError("Error fetching permissions: " + error.message, 500); // Custom error handling
+      throw new AppError("Error fetching permissions: " + error.message, 500); 
     }
   };
   
@@ -21,7 +21,7 @@ const {
     try {
       return await createPermission(permissionData);
     } catch (error) {
-      throw new AppError("Error creating permission: " + error.message, 400); // Custom error handling
+      throw new AppError("Error creating permission: " + error.message, 400); 
     }
   };
   
@@ -29,7 +29,7 @@ const {
     try {
       return await updatePermission(permissionId, updatedData);
     } catch (error) {
-      throw new AppError("Error updating permission: " + error.message, 400); // Custom error handling
+      throw new AppError("Error updating permission: " + error.message, 400); 
     }
   };
   
@@ -37,7 +37,7 @@ const {
     try {
       return await deletePermission(permissionId);
     } catch (error) {
-      throw new AppError("Error deleting permission: " + error.message, 404); // Custom error handling
+      throw new AppError("Error deleting permission: " + error.message, 404); 
     }
   };
   
@@ -45,11 +45,11 @@ const {
     try {
       const permission = await getPermissionById(permissionId);
       if (!permission) {
-        throw new AppError("Permission not found", 404); // Custom error handling if permission is not found
+        throw new AppError("Permission not found", 404); 
       }
       return permission;
     } catch (error) {
-      throw new AppError("Error fetching permission by ID: " + error.message, 500); // Custom error handling
+      throw new AppError("Error fetching permission by ID: " + error.message, 500); 
     }
   };
   
@@ -57,11 +57,11 @@ const {
     try {
       const permission = await getPermissionByResourceName(resourceName);
       if (!permission) {
-        throw new AppError("Permission not found for this resource", 404); // Custom error handling if permission is not found
+        throw new AppError("Permission not found for this resource", 404); 
       }
       return permission;
     } catch (error) {
-      throw new AppError("Error fetching permission by resource name: " + error.message, 500); // Custom error handling
+      throw new AppError("Error fetching permission by resource name: " + error.message, 500); 
     }
   };
   

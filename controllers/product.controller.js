@@ -6,7 +6,7 @@ const {
 } = require('../middlewares/productvalidate.middleware');
 const productService = require('../services/product.service');
 
-router.post('/', validateProduct, async (req, res, next) => {
+router.post('/', checkPermission("products","create"),validateProduct, async (req, res, next) => {
   try {
     const product = await productService.createProduct(req.body);
     res.status(201).json({ success: true, data: product });
@@ -63,7 +63,7 @@ router.get('/:id', validateProductId, async (req, res, next) => {
   }
 });
 
-router.put('/:id', validateProductId, validateProduct, async (req, res, next) => {
+router.put('/:id', checkPermission("products","update"),validateProductId, validateProduct, async (req, res, next) => {
   try {
     const updatedProduct = await productService.updateProduct(req.params.id, req.body);
     res.json({ success: true, data: updatedProduct });
@@ -72,7 +72,7 @@ router.put('/:id', validateProductId, validateProduct, async (req, res, next) =>
   }
 });
 
-router.delete('/:id', validateProductId, async (req, res, next) => {
+router.delete('/:id',checkPermission("products","delete"), validateProductId, async (req, res, next) => {
   try {
     await productService.deleteProduct(req.params.id);
     res.status(204).send();

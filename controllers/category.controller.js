@@ -43,7 +43,7 @@ router.get('/:id', validateCategoryId, async (req, res, next) => {
   }
 });
 
-router.put('/:id', validateCategoryId, validateCategory, async (req, res, next) => {
+router.put('/:id', checkPermission("category","update"),validateCategoryId, validateCategory, async (req, res, next) => {
   try {
     const updatedCategory = await categoryService.updateCategory(req.params.id, req.body);
     res.json({ success: true, data: updatedCategory });
@@ -52,7 +52,7 @@ router.put('/:id', validateCategoryId, validateCategory, async (req, res, next) 
   }
 });
 
-router.delete('/:id', validateCategoryId, async (req, res, next) => {
+router.delete('/:id', checkPermission("category","delete"),validateCategoryId, async (req, res, next) => {
   try {
     await categoryService.deleteCategory(req.params.id);
     res.status(204).send();
