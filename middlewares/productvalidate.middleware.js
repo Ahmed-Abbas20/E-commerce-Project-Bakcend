@@ -21,6 +21,7 @@ exports.validateProduct = (req, res, next) => {
 };
 
 
+
 exports.validateProductId = (req, res, next) => {
   const schema = Joi.string().guid({
     version: ['uuidv4'],
