@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const checkPermission = require("../middlewares/authorization.middleware"); 
 const {
   validateProduct,
   validateProductId
 } = require('../middlewares/productvalidate.middleware');
+
 const productService = require('../services/product.service');
 
 router.post('/', checkPermission("products","create"),validateProduct, async (req, res, next) => {
