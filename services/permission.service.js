@@ -7,7 +7,7 @@ const {
     getPermissionByResourceName
   } = require("../repos/permission.repo");
   
-  const AppError = require("../utils/appError"); // Importing the custom error class
+  const {AppError} = require("../utils/appError"); // Importing the custom error class
   
   module.exports.getPermissions = async () => {
     try {

@@ -1,5 +1,5 @@
 const { getPermissionByResourceName } = require("../repos/permission.repo");  // Import the permission service
-const AppError = require("../utils/errorHandler");  // Importing the custom error class
+const {AppError} = require("../utils/errorHandler");  // Importing the custom error class
 const { verifyToken } = require("../utils/jwttoken.manager");  // Importing verifyToken from the jwt utility
 
 // Middleware to check if the user has permission

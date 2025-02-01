@@ -5,9 +5,12 @@ const usersController = require("./controllers/user.controller");
 const categoryController = require('./controllers/category.controller');
 const productController = require('./controllers/product.controller');
 const authenticationMiddleware = require("./middlewares/authentication.middleware");
+const {  errorHandler } = require('./utils/errorHandler'); 
+const { notFound } = require('./utils/notFound'); 
 
 
-const { notFound, errorHandler } = require('./middlewares/error.midllewares');
+
+
 
 const app = express();
 
@@ -21,7 +24,17 @@ app.use("/users", [authenticationMiddleware,],usersController);
 app.use('/categories', [authenticationMiddleware],categoryController);
 app.use('/products', [authenticationMiddleware],productController);
 
-/* app.use(notFound); */
-/* app.use(errorHandler); */
+app.use(notFound);
+// Error handling
+//app.use(errorHandler);
+
+// 404 handler
+app.all('*', (req, res, next) => {
+    const err = new errorHandler.AppError(
+        `Can't find ${req.originalUrl} on this server!`,
+        404
+    );
+    next(err);
+});
 
 module.exports = app;

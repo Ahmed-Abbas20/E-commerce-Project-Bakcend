@@ -1,11 +1,10 @@
 const { signToken } = require("../utils/jwttoken.manager");
 const { createUser, getUserByEmail } = require("../services/user.service");
+const {AppError} = require("../utils/errorHandler"); // Import the AppError class
 
 // Register user
 const registerUser = async ({ firstName, lastName, email, password, phone1, userType = "customer", role }) => {
   try {
-   
-
     // Create the user
     const claims = await createUser({ firstName, lastName, email, password, phone1, userType, role });
 
@@ -14,10 +13,10 @@ const registerUser = async ({ firstName, lastName, email, password, phone1, user
 
     return { token };
   } catch (error) {
-    throw new Error("Error registering user: " + error.message);
+    // Use AppError to throw a more structured error
+    throw new AppError("Error registering user: " + error.message, 500);
   }
 };
-
 
 // Login user
 const loginUser = async ({ email, password }) => {
@@ -29,7 +28,7 @@ const loginUser = async ({ email, password }) => {
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      throw new Error("Invalid email or password");
+      throw new AppError("Invalid email or password", 401); // Invalid credentials error
     }
 
     // Generate a token for the user
@@ -39,12 +38,13 @@ const loginUser = async ({ email, password }) => {
       userType: user.userType,
       role: user.role,
     };
-   console.log(claims);
+
     const token = signToken({ claims });
 
     return { token };
   } catch (error) {
-    throw new Error("Error logging in user: " + error.message);
+    // Use AppError to throw a more structured error
+    throw new AppError("Error logging in user: " + error.message, 500);
   }
 };
 
