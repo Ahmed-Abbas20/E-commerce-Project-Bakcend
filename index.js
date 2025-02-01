@@ -26,7 +26,7 @@ app.use('/products', [authenticationMiddleware],productController);
 
 app.use(notFound);
 // Error handling
-//app.use(errorHandler);
+app.use(errorHandler);
 
 // 404 handler
 app.all('*', (req, res, next) => {

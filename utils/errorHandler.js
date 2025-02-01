@@ -13,6 +13,10 @@ const handleCastErrorDB = err => {
     const message = `Invalid ${err.path}: ${err.value}`;
     return new AppError(message, 400);
 };
+const handleNotFoundError = err => {
+    
+    return new AppError(err.message, 404);
+  };
 
 const handleDuplicateFieldsDB = err => {
     const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
@@ -77,6 +81,7 @@ const errorHandler = (err, req, res, next) => {
         if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
         if (error.name === 'JsonWebTokenError') error = handleJWTError();
         if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
+        if (error.statusCode === 404) error = handleNotFoundError(error);
 
         sendErrorProd(error, res);
     }

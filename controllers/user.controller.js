@@ -9,7 +9,7 @@ const {
 const {AppError} = require("../utils/errorHandler");  
 
 // Get all users
-router.get("/", async (req, res, next) => {
+router.get("/",async (req, res, next) => {
   try {
     const users = await getUsers();
     res.status(200).json({ success: true, data: users });
@@ -45,7 +45,7 @@ router.put("/:userId", async (req, res, next) => {
 });
 
 // Delete a user
-router.delete("/:userId", async (req, res, next) => {
+router.delete("/:userId",async (req, res, next) => {
   try {
     const { userId } = req.params;
     const deletedUser = await deleteUser(userId);
