@@ -1,15 +1,13 @@
 const mongoose = require('mongoose');
 const Product=require("./product.model")
 
-const { v4: uuidv4 } = require('uuid');
+
 
 const CategorySchema = new mongoose.Schema({
 
-id: {
-type: String,
-default: uuidv4,
-required: true
-},
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+  },
 name: {
 type: String,
 required: true,
@@ -22,7 +20,7 @@ trim: true
 
 //delete products related to category
 CategorySchema.pre('remove', async function(next) {
-  await mongoose.model('Product').deleteMany({ categoryId: this.id });
+  await mongoose.model('Product').deleteMany({ categoryId: this._id });
   next();
 });
 
@@ -30,7 +28,7 @@ CategorySchema.pre('remove', async function(next) {
 CategorySchema.post('findOneAndUpdate', async function(doc) {
   if (doc && doc.isModified('name')) {
     await mongoose.model('Product').updateMany(
-      { categoryId: doc.id },
+      { categoryId: doc._id },
       { $set: { categoryName: doc.name } }
     );
   }

@@ -5,6 +5,7 @@ const {
   validateProductId
 } = require('../middlewares/productvalidate.middleware');
 const productService = require('../services/product.service');
+const checkPermission=require("./../middlewares/authorization.middleware")
 
 router.post('/', checkPermission("products","create"),validateProduct, async (req, res, next) => {
   try {
@@ -44,7 +45,7 @@ router.get('/filter/price', async (req, res, next) => {
   }
 });
 
-router.get('/category/:categoryId', async (req, res, next) => {
+router.get('/:categoryId', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const products = await productService.getByCategory(req.params.categoryId, page);
