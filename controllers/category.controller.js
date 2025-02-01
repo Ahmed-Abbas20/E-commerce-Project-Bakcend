@@ -9,7 +9,7 @@ const categoryService = require('../services/category.service');
 router.post('/', validateCategory, async (req, res, next) => {
   try {
     const category = await categoryService.createCategory(req.body);
-    res.status(201).json({ success: true, data: category });
+    res.status(201).json({ data: category });
   } catch (error) {
     next(error);
   }

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 
 const ProductSchema = new mongoose.Schema({
+  
   id: {
     type: String,
     default: uuidv4,
@@ -10,7 +11,8 @@ const ProductSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    unique:true
   },
   price: {
     type: Number,
@@ -33,7 +35,7 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  sellerId: String,
+  sellerId:{type: String},
   createdAt: {
     type: Date,
     default: Date.now()
@@ -41,7 +43,7 @@ const ProductSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now()
-  }
+  }   
 });
 
 module.exports = mongoose.model('Product', ProductSchema);

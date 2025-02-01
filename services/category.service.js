@@ -1,12 +1,4 @@
-const {
-    createCategory,
-    getAllCategories,
-    getCategoryById,
-    getCategoryByName,
-    updateCategory,
-    deleteCategory,
-    searchCategories
-  } = require('../repos/category.repo');
+const { createCategory,getAllCategories,getCategoryById,getCategoryByName, updateCategory,deleteCategory,searchCategories } = require('../repos/category.repo');
   
   exports.createCategory = async (categoryData) => {
     const exists = await getCategoryByName(categoryData.name);

@@ -4,6 +4,7 @@ const Product=require("./product.model")
 const { v4: uuidv4 } = require('uuid');
 
 const CategorySchema = new mongoose.Schema({
+
 id: {
 type: String,
 default: uuidv4,
@@ -15,7 +16,9 @@ required: true,
 unique: true,
 trim: true
 }
-}, { timestamps: true });
+   
+
+},)
 
 //delete products related to category
 CategorySchema.pre('remove', async function(next) {
