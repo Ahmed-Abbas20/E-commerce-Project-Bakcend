@@ -1,4 +1,5 @@
 const User = require("../models/base.model");
+const Staff = require("../models/staff.model");
 const bcrypt = require("bcrypt");
 
 // Get all users
@@ -13,9 +14,10 @@ module.exports.getUsers = async () => {
 };
 
 // Create a new user
-module.exports.createUser = async ({ firstName, lastName, email, password, phone1, userType = "Customer", role }) => {
+module.exports.createUser = async ({ firstName, lastName, email, password, phone1, userType = "customer", role }) => {
   try {
     // Hash the password
+    
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -30,27 +32,35 @@ module.exports.createUser = async ({ firstName, lastName, email, password, phone
       salt,
     };
 
+    let user = new User(userData);
     // Add role for staff members
-    if (userType === "Staff") {
+    if (userType === "staff") {
       if (!role) {
         throw new Error("Role is required for staff members");
       }
       userData.role = role; // Ensure role is added to userData
+      user = new Staff(userData);
+      
     }
+
 
     // console.log("User Data Before Save:", userData); // Debugging: Log the user data before saving
 
     // Save the user to the database
-    const user = new User(userData);
+   
+    
+   
     await user.save();
 
     // console.log("User Data After Save:", user); // Debugging: Log the user data after saving
 
+    
     // Prepare claims for the token
     const claims = {
       sub: user._id,
       email: user.email,
       userType: user.userType,
+      role: user.role,
     };
 
     return claims;

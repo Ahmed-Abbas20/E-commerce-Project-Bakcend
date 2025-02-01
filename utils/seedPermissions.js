@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Permission = require("../models/permission.model");  // Assuming your Permission model is at this path
+const Permission = require("../models/permisssion.model");  // Assuming your Permission model is at this path
 
 const uniquePermissions = [
     // Super Admin Permissions

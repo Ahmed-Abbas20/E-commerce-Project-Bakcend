@@ -2,8 +2,9 @@ const { signToken } = require("../utils/jwttoken.manager");
 const { createUser, getUserByEmail } = require("../services/user.service");
 
 // Register user
-const registerUser = async ({ firstName, lastName, email, password, phone1, userType = "Customer", role }) => {
+const registerUser = async ({ firstName, lastName, email, password, phone1, userType = "customer", role }) => {
   try {
+   
 
     // Create the user
     const claims = await createUser({ firstName, lastName, email, password, phone1, userType, role });
@@ -36,7 +37,9 @@ const loginUser = async ({ email, password }) => {
       sub: user._id,
       email: user.email,
       userType: user.userType,
+      role: user.role,
     };
+   console.log(claims);
     const token = signToken({ claims });
 
     return { token };

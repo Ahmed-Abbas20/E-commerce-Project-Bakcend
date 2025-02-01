@@ -1,26 +1,47 @@
-const { getPermissionByResourceName } = require("../repos/permissions.repo");  // Import the permission service
-const AppError = require("../utils/appError");  // Importing the custom error class
+const { getPermissionByResourceName } = require("../repos/permission.repo");  // Import the permission service
+const AppError = require("../utils/errorHandler");  // Importing the custom error class
+const { verifyToken } = require("../utils/jwttoken.manager");  // Importing verifyToken from the jwt utility
 
 // Middleware to check if the user has permission
 const checkPermission = (resource, action) => {
   return async (req, res, next) => {
     try {
-      // Retrieve user role from the request (typically from the JWT token)
-      const userRole = req.user.role; // Make sure the user's role is attached to the request (e.g., from the JWT)
+      // Retrieve the JWT token from the Authorization header
+      const token = req.headers.authorization?.split(" ")[1]; // Get the token from "Bearer <token>"
 
-      // Get the permission for the specified resource
-      const permission = await getPermissionByResourceName(resource);
+      // If no token is provided, return an error
+      if (!token) {
+        return next(new AppError('Authorization token not provided', 401));
+      }
 
-      // Check if the action is allowed for this resource and if the user's role is in the allowed roles
-      if (!permission || !permission.action.includes(action) || !permission.condition.role.IN.includes(userRole)) {
-        // If no matching permission, send an unauthorized response using custom error handler
+      // Verify the token and extract the user's role
+      const decoded = verifyToken(token);  // Use the verifyToken function here
+      console.log(decoded); 
+     
+      const userRole = decoded.role ? decoded.role : decoded.userType ;  // Assuming the token contains the user's role
+     
+     
+
+      // Get the permission for the specified resource using the modified function
+      const permission = await getPermissionByResourceName(resource, userRole, action);
+      
+
+      // If no permission is found, send an unauthorized response using custom error handler
+      if (!permission) {
         return next(new AppError(`You don't have permission to ${action} this ${resource}`, 403));
       }
 
       // Proceed to the next middleware if permission is found
       next();
     } catch (error) {
-      // Pass the error to the error handler
+      // Handle errors (e.g., invalid token, permission not found, etc.)
+      if (error.name === 'JsonWebTokenError') {
+        return next(new AppError('Invalid token. Please log in again!', 401));
+      }
+      if (error.name === 'TokenExpiredError') {
+        return next(new AppError('Your token has expired! Please log in again.', 401));
+      }
+      // Pass any other errors to the next error handler
       next(error);
     }
   };
