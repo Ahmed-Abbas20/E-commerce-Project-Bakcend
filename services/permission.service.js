@@ -5,7 +5,7 @@ const {
     deletePermission,
     getPermissionById,
     getPermissionByResourceName
-  } = require("../repos/permissions.repo");
+  } = require("../repos/permission.repo");
   
   const AppError = require("../utils/appError"); // Importing the custom error class
   

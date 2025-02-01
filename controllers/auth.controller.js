@@ -5,12 +5,14 @@ const router = require("express").Router();
 
 router.post("/register", async (req, res) => {
   try {
-    const { firstName, lastName, email, password, phone1, userType = "Customer", role } = req.body;
+    const { firstName, lastName, email, password, phone1, userType = "customer", role } = req.body;
+    
     // Validate role for staff members
-    if (userType === "Staff" && !role) {
+    if (userType === "staff" && !role) {
       return res.status(400).json({ message: "Role is required for staff members" });
     }
-
+    
+   
     const { token } = await registerUser({
       firstName,
       lastName,

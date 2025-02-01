@@ -82,4 +82,4 @@ module.exports = (err, req, res, next) => {
     }
 };
 
-module.exports.AppError = AppError;
+module.exports= AppError;

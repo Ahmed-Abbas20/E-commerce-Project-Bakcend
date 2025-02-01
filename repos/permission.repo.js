@@ -1,5 +1,5 @@
-const permissionModel = require("../models/permission.model");
-const AppError = require("../utils/appError");
+const permissionModel = require("../models/permisssion.model");
+const AppError = require("../utils/errorHandler");
 
 module.exports.createPermission = async (permission) => {
   try {
@@ -63,14 +63,19 @@ module.exports.getPermissions = async () => {
     }
   };
 
-  module.exports.getPermissionByResourceName = async (resource) => {
+  module.exports.getPermissionByResourceName = async (resource, role, action) => {
     try {
+      // Find permission by resource and check if the role is in the 'IN' array of the condition
       const permission = await permissionModel.findOne({
         resource: resource, // Find permission by resource name
+        "condition.role.IN": { $in: [role] }, // Ensure the role is authorized
+        action: { $in: [action] }, // Check if the action is allowed for this resource
       });
+  
       if (!permission) {
-        throw new AppError("Permission not found for this resource", 404); // Custom error if permission not found
+        throw new AppError(`Permission not found for ${role} to ${action} this ${resource}`, 403); // Custom error if permission not found
       }
+  
       return permission; // Return the found permission object
     } catch (error) {
       throw new AppError("Error fetching permission: " + error.message, 500); // Custom error handling

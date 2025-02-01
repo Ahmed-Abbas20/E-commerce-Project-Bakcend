@@ -1,4 +1,5 @@
 const express = require('express');
+const checkPermission = require("../middlewares/authorization.middleware"); 
 const router = express.Router();
 const {
   validateCategory,
@@ -6,7 +7,7 @@ const {
 } = require('../middlewares/categoryvalidate.middleware');
 const categoryService = require('../services/category.service');
 
-router.post('/', validateCategory, async (req, res, next) => {
+router.post('/',checkPermission("category","create") ,validateCategory, async (req, res, next) => {
   try {
     const category = await categoryService.createCategory(req.body);
     res.status(201).json({ data: category });
@@ -15,7 +16,7 @@ router.post('/', validateCategory, async (req, res, next) => {
   }
 });
 
-router.get('/', async (req, res, next) => {
+router.get('/',checkPermission("category","read") , async (req, res, next) => {
   try {
     const categories = await categoryService.getAllCategories();
     res.json({ success: true, data: categories });
