@@ -1,33 +1,24 @@
 const express = require("express");
 const morgan = require("morgan");
-const fileUpload = require("express-fileupload");
-const MemoController =require("./controllers/Memo.controller");
-const authenticationMiddleware = require("./middlewares/authentication.middleware");
 const authController = require("./controllers/auth.controller");
-const fs = require("fs");
-const path = require("path");
+const usersController = require("./controllers/user.controller");
+const categoryController = require('./controllers/category.controller');
+const productController = require('./controllers/product.controller');
+const { notFound, errorHandler } = require('./middlewares/error.midllewares');
 
 const app = express();
 
 app.use(morgan("common"));
 
 app.use(express.json());
-app.use(
-  fileUpload({
-    limits: { fileSize: 50 * 1024 * 1024 },
-    useTempFiles: false,
-    preserveExtension: true,
-  })
-);
+
 app.use("/auth", authController);
-app.use("/memories",[authenticationMiddleware], MemoController);
+app.use("/users", usersController);
 
-const controllersDirPath = path.join(__dirname, "controllers");
-const controllersDirectory = fs.readdirSync(controllersDirPath);
+app.use('/categories', categoryController);
+app.use('/products', productController);
 
-for (const controllerFile of controllersDirectory) {
-  const controller = require(path.join(controllersDirPath, controllerFile));
-  app.use(controller);
-}
+app.use(notFound);
+app.use(errorHandler);
 
 module.exports = app;
