@@ -5,6 +5,7 @@ const usersController = require("./controllers/user.controller");
 const categoryController = require('./controllers/category.controller');
 const productController = require('./controllers/product.controller');
 const authenticationMiddleware = require("./middlewares/authentication.middleware");
+const managerController=require('./controllers/manager.controller');
 const {  errorHandler } = require('./utils/errorHandler'); 
 const { notFound } = require('./utils/notFound'); 
 
@@ -23,6 +24,7 @@ app.use("/users", [authenticationMiddleware,],usersController);
 
 app.use('/categories', [authenticationMiddleware],categoryController);
 app.use('/products', [authenticationMiddleware],productController);
+app.use('/managers', [authenticationMiddleware],managerController);
 
 app.use(notFound);
 // Error handling
