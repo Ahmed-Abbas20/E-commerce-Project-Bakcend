@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const checkPermission = require("../middlewares/authorization.middleware"); 
 const {
   validateProduct,
   validateProductId
 } = require('../middlewares/productvalidate.middleware');
+
 const productService = require('../services/product.service');
-const checkPermission=require("./../middlewares/authorization.middleware")
+
 
 router.post('/', checkPermission("products","create"),validateProduct, async (req, res, next) => {
   try {
@@ -58,9 +60,10 @@ router.get('/:categoryId', async (req, res, next) => {
 router.get('/:id', validateProductId, async (req, res, next) => {
   try {
     const product = await productService.getProduct(req.params.id);
+    if(!product) res.json({data:"no products found"})
     res.json({ success: true, data: product });
   } catch (error) {
-    next(error);
+     return next(new AppError(error.message, 500));
   }
 });
 
