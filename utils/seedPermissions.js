@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Permission = require("../models/permisssion.model");  
+const Permission = require("../models/permission.model");  
 
 const uniquePermissions = [
     // Super Admin Permissions
@@ -10,7 +10,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage managers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -21,7 +21,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage cashiers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -32,7 +32,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage customers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -43,7 +43,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage products",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -54,7 +54,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage sellers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -65,7 +65,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage suppliers",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -76,7 +76,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage seller inventories",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -87,7 +87,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage supplier inventories",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -98,7 +98,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage customer orders",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -109,7 +109,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage supplier orders",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -120,7 +120,7 @@ const uniquePermissions = [
       description: "Allows super admin to manage product categories",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"] 
+          IN: ["super_admin", "manager"] 
         }
       }
     },
@@ -255,12 +255,34 @@ const uniquePermissions = [
     },
     {
       effect: "allow",
-      resource: "staff",
+      resource: "clerk",
       action: ["create", "read", "update", "delete"],
       description: "Allows super admin to manage staff",
       condition: {
         role: {
-          IN: ["superAdmin", "manager"]
+          IN: ["super_admin", "manager"]
+        }
+      }
+    },
+    {
+      effect: "allow",
+      resource: "cashier",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin to manage staff",
+      condition: {
+        role: {
+          IN: ["super_admin", "manager"]
+        }
+      }
+    },
+    {
+      effect: "allow",
+      resource: "manager",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin to manage staff",
+      condition: {
+        role: {
+          IN: ["super_admin"]
         }
       }
     },

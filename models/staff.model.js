@@ -4,7 +4,7 @@ const User = require("./base.model");
 const StaffSchema = new mongoose.Schema({
   managerId: {
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Staff', 
+    ref: 'User', 
     
   },
   SSN: { type: String },
