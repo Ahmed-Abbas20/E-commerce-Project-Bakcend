@@ -1,10 +1,18 @@
-const User = require("./User");
+const mongoose = require("mongoose");
+const User = require("./base.model"); 
 
 const StaffSchema = new mongoose.Schema({
-	managerId:{ type:number , ref:StaffSchema },
-	SSN:{type:String,required:true},
-    role: { type: String, enum: ["super_admin", "clerk", "cashier" , "manager"], required: true },
-}
-);
+  managerId: {
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'staff', 
+    
+  },
+  SSN: { type: String },
+  role: {
+    type: String,
+    enum: ["super_admin", "clerk", "cashier", "manager"], 
+    required: true,
+  },
+});
 
-module.exports = User.discriminator("Staff", StaffSchema);
+module.exports = User.discriminator("staff", StaffSchema); 

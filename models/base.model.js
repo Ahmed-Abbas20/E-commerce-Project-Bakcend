@@ -10,8 +10,8 @@ const UserBaseSchema = new mongoose.Schema(
     phone1: { type: String, required: true, unique: true },
     userType: {
       type: String,
-      enum: ["Staff", "Customer", "Seller"],
-      default: "Customer",
+      enum: ["staff", "customer", "seller"],
+      default: "customer",
       required: true,
     },
     salt: { type: String, required: true },
