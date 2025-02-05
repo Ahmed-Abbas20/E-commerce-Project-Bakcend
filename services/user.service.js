@@ -1,10 +1,10 @@
-const User = require("../models/base.model");
+const Customer = require("../models/base.model");
 const bcrypt = require("bcrypt");
 
 // Get all users
-module.exports.getUsers = async () => {
+module.exports.getCustomer = async () => {
   try {
-    const users = await User.find({});
+    const users = await Customer.find({});
     return users;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -13,7 +13,7 @@ module.exports.getUsers = async () => {
 };
 
 // Create a new user
-module.exports.createUser = async ({ firstName, lastName, email, password, phone1, userType = "Customer", role }) => {
+module.exports.createCustomer = async ({ firstName, lastName, email, password, phone1, userType = "Customer", role }) => {
   try {
     // Hash the password
     const salt = await bcrypt.genSalt(10);
@@ -30,23 +30,10 @@ module.exports.createUser = async ({ firstName, lastName, email, password, phone
       salt,
     };
 
-    // Add role for staff members
-    if (userType === "Staff") {
-      if (!role) {
-        throw new Error("Role is required for staff members");
-      }
-      userData.role = role; // Ensure role is added to userData
-    }
 
-    // console.log("User Data Before Save:", userData); // Debugging: Log the user data before saving
-
-    // Save the user to the database
-    const user = new User(userData);
+    const user = new Customer(userData);
     await user.save();
 
-    // console.log("User Data After Save:", user); // Debugging: Log the user data after saving
-
-    // Prepare claims for the token
     const claims = {
       sub: user._id,
       email: user.email,
@@ -61,9 +48,9 @@ module.exports.createUser = async ({ firstName, lastName, email, password, phone
 };
 
 // Update a user
-module.exports.updateUser = async (userId, updatedData) => {
+module.exports.updateCustomer = async (userId, updatedData) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true });
+    const updatedUser = await Customer.findByIdAndUpdate(userId, updatedData, { new: true });
     return updatedUser;
   } catch (error) {
     console.error("Error updating user:", error);
@@ -72,9 +59,9 @@ module.exports.updateUser = async (userId, updatedData) => {
 };
 
 // Delete a user
-module.exports.deleteUser = async (userId) => {
+module.exports.deleteCustomer = async (userId) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(userId);
+    const deletedUser = await Customer.findByIdAndDelete(userId);
     return deletedUser;
   } catch (error) {
     console.error("Error deleting user:", error);
@@ -83,9 +70,9 @@ module.exports.deleteUser = async (userId) => {
 };
 
 // Get a user by email
-module.exports.getUserByEmail = async ({ email }) => {
+module.exports.getCustomerByEmail = async ({ email }) => {
   try {
-    const user = await User.findOne({ email });
+    const user = await Customer.findOne({ email });
 
     if (!user) {
       throw new Error("User not found");

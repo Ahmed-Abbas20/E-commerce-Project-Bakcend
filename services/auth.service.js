@@ -1,51 +1,54 @@
 const { signToken } = require("../utils/jwttoken.manager");
-const { createUser, getUserByEmail } = require("../services/user.service");
+const { createCustomer, getCustomerByEmail } = require("../services/user.service");
+const {AppError} = require("../utils/errorHandler"); // Import the AppError class
 
 // Register user
-const registerUser = async ({ firstName, lastName, email, password, phone1, userType = "Customer", role }) => {
+const registerCustomer = async ({ firstName, lastName, email, password, phone1, userType = "customer", role }) => {
   try {
+   
+    const claims = await createCustomer({ firstName, lastName, email, password, phone1, userType, role });
 
-    // Create the user
-    const claims = await createUser({ firstName, lastName, email, password, phone1, userType, role });
-
-    // Generate a token for the new user
+    
     const token = signToken({ claims });
 
     return { token };
   } catch (error) {
-    throw new Error("Error registering user: " + error.message);
+   
+    throw new AppError("Error registering user: " + error.message, 500);
   }
 };
 
-
 // Login user
-const loginUser = async ({ email, password }) => {
+const loginCustomer = async ({ email, password }) => {
   try {
-    // Find the user by email
-    const user = await getUserByEmail({ email });
+   
+    const user = await getCustomerByEmail({ email });
 
-    // Check if the password is correct
+    
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      throw new Error("Invalid email or password");
+      throw new AppError("Invalid email or password", 401); 
     }
 
-    // Generate a token for the user
+   
     const claims = {
       sub: user._id,
       email: user.email,
       userType: user.userType,
+      role: user.role,
     };
+
     const token = signToken({ claims });
 
     return { token };
   } catch (error) {
-    throw new Error("Error logging in user: " + error.message);
+    
+    throw new AppError("Error logging in user: " + error.message, 500);
   }
 };
 
 module.exports = {
-  registerUser,
-  loginUser,
+  registerCustomer,
+  loginCustomer,
 };
