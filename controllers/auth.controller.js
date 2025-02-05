@@ -1,9 +1,10 @@
-const { loginUser, registerUser } = require("../services/auth.service");
+const { loginCustomer, registerCustomer } = require("../services/auth.service");
 const router = require("express").Router();
 const {AppError} = require("../utils/errorHandler"); // Import the AppError class
+const { validateUserRegistration } = require("../middlewares/RegisterValidation.middleware");
 
 // Register Route
-router.post("/register", async (req, res, next) => {
+router.post("/register",validateUserRegistration, async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone1, userType = "customer", role } = req.body;
     
@@ -13,7 +14,7 @@ router.post("/register", async (req, res, next) => {
       return next(new AppError("Role is required for staff members", 400));
     }
     
-    const { token } = await registerUser({
+    const { token } = await registerCustomer({
       firstName,
       lastName,
       email,
@@ -33,7 +34,7 @@ router.post("/register", async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const { token } = await loginUser({
+    const { token } = await loginCustomer({
       email,
       password,
     });
