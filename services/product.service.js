@@ -29,14 +29,14 @@ exports.createProduct = async (productData) => {
 };
 
 exports.getProduct = async (id) => {
-  const product = await getProductById(id);
+  const product = await getProductById(id); 
   if (!product) {
     throw new AppError('Product not found', 404); 
   }
   return product;
 };
 
-exports.getAllProducts = getAllProducts;
+
 
 exports.updateProduct = async (id, updateData) => {
   if (updateData.categoryId) {
@@ -51,6 +51,8 @@ exports.updateProduct = async (id, updateData) => {
 
 exports.deleteProduct = deleteProduct;
 exports.searchProducts = searchProducts;
+exports.getAllProducts = getAllProducts;
+
 exports.filterProductsService = (categoryId = null, min = null, max = null, page = 1) => {
   
     const query = {};

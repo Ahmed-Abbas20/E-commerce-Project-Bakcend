@@ -2,10 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {AppError} = require("../utils/errorHandler"); 
 const checkPermission = require("../middlewares/authorization.middleware"); 
-const {
-  validateProduct,
-  validateProductId
-} = require('../middlewares/productvalidate.middleware');
+const {validateProduct} = require('../middlewares/productvalidate.middleware');
 
 const productService = require('../services/product.service');
 
@@ -67,7 +64,7 @@ router.get('/filter', async (req, res, next) => {
 
 
 
-router.get('/:id', validateProductId, async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const product = await productService.getProduct(req.params.id);
     if(!product) res.json({data:"no products found"})
@@ -77,7 +74,7 @@ router.get('/:id', validateProductId, async (req, res, next) => {
   }
 });
 
-router.put('/:id', checkPermission("products","update"),validateProductId, validateProduct, async (req, res, next) => {
+router.put('/:id', checkPermission("products","update"),validateProduct, async (req, res, next) => {
   try {
     const updatedProduct = await productService.updateProduct(req.params.id, req.body);
     res.json({ success: true, data: updatedProduct });
@@ -86,7 +83,7 @@ router.put('/:id', checkPermission("products","update"),validateProductId, valid
   }
 });
 
-router.delete('/:id',checkPermission("products","delete"), validateProductId, async (req, res, next) => {
+router.delete('/:id',checkPermission("products","delete"), async (req, res, next) => {
   try {
     await productService.deleteProduct(req.params.id);
     res.status(204).send();
