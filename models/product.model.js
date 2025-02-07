@@ -27,7 +27,7 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  sellerId:{type: String},
+  sellerId:{type: String, ref:'Seller'},
   createdAt: {
     type: Date,
     default: Date.now()

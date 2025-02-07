@@ -31,7 +31,7 @@ app.use(errorHandler);
 // 404 handler
 app.all('*', (req, res, next) => {
     const err = new errorHandler.AppError(
-        `Can't find ${req.originalUrl} on this server!`,
+        `Can't find ${req.originalUrl} on this server!`, 
         404
     );
     next(err);
