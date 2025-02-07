@@ -51,7 +51,7 @@ exports.updateProduct = async (id, updateData) => {
 
 exports.deleteProduct = deleteProduct;
 exports.searchProducts = searchProducts;
-exports.filterProductsService = async (categoryId = null, min = null, max = null, page = 1) => {
+exports.filterProductsService = (categoryId = null, min = null, max = null, page = 1) => {
   
     const query = {};
 
@@ -60,16 +60,15 @@ exports.filterProductsService = async (categoryId = null, min = null, max = null
       query.categoryId = categoryId;
     }
 
-    
     if (min !== null || max !== null) {
       query.price = {};
       if (min !== null) query.price.$gte = min;
       if (max !== null) query.price.$lte = max;
     }
 
-    console.log('Final Query:', query); // Debugging log
+    console.log('Final Query:', query); 
 
-    // Call the repository function
+
     return filterProducts(query, page);
  
   }
