@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const {AppError} = require("../utils/errorHandler"); 
 const checkPermission = require("../middlewares/authorization.middleware"); 
 const {
   validateProduct,
@@ -37,25 +38,34 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
-router.get('/filter/price', async (req, res, next) => {
+router.get('/filter', async (req, res, next) => {
   try {
-    const { min, max, page } = req.query;
-    const results = await productService.filterByPrice(min, max, page || 1);
-    res.json({ success: true, data: results });
+    const { categoryId, min, max, page = 1 } = req.query;
+
+    // Parse query parameters with default values
+    const parsedMin = min ? parseFloat(min) : null;
+    const parsedMax = max ? parseFloat(max) : null;
+    const parsedPage = page ? parseInt(page) : 1;
+
+    // Validate parsed values
+    if (parsedPage < 1) {
+      return next(new AppError('Page number must be greater than 0', 400));
+    }
+    if (parsedMin !== null && parsedMax !== null && parsedMin > parsedMax) {
+      return next(new AppError('Min price cannot be greater than max price', 400));
+    }
+
+    // Call the service function
+    const products = await productService.filterProductsService(categoryId, parsedMin, parsedMax, parsedPage);
+
+    // Return the results
+    res.json({ success: true, data: products });
   } catch (error) {
-    next(error);
+    return next(error); 
   }
 });
 
-router.get('/:categoryId', async (req, res, next) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const products = await productService.getByCategory(req.params.categoryId, page);
-    res.json({ success: true, data: products });
-  } catch (error) {
-    next(error);
-  }
-});
+
 
 router.get('/:id', validateProductId, async (req, res, next) => {
   try {

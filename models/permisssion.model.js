@@ -41,11 +41,8 @@ const PermissionSchema = new mongoose.Schema({
         type: [String],
         default: [],
       },
-      NIN: {
-        type: [String],
-        default: [],
-      },
-    },
+     
+    }
   },
 }, { timestamps: true });
 
