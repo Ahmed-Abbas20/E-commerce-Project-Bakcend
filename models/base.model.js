@@ -18,6 +18,7 @@ const UserBaseSchema = new mongoose.Schema(
   },
   { discriminatorKey: "userType", timestamps: true }
 );
+
 UserBaseSchema.methods.comparePassword = async function (enteredPassword) {
   const hashedPassword = await bcrypt.hash(enteredPassword, this.salt);
   return hashedPassword === this.password;
