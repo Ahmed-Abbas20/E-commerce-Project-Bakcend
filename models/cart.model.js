@@ -1,5 +1,5 @@
 const CartSchema = new mongoose.Schema({
-    cartId: {  type: String, required: true },
+    
     products: [
       {
         productId: { type: String, required: true , ref:Product},

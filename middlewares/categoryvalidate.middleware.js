@@ -15,16 +15,3 @@ exports.validateCategory = (req, res, next) => {
   next();
 };
 
-exports.validateCategoryId = (req, res, next) => {
-  const schema = JoiObjectId().required();
-
-  const { error } = schema.validate(req.params.id);
-  
-  if (error) {
-    const err = new Error(error.details[0].message);
-    err.statusCode = 400;
-    return next(err);
-  }
-  
-  next();
-};

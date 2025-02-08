@@ -1,4 +1,5 @@
 const Product = require('../models/product.model');
+
 const BASE_IMAGE_URL = "https://ik.imagekit.io/cwe4zwtml"; 
 const {AppError} = require("../utils/errorHandler"); 
 const { deleteProductImages} = require("../services/media.service");
