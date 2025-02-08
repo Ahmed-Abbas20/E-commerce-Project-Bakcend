@@ -1,12 +1,12 @@
 const { signToken } = require("../utils/jwttoken.manager");
-const { createUser, getUserByEmail } = require("../services/user.service");
+const { createCustomer, getCustomerByEmail } = require("../services/user.service");
 const {AppError} = require("../utils/errorHandler"); // Import the AppError class
 
 // Register user
-const registerUser = async ({ firstName, lastName, email, password, phone1, userType = "customer", role }) => {
+const registerCustomer = async ({ firstName, lastName, email, password, phone1, userType = "customer", role }) => {
   try {
    
-    const claims = await createUser({ firstName, lastName, email, password, phone1, userType, role });
+    const claims = await createCustomer({ firstName, lastName, email, password, phone1, userType, role });
 
     
     const token = signToken({ claims });
@@ -19,10 +19,10 @@ const registerUser = async ({ firstName, lastName, email, password, phone1, user
 };
 
 // Login user
-const loginUser = async ({ email, password }) => {
+const loginCustomer = async ({ email, password }) => {
   try {
    
-    const user = await getUserByEmail({ email });
+    const user = await getCustomerByEmail({ email });
 
     
     const isMatch = await user.comparePassword(password);
@@ -49,6 +49,6 @@ const loginUser = async ({ email, password }) => {
 };
 
 module.exports = {
-  registerUser,
-  loginUser,
+  registerCustomer,
+  loginCustomer,
 };
