@@ -1,5 +1,29 @@
-const SellerReq=require('./../models/SellerRequest.model');
+// repos/sellerRequestRepo.js
+const SellerRequest = require('../models/SellerRequest.model');
 
-exports.createProduct = (productData) => Product.create(productData);
-exports.updateProduct = (id, updateData) =>Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
-exports.deleteProduct = (id) => Product.findByIdAndDelete(id);
+const createRequest = async (requestData) => {
+  return await SellerRequest.create(requestData);
+};
+
+const findById = async (id) => {
+  return await SellerRequest.findById(id).populate('sellerId').populate('productId');
+};
+
+const findBySellerId = async (sellerId) => {
+  return await SellerRequest.find({ sellerId }).populate('productId');
+};
+
+const updateStatus = async (id, status, rejectionReason = '') => {
+  return await SellerRequest.findByIdAndUpdate(
+    id,
+    { status, rejectionReason },
+    { new: true }
+  );
+};
+
+module.exports = {
+  createRequest,
+  findById,
+  findBySellerId,
+  updateStatus
+};

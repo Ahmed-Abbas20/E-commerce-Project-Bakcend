@@ -1,32 +1,29 @@
+// models/SellerRequest.js
 const mongoose = require('mongoose');
 
 const SellerReqSchema = new mongoose.Schema({
   sellerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Seller', 
+    ref: 'Seller',
     required: [true, 'Seller ID is required']
   },
-  productName: {
+  operationType: {
     type: String,
-    required: [true, 'Product name is required']
+    enum: ['create', 'update', 'delete'],
+    required: true
   },
-  productDescription: {
-    type: String,
-    required: [true, 'Product description is required'] 
+  productData: {
+    type: mongoose.Schema.Types.Mixed,
+    required: function () {
+      return this.operationType === 'create' || this.operationType === 'update';
+    }
   },
-  productPrice: {
-    type: Number,
-    required: [true, 'Product price is required'],
-    min: [0, 'Price cannot be negative']
-  },
-  productImages: {
-    type: [String], // Array of image URLs or file paths
-    required: [true, 'At least one product image is required']
-  },
-  productCategory: {
+  productId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref:'Category',
-    required: [true, 'Product category is required']
+    ref: 'Product',
+    required: function () {
+      return this.operationType === 'update' || this.operationType === 'delete';
+    }
   },
   status: {
     type: String,
@@ -34,17 +31,9 @@ const SellerReqSchema = new mongoose.Schema({
     default: 'pending'
   },
   rejectionReason: {
-    type: String, 
+    type: String,
     default: ''
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('SellerRequest', SellerReqSchema);
