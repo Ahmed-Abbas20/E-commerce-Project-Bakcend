@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const JoiObjectId = require('joi-objectid')(Joi); 
 
 const categorySchema = Joi.object({
   name: Joi.string().trim().required().min(2).max(50)
@@ -15,17 +16,15 @@ exports.validateCategory = (req, res, next) => {
 };
 
 exports.validateCategoryId = (req, res, next) => {
-    const schema = Joi.string().guid({
-      version: ['uuidv4'],
-      separator: '-'
-    }).required();
+  const schema = JoiObjectId().required();
+
+  const { error } = schema.validate(req.params.id);
   
-    const { error } = schema.validate(req.params.id);
-    
-    if (error) {
-      error.statusCode = 400;
-      return next(error);
-    }
-    
-    next();
-  };
+  if (error) {
+    const err = new Error(error.details[0].message);
+    err.statusCode = 400;
+    return next(err);
+  }
+  
+  next();
+};

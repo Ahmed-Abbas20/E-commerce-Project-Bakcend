@@ -261,6 +261,7 @@ const uniquePermissions = [
       condition: {
         role: {
           IN: ["super_admin", "manager"]
+
         }
       }
     },
@@ -283,6 +284,8 @@ const uniquePermissions = [
       condition: {
         role: {
           IN: ["super_admin"]
+
+
         }
       }
     },
