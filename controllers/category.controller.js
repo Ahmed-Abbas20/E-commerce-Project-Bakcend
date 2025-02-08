@@ -1,12 +1,9 @@
 const express = require('express');
 const checkPermission = require("../middlewares/authorization.middleware"); 
 const router = express.Router();
-const {
-  validateCategory,
-  validateCategoryId
-} = require('../middlewares/categoryvalidate.middleware');
-const categoryService = require('../services/category.service');
+const {validateCategory,validateCategoryId} = require('../middlewares/categoryvalidate.middleware');
 
+const categoryService = require('../services/category.service');
 router.post('/',checkPermission("category","create") ,validateCategory, async (req, res, next) => {
   try {
     const category = await categoryService.createCategory(req.body);

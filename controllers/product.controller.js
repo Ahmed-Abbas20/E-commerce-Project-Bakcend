@@ -63,6 +63,7 @@ router.post(
     } catch (error) {
       next(error);
     }
+
   }
 );
 
@@ -85,6 +86,7 @@ router.get('/search', async (req, res, next) => {
     next(error);
   }
 });
+
 
 
 router.get('/filter', async (req, res, next) => {
@@ -118,9 +120,10 @@ router.get('/filter', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const product = await productService.getProduct(req.params.id);
+    if(!product) res.json({data:"no products found"})
     res.json({ success: true, data: product });
   } catch (error) {
-    next(error);
+     return next(new AppError(error.message, 500));
   }
 });
 
