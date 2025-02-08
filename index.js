@@ -8,6 +8,8 @@ const authenticationMiddleware = require("./middlewares/authentication.middlewar
 const {  errorHandler } = require('./utils/errorHandler'); 
 const { notFound } = require('./utils/notFound'); 
 
+const cors = require('cors');
+
 
 
 
@@ -17,6 +19,14 @@ const app = express();
 app.use(morgan("common"));
 
 app.use(express.json());
+
+// Enable CORS for all routes
+app.use(cors({
+    origin: 'http://localhost:4200', // Allow requests from this origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
+  }));
+  
 
 app.use("/auth", authController);
 app.use("/users", [authenticationMiddleware,],usersController);
@@ -36,5 +46,6 @@ app.all('*', (req, res, next) => {
     );
     next(err);
 });
+
 
 module.exports = app;
