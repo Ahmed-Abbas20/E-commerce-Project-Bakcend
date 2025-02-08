@@ -13,7 +13,7 @@ module.exports.getCustomer = async () => {
 };
 
 // Create a new user
-module.exports.createCustomer = async ({ firstName, lastName, email, password, phone1, userType = "Customer", role }) => {
+module.exports.createCustomer = async ({ firstName, lastName, email, password, phone1, userType = "Customer" }) => {
   try {
     // Hash the password
     const salt = await bcrypt.genSalt(10);
