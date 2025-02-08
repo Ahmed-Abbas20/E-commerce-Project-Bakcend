@@ -8,6 +8,7 @@ const authenticationMiddleware = require("./middlewares/authentication.middlewar
 const managerController=require('./controllers/manager.controller');
 const {  errorHandler } = require('./utils/errorHandler'); 
 const { notFound } = require('./utils/notFound'); 
+const fileUpload = require("express-fileupload");
 
 
 
@@ -15,9 +16,18 @@ const { notFound } = require('./utils/notFound');
 
 const app = express();
 
+app.use(
+    fileUpload({
+      limits: { fileSize: 50 * 1024 * 1024 },
+      useTempFiles: false,
+      preserveExtension: true,
+    })
+  );
+
 app.use(morgan("common"));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/auth", authController);
 app.use("/users", [authenticationMiddleware,],usersController);
@@ -25,6 +35,8 @@ app.use("/users", [authenticationMiddleware,],usersController);
 app.use('/categories', [authenticationMiddleware],categoryController);
 app.use('/products', [authenticationMiddleware],productController);
 app.use('/managers', [authenticationMiddleware],managerController);
+
+
 
 app.use(notFound);
 // Error handling
