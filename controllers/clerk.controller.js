@@ -1,66 +1,82 @@
 const express = require("express");
 const router = express.Router();
-const  checkPermission  = require("../middlewares/authorization.middleware");
 const {
-  getClerks,
+  getAllClerks,
+  getClerkById,
   createClerk,
   updateClerk,
   deleteClerk,
-  getClerkByEmail,
 } = require("../repos/clerk.repo");
+const { AppError } = require("../utils/errorHandler");
 
-// Get all clerks
-router.get("/", checkPermission("clerk", "read"), async (req, res, next) => {
+// ✅ Create a new clerk (Uses `createClerk` from the repo)
+router.post("/", async (req, res, next) => {
   try {
-    const clerks = await getClerks();
+    const { firstName, lastName, email, password, phone1, SSN, managerId } = req.body;
+
+    if (!firstName || !lastName || !email || !password || !phone1 || !SSN) {
+      return next(new AppError("All required fields must be provided", 400));
+    }
+
+    const newClerk = await createClerk({
+      firstName,
+      lastName,
+      email,
+      password,
+      phone1,
+      SSN,
+      managerId,
+    });
+
+    res.status(201).json({ success: true, data: newClerk });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// ✅ Get all clerks
+router.get("/", async (req, res, next) => {
+  try {
+    const clerks = await getAllClerks();
     res.status(200).json({ success: true, data: clerks });
   } catch (error) {
-    next(error);
+    return next(new AppError(error.message, 500));
   }
 });
 
-// Create a new clerk
-router.post("/", checkPermission("clerk", "create"), async (req, res, next) => {
+// ✅ Get a clerk by ID
+router.get("/:clerkId", async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password, phone1, managerId, SSN } = req.body;
-    const claims = await createClerk({ firstName, lastName, email, password, phone1, managerId, SSN });
-    res.status(201).json({ success: true, claims });
+    const { clerkId } = req.params;
+    const clerk = await getClerkById(clerkId);
+    res.status(200).json({ success: true, data: clerk });
   } catch (error) {
-    next(error);
+    return next(new AppError(error.message, 500));
   }
 });
 
-// Update a clerk
-router.put("/:clerkId", checkPermission("clerk", "update"), async (req, res, next) => {
+// ✅ Update a clerk (Supports image upload)
+router.put("/:clerkId", async (req, res, next) => {
   try {
     const { clerkId } = req.params;
     const updatedData = req.body;
-    const updatedClerk = await updateClerk(clerkId, updatedData);
+    const uploadedFile = req.files?.image ? [req.files.image] : [];
+
+    const updatedClerk = await updateClerk(clerkId, updatedData, uploadedFile);
     res.status(200).json({ success: true, data: updatedClerk });
   } catch (error) {
-    next(error);
+    next(new AppError(error.message, 500));
   }
 });
 
-// Delete a clerk
-router.delete("/:clerkId", checkPermission("clerk", "delete"), async (req, res, next) => {
+// ✅ Delete a clerk
+router.delete("/:clerkId", async (req, res, next) => {
   try {
     const { clerkId } = req.params;
     const deletedClerk = await deleteClerk(clerkId);
     res.status(200).json({ success: true, data: deletedClerk });
   } catch (error) {
-    next(error);
-  }
-});
-
-// Get a clerk by email
-router.get("/email", checkPermission("clerk", "read"), async (req, res, next) => {
-  try {
-    const { email } = req.query;
-    const clerk = await getClerkByEmail(email);
-    res.status(200).json({ success: true, data: clerk });
-  } catch (error) {
-    next(error);
+    return next(new AppError(error.message, 500));
   }
 });
 
