@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const JoiObjectId = require('joi-objectid')(Joi); 
+
 
 const categorySchema = Joi.object({
   name: Joi.string().trim().required().min(2).max(50)
