@@ -1,10 +1,10 @@
 const Cart = require("../models/cart.model");
 
 // Create or update a cart
-exports.createOrUpdateCart = async (customerId, products) => {
+exports.createOrUpdateCart = async (userId, products) => {
   try {
     const cart = await Cart.findOneAndUpdate(
-      { customerId },
+      { userId },
       { $set: { products } },
       { new: true, upsert: true }
     );
@@ -15,9 +15,9 @@ exports.createOrUpdateCart = async (customerId, products) => {
 };
 
 // Get cart by customer ID
-exports.getCartByCustomerId = async (customerId) => {
+exports.getCartByUserId = async (userId) => {
   try {
-    const cart = await Cart.findOne({ customerId }).populate("products.productId");
+    const cart = await Cart.findOne({ userId }).populate("products.productId");
     return cart;
   } catch (error) {
     throw new Error("Error fetching cart: " + error.message);
@@ -25,18 +25,18 @@ exports.getCartByCustomerId = async (customerId) => {
 };
 
 // Delete a cart
-exports.deleteCart = async (customerId) => {
+exports.deleteCart = async (userId) => {
   try {
-    await Cart.findOneAndDelete({ customerId });
+    await Cart.findOneAndDelete({ userId });
   } catch (error) {
     throw new Error("Error deleting cart: " + error.message);
   }
 };
 
 // Add a product to the cart
-exports.addProductToCart = async (customerId, productId, requiredQty) => {
+exports.addProductToCart = async (userId, productId, requiredQty) => {
   try {
-    const cart = await Cart.findOne({ customerId });
+    const cart = await Cart.findOne({ userId });
     if (!cart) {
       throw new Error("Cart not found");
     }
@@ -59,9 +59,9 @@ exports.addProductToCart = async (customerId, productId, requiredQty) => {
 };
 
 // Remove a product from the cart
-exports.removeProductFromCart = async (customerId, productId) => {
+exports.removeProductFromCart = async (userId, productId) => {
   try {
-    const cart = await Cart.findOne({ customerId });
+    const cart = await Cart.findOne({ userId });
     if (!cart) {
       throw new Error("Cart not found");
     }
