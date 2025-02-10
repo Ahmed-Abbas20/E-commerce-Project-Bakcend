@@ -1,7 +1,7 @@
 const express = require('express');
 const checkPermission = require("../middlewares/authorization.middleware"); 
 const router = express.Router();
-const {validateCategory,validateCategoryId} = require('../middlewares/categoryvalidate.middleware');
+const {validateCategory} = require('../middlewares/categoryvalidate.middleware');
 
 const categoryService = require('../services/category.service');
 router.post('/',checkPermission("category","create") ,validateCategory, async (req, res, next) => {
@@ -31,7 +31,7 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
-router.get('/:id', validateCategoryId, async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const category = await categoryService.getCategory(req.params.id);
     res.json({ success: true, data: category });
@@ -40,7 +40,7 @@ router.get('/:id', validateCategoryId, async (req, res, next) => {
   }
 });
 
-router.put('/:id', checkPermission("category","update"),validateCategoryId, validateCategory, async (req, res, next) => {
+router.put('/:id', checkPermission("category","update"), validateCategory, async (req, res, next) => {
   try {
     const updatedCategory = await categoryService.updateCategory(req.params.id, req.body);
     res.json({ success: true, data: updatedCategory });
@@ -49,7 +49,7 @@ router.put('/:id', checkPermission("category","update"),validateCategoryId, vali
   }
 });
 
-router.delete('/:id', checkPermission("category","delete"),validateCategoryId, async (req, res, next) => {
+router.delete('/:id', checkPermission("category","delete"), async (req, res, next) => {
   try {
     await categoryService.deleteCategory(req.params.id);
     res.status(204).send();

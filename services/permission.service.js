@@ -50,7 +50,7 @@ const {
       return permission;
     } catch (error) {
       throw new AppError("Error fetching permission by ID: " + error.message, 500); 
-    }
+    } 
   };
   
   module.exports.getPermissionByResourceName = async (resourceName) => {
