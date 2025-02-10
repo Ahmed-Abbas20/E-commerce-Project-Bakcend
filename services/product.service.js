@@ -1,7 +1,25 @@
-const {filterProducts, createProduct, getProductById, getAllProducts, updateProduct, deleteProduct, searchProducts} = require('../repos/product.repo');
+const { createProduct, getProductById, getAllProducts, updateProduct, deleteProduct, searchProducts,filterProducts } = require('../repos/product.repo');
 const { getCategoryById } = require('../repos/category.repo');
 const Product = require('../models/product.model'); 
 const {AppError} = require('../utils/errorHandler'); 
+const { deleteProductImages} = require("./media.service");
+const { handleImageUpload } = require("./upload.service");
+const BASE_IMAGE_URL = "https://ik.imagekit.io/cwe4zwtml/";
+const { APP_CONFIG } = require("../config/app.config");
+const ImageKit = require("imagekit");
+const {
+  IMAGEKIT_ENDPOINT_URL,
+  IMAGEKIT_PRIVATE_KEY,
+  IMAGEKIT_PUBLIC_KEY,
+} = APP_CONFIG;
+
+const imagekit = new ImageKit({
+  publicKey: IMAGEKIT_PUBLIC_KEY,
+  privateKey: IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: IMAGEKIT_ENDPOINT_URL,
+});
+
+
 
 exports.createProduct = async (productData) => {
   // 1. Validate category exists
@@ -29,50 +47,93 @@ exports.createProduct = async (productData) => {
 };
 
 exports.getProduct = async (id) => {
-  const product = await getProductById(id); 
+  const product = await getProductById(id);
   if (!product) {
     throw new AppError('Product not found', 404); 
   }
   return product;
 };
 
+exports.getAllProducts = getAllProducts;
 
-
-exports.updateProduct = async (id, updateData) => {
-  if (updateData.categoryId) {
-    const category = await getCategoryById(updateData.categoryId);
-    if (!category) {
-      throw new AppError('Category not found', 404);
+exports.updateProduct = async (id, updateData, uploadedFiles = [], imagesToRemove = []) => {
+  try {
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) {
+      throw new AppError("Product not found", 404);
     }
-    updateData.categoryName = category.name;
+
+   
+    const imageFileIdsToRemove = imagesToRemove.filter(fileId =>
+      existingProduct.images.some(img => img.fileId === fileId)
+    );
+
+    if (imageFileIdsToRemove.length > 0) {
+      await deleteProductImages(imageFileIdsToRemove);
+
+      
+      existingProduct.images = existingProduct.images.filter(img => 
+        !imageFileIdsToRemove.includes(img.fileId)
+      );
+      await existingProduct.save();
+    }
+
+   
+    if (uploadedFiles.length > 0) {
+      const uploadedImages = await handleImageUpload(Product, id, uploadedFiles);
+      existingProduct.images.push(...uploadedImages);
+      await existingProduct.save();
+    }
+
+    Object.assign(existingProduct, updateData);
+    await existingProduct.save();
+
+    return await Product.findById(id);
+
+  } catch (error) {
+    throw new AppError(error.message || "Failed to update product", 500);
   }
-  return updateProduct(id, updateData);
 };
+
+
+
 
 exports.deleteProduct = deleteProduct;
 exports.searchProducts = searchProducts;
-exports.getAllProducts = getAllProducts;
-
-exports.filterProductsService = (categoryId = null, min = null, max = null, page = 1) => {
-  
+exports.filterProductsService = async (categoryname = null, min = null, max = null, page = 1) => {
+  try {
     const query = {};
 
-    // Add category filter if categoryId is provided
-    if (categoryId) {
-      query.categoryId = categoryId;
+    // ✅ Add category filter if provided
+    if (categoryname) {
+      query.categoryname = categoryname;
     }
 
+    // ✅ Add price filters
     if (min !== null || max !== null) {
       query.price = {};
       if (min !== null) query.price.$gte = min;
       if (max !== null) query.price.$lte = max;
     }
 
-    console.log('Final Query:', query); 
+    // ✅ Fetch paginated results
+    const products = await Product.find(query)
+      .sort('-createdAt')
+      .skip((page - 1) * 20)
+      .limit(20);
 
+    // ✅ Transform images to full URLs
+    return products.map(product => ({
+      ...product.toObject(),
+      images: product.images.map(img => ({
+        fileId: img.fileId,
+        filePath: `${BASE_IMAGE_URL}${img.filePath}`
+      }))
+    }));
 
-    return filterProducts(query, page);
- 
+  } catch (error) {
+    throw new AppError(error.message || "Failed to filter products", 500);
   }
+};
 
 

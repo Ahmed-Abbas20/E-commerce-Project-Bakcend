@@ -1,39 +1,18 @@
-// models/SellerRequest.js
 const mongoose = require('mongoose');
 
-const SellerReqSchema = new mongoose.Schema({
-  sellerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Seller',
-    required: [true, 'Seller ID is required']
-  },
-  operationType: {
-    type: String,
-    enum: ['create', 'update', 'delete'],
-    required: true
-  },
-  productData: {
-    type: mongoose.Schema.Types.Mixed,
-    required: function () {
-      return this.operationType === 'create' || this.operationType === 'update';
-    }
-  },
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: function () {
-      return this.operationType === 'update' || this.operationType === 'delete';
-    }
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
-  },
-  rejectionReason: {
-    type: String,
-    default: ''
-  },
+const SellerRequestSchema = new mongoose.Schema({
+  seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  operationType: { type: String, enum: ['create', 'update', 'delete'], required: true },
+  productData: mongoose.Schema.Types.Mixed,
+  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  rejectionReason: String,
+  processedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  images: [{
+    fileId: String,
+    filePath: String,
+    status: { type: String, enum: ['pending', 'committed'], default: 'pending' }
+  }]
 }, { timestamps: true });
 
-module.exports = mongoose.model('SellerRequest', SellerReqSchema);
+module.exports = mongoose.model('SellerRequest', SellerRequestSchema);

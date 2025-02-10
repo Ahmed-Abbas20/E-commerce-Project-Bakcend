@@ -1,4 +1,4 @@
-const permissionModel = require("../models/permisssion.model");
+const permissionModel = require("../models/permission.model");
 const {AppError} = require("../utils/errorHandler");
 
 module.exports.createPermission = async (permission) => {
