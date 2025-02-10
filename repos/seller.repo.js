@@ -1,98 +1,87 @@
-const User = require("../models/base.model");
-const Staff = require("../models/staff.model");
 const Seller = require("../models/seller.model");
-const bcrypt = require("bcrypt");
-const {AppError} = require("../utils/errorHandler"); 
+const { uploadUserImage } = require("../services/userImageUpload.service");
+const { AppError } = require("../utils/errorHandler");
 
-// Get all sellers
-module.exports.getSellers = async () => {
+// ✅ Create a new seller
+module.exports.createSeller = async ({ firstName, lastName, email, phone1, password, salt, companyName, companyRegistrationNumber, SSN }) => {
   try {
-    const sellers = await Seller.find({});
-    return sellers;
-  } catch (error) {
-    throw new AppError("Error fetching sellers: " + error.message, 500); 
-  }
-};
-
-// Create a new seller
-module.exports.createSeller = async ({ firstName, lastName, email, password, phone1, userType = "seller",companyName,companyRegistrationNumber,SSN, role }) => {
-  try {
-    // Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Prepare seller data
-    const sellerData = {
+    const seller = new Seller({
       firstName,
       lastName,
       email,
       phone1,
-      userType,
-      password: hashedPassword,
+      password,
       salt,
+      userType: "seller",
       companyName,
       companyRegistrationNumber,
-        SSN,
-    };
+      SSN,
+    });
 
-      let seller = new seller(sellerData);
-      
-   
-
-    // Save the seller to the database
     await seller.save();
-
-    // Prepare claims for the token
-    const claims = {
-      sub: user._id,
-      email: user.email,
-      userType: user.userType,
-      role: user.role,
-    };
-
-    return claims;
+    return seller;
   } catch (error) {
-    throw new AppError("Error creating seller: " + error.message, 500); 
-  }
-};
-// Update a seller
-module.exports.updateSeller = async (sellerId, updatedData) => {
-  try {
-    const updatedSeller = await Seller.findByIdAndUpdate(sellerId, updatedData, { new: true });
-    if (!updatedSeller) {
-      throw new AppError("Seller not found", 404); 
-    }
-    return updatedSeller;
-  } catch (error) {
-    throw new AppError("Error updating seller: " + error.message, 500); 
+    throw new AppError(`Error creating seller: ${error.message}`, 500);
   }
 };
 
-// Delete a seller
-module.exports.deleteSeller = async (sellerId) => {
+// ✅ Get all sellers
+module.exports.getAllSellers = async () => {
   try {
-    const deletedSeller = await Seller.findByIdAndDelete(sellerId);
-    if (!deletedSeller) {
-      throw new AppError("Seller not found", 404); 
-    }
-    return deletedSeller;
+    const sellers = await Seller.find({ userType: "seller" });
+    return sellers;
   } catch (error) {
-    throw new AppError("Error deleting seller: " + error.message, 500); 
+    throw new AppError(`Error fetching sellers: ${error.message}`, 500);
   }
 };
 
-// Get a seller by email
-module.exports.getSellerByEmail = async ({ email }) => {
+// ✅ Get a seller by ID
+module.exports.getSellerById = async (sellerId) => {
   try {
-    const seller = await Seller.findOne({ email });
-
-    if (!seller) {
-      throw new AppError("Seller not found", 404); 
-    }
+    const seller = await Seller.findOne({ _id: sellerId, userType: "seller" });
+    if (!seller) throw new AppError("Seller not found", 404);
 
     return seller;
   } catch (error) {
-    throw new AppError("Error fetching seller by email: " + error.message, 500); 
+    throw new AppError(`Error fetching seller: ${error.message}`, 500);
   }
 };
 
+
+
+// ✅ Update a seller
+module.exports.updateSeller = async (sellerId, updatedData, uploadedFile = []) => {
+  try {
+    const existingSeller = await Seller.findOne({ _id: sellerId, userType: "seller" });
+
+    if (!existingSeller) {
+      throw new AppError("Seller not found", 404);
+    }
+
+    // ✅ Handle Image Upload
+    const imageUpdate = await uploadUserImage(existingSeller.image?.fileId, uploadedFile);
+    if (imageUpdate) {
+      updatedData.image = imageUpdate;
+    }
+
+    // ✅ Update seller details
+    Object.assign(existingSeller, updatedData);
+    await existingSeller.save();
+
+    return existingSeller;
+  } catch (error) {
+    throw new AppError(`Error updating seller: ${error.message}`, 500);
+  }
+};
+
+// ✅ Delete a seller
+module.exports.deleteSeller = async (sellerId) => {
+  try {
+    const deletedSeller = await Seller.findOneAndDelete({ _id: sellerId, userType: "seller" });
+    if (!deletedSeller) throw new AppError("Seller not found", 404);
+
+    return deletedSeller;
+  } catch (error) {
+    throw new AppError(`Error deleting seller: ${error.message}`, 500);
+  }
+};

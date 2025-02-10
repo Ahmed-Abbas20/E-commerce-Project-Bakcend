@@ -48,16 +48,23 @@ const uniquePermissions = [
       }
     },
     {
-      effect: "allow",
-      resource: "sellers",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage sellers",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
+      "effect": "allow",
+      "resource": "sellers",
+      "action": ["create", "read", "update", "delete"],
+      "description": "Allows super admin and manager to manage sellers, and sellers to update their own profile",
+      "condition": {
+        "$or": [
+          { "role": { "IN": ["super_admin", "manager"] } },
+          { "requester.id": "params.sellerId" }
+        ]
       }
-    },
+    }
+    
+    
+    
+,    
+    
+    
     {
       effect: "allow",
       resource: "suppliers",

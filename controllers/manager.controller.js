@@ -1,66 +1,85 @@
 const express = require("express");
 const router = express.Router();
-const checkPermission  = require("../middlewares/authorization.middleware");
 const {
-  getManagers,
+  getAllManagers,
+  getManagerById,
   createManager,
   updateManager,
   deleteManager,
-  getManagerByEmail,
 } = require("../repos/manager.repo");
+const { AppError } = require("../utils/errorHandler");
 
-// Get all managers
-router.get("/", checkPermission("manager", "read"), async (req, res, next) => {
+
+// ✅ Create a new manager (Uses `createManager` from the repo)
+router.post("/", async (req, res, next) => {
   try {
-    const managers = await getManagers();
+    const { firstName, lastName, email, password, phone1, SSN, managerId } = req.body;
+
+    if (!firstName || !lastName || !email || !password || !phone1 || !SSN) {
+      return next(new AppError("All required fields must be provided", 400));
+    }
+
+    const newManager = await createManager({
+      firstName,
+      lastName,
+      email,
+      password,
+      phone1,
+      SSN,
+      managerId,
+    });
+
+    res.status(201).json({ success: true, data: newManager });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// ✅ Get all managers
+router.get("/", async (req, res, next) => {
+  try {
+    const managers = await getAllManagers();
     res.status(200).json({ success: true, data: managers });
   } catch (error) {
-    next(error);
+    return next(new AppError(error.message, 500));
   }
 });
 
-// Create a new manager (Only super_admin can create managers)
-router.post("/", checkPermission("manager", "create"), async (req, res, next) => {
+// ✅ Get a manager by ID
+router.get("/:managerId", async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password, phone1, managerId, SSN } = req.body;
-    const claims = await createManager({ firstName, lastName, email, password, phone1, managerId, SSN });
-    res.status(201).json({ success: true, claims });
+    const { managerId } = req.params;
+    const manager = await getManagerById(managerId);
+    res.status(200).json({ success: true, data: manager });
   } catch (error) {
-    next(error);
+    return next(new AppError(error.message, 500));
   }
 });
 
-// Update a manager (Only super_admin can update managers)
-router.put("/:managerId", checkPermission("manager", "update"), async (req, res, next) => {
+
+
+// ✅ Update a manager (Supports image upload)
+router.put("/:managerId", async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const updatedData = req.body;
-    const updatedManager = await updateManager(managerId, updatedData);
+    const uploadedFile = req.files?.image ? [req.files.image] : [];
+
+    const updatedManager = await updateManager(managerId, updatedData, uploadedFile);
     res.status(200).json({ success: true, data: updatedManager });
   } catch (error) {
-    next(error);
+    next(new AppError(error.message, 500));
   }
 });
 
-// Delete a manager (Only super_admin can delete managers)
-router.delete("/:managerId", checkPermission("manager", "delete"), async (req, res, next) => {
+// ✅ Delete a manager
+router.delete("/:managerId", async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const deletedManager = await deleteManager(managerId);
     res.status(200).json({ success: true, data: deletedManager });
   } catch (error) {
-    next(error);
-  }
-});
-
-// Get a manager by email
-router.get("/email", checkPermission("manager", "read"), async (req, res, next) => {
-  try {
-    const { email } = req.query;
-    const manager = await getManagerByEmail(email);
-    res.status(200).json({ success: true, data: manager });
-  } catch (error) {
-    next(error);
+    return next(new AppError(error.message, 500));
   }
 });
 

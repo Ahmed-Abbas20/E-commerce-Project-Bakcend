@@ -1,37 +1,61 @@
 const { signToken } = require("../utils/jwttoken.manager");
-const { createCustomer, getCustomerByEmail } = require("../services/user.service");
 const {AppError} = require("../utils/errorHandler"); // Import the AppError class
+const bcrypt = require("bcrypt");
+const { createCustomer } = require("../repos/customer.repo");
+const { createSeller } = require("../repos/seller.repo");
+const User = require("../models/base.model");
+
+
+
+
 
 // Register user
-const registerCustomer = async ({ firstName, lastName, email, password, phone1, userType = "customer", role }) => {
+const registerUser = async (userData) => {
   try {
-   
-    const claims = await createCustomer({ firstName, lastName, email, password, phone1, userType, role });
+    const { firstName, lastName, email, password, phone1, userType = "customer", companyName, companyRegistrationNumber, SSN } = userData;
 
     
-    const token = signToken({ claims });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    return { token };
+    let user;
+
+    if (userType === "seller") {
+      user = await createSeller({ firstName, lastName, email, phone1, password: hashedPassword, salt, companyName, companyRegistrationNumber, SSN });
+    } else {
+      user = await createCustomer({ firstName, lastName, email, phone1, password: hashedPassword, salt });
+    }
+
+    
+    const claims = {
+      sub: user._id,
+      email: user.email,
+      userType: user.userType,
+    };
+
+    return { token: signToken({ claims }) };
   } catch (error) {
-   
-    throw new AppError("Error registering user: " + error.message, 500);
+    throw new AppError(`Error registering user: ${error.message}`, 500);
   }
 };
 
+
 // Login user
-const loginCustomer = async ({ email, password }) => {
+const loginUser = async ({ email, password }) => {
   try {
-   
-    const user = await getCustomerByEmail({ email });
-
     
-    const isMatch = await user.comparePassword(password);
+    const user = await User.findOne({ email });
 
-    if (!isMatch) {
-      throw new AppError("Invalid email or password", 401); 
+    if (!user) {
+      throw new AppError("Invalid email or password", 401);
     }
 
-   
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      throw new AppError("Invalid email or password", 401);
+    }
+
     const claims = {
       sub: user._id,
       email: user.email,
@@ -43,12 +67,11 @@ const loginCustomer = async ({ email, password }) => {
 
     return { token };
   } catch (error) {
-    
     throw new AppError("Error logging in user: " + error.message, 500);
   }
 };
 
 module.exports = {
-  registerCustomer,
-  loginCustomer,
+  registerUser,
+  loginUser,
 };

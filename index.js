@@ -1,7 +1,11 @@
 const express = require("express");
 const morgan = require("morgan");
 const authController = require("./controllers/auth.controller");
-const usersController = require("./controllers/user.controller");
+const customersController = require("./controllers/customer.controller");
+const sellersController = require("./controllers/seller.controller");
+const managersController = require("./controllers/manager.controller");
+const clerksController = require("./controllers/clerk.controller");
+const cashiersController = require("./controllers/cashier.controller");
 const categoryController = require('./controllers/category.controller');
 const productController = require('./controllers/product.controller');
 const authenticationMiddleware = require("./middlewares/authentication.middleware");
@@ -17,6 +21,7 @@ const cors = require('cors');
 
 
 const app = express();
+
 
 app.use(
     fileUpload({
@@ -40,7 +45,11 @@ app.use(cors({
   
 
 app.use("/auth", authController);
-app.use("/users", [authenticationMiddleware,],usersController);
+app.use("/customers", [authenticationMiddleware,],customersController);
+app.use("/sellers", [authenticationMiddleware,],sellersController);
+app.use("/managers", [authenticationMiddleware,],managersController);
+app.use("/clerks", [authenticationMiddleware,],clerksController);
+app.use("/cashiers", [authenticationMiddleware,],cashiersController);
 
 app.use('/categories', [authenticationMiddleware],categoryController);
 app.use('/products', [authenticationMiddleware],productController);
