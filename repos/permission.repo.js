@@ -1,4 +1,4 @@
-const permissionModel = require("../models/permisssion.model");
+const permissionModel = require("../models/permission.model");
 const {AppError} = require("../utils/errorHandler");
 
 module.exports.createPermission = async (permission) => {
@@ -63,32 +63,31 @@ module.exports.getPermissions = async () => {
     }
   };
 
-  module.exports.getPermissionByResourceName = async (resource, role, action) => {
-    try {
-      // Find permission by resource and check if the role is in the 'IN' array of the condition
-      const permission = await permissionModel.findOne({
-        resource: resource, 
-        "condition.role.IN": { $in: [role] }, 
-        action: { $in: [action] }, 
-      });
+  module.exports.getPermissionByResourceName = async (resource, userRole, action, context) => {
+    console.log(`🛠️ Fetching permission for resource: ${resource}, role: ${userRole}, action: ${action}`);
+    console.log("🛠️ Evaluating Permission Context:", context);
   
-      
-      if (!permission) {
-       
-        throw new AppError(`Permission not found for ${role} to ${action} this ${resource}`, 403);
-      }
+    const sellerId = context.params?.sellerId; // ✅ Extract sellerId correctly
   
-     
-      return permission;
-      
-    } catch (error) {
-    
-      if (error.statusCode !== 403) {
-        throw new AppError("Error fetching permission: " + error.message, 500);
-      }
-      // If it’s a 403 error, let it pass
-      throw error;
+    const permission = await permissionModel.findOne({
+      resource,
+      action: { $in: [action] },
+      $or: [
+        { "condition.role.IN": { $in: [userRole] } },  // ✅ Match super_admin or manager
+        { "condition.requester.id": sellerId }  // ✅ Match seller updating their own profile
+      ]
+    });
+  
+    if (!permission) {
+      console.log("❌ No matching permission found!");
+      return null;
     }
+  
+    console.log("✅ Found Permission:", permission);
+    return permission;
   };
+  
+  
+  
   
           

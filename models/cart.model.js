@@ -3,7 +3,7 @@ const Product = require("./product.model"); // Import Product model
 const { AppError } = require("../utils/errorHandler"); // Import AppError
 
 const CartSchema = new mongoose.Schema({
-  customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   products: [
     {
       productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },

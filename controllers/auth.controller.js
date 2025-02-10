@@ -1,43 +1,27 @@
-const { loginCustomer, registerCustomer } = require("../services/auth.service");
+const { loginUser } = require("../services/auth.service");
 const router = require("express").Router();
-const { AppError } = require("../utils/errorHandler"); // Import the AppError class
-const {
-  validateUserRegistration,
-} = require("../middlewares/RegisterValidation.middleware");
+const { validateUserRegistration } = require("../middlewares/RegisterValidation.middleware");
+const { registerUser }= require("../services/auth.service");
 
 // Register Route
-router.post("/register/customer", validateUserRegistration, async (req, res, next) => {
+router.post("/register", validateUserRegistration, async (req, res, next) => {
   try {
-    const {
-      firstName,
-      lastName,
-      email,
-      password,
-      phone1,
-      userType = "customer",
-      guestCartId, // Add guestCartId to the request body
-    } = req.body;
-
-    const { token } = await registerCustomer({
-      firstName,
-      lastName,
-      email,
-      password,
-      phone1,
-      userType,
-      guestCartId, // Pass guestCartId to the registerCustomer function
-    });
-
+    const { token } = await registerUser(req.body);
     res.status(201).json({ success: true, token });
   } catch (error) {
     next(error);
   }
 });
+
+
+
+
+
 // Login Route
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const { token } = await loginCustomer({
+    const { token } = await loginUser({
       email,
       password,
     });

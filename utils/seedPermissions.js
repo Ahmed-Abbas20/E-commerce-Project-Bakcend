@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Permission = require("../models/permisssion.model");  
+const Permission = require("../models/permission.model");  
 
 const uniquePermissions = [
     // Super Admin Permissions
@@ -48,16 +48,23 @@ const uniquePermissions = [
       }
     },
     {
-      effect: "allow",
-      resource: "sellers",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage sellers",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
+      "effect": "allow",
+      "resource": "sellers",
+      "action": ["create", "read", "update", "delete"],
+      "description": "Allows super admin and manager to manage sellers, and sellers to update their own profile",
+      "condition": {
+        "$or": [
+          { "role": { "IN": ["super_admin", "manager"] } },
+          { "requester.id": "params.sellerId" }
+        ]
       }
-    },
+    }
+    
+    
+    
+,    
+    
+    
     {
       effect: "allow",
       resource: "suppliers",
@@ -255,12 +262,37 @@ const uniquePermissions = [
     },
     {
       effect: "allow",
-      resource: "staff",
+      resource: "clerk",
       action: ["create", "read", "update", "delete"],
       description: "Allows super admin to manage staff",
       condition: {
         role: {
           IN: ["super_admin", "manager"]
+
+        }
+      }
+    },
+    {
+      effect: "allow",
+      resource: "cashier",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin to manage staff",
+      condition: {
+        role: {
+          IN: ["super_admin", "manager"]
+        }
+      }
+    },
+    {
+      effect: "allow",
+      resource: "manager",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin to manage staff",
+      condition: {
+        role: {
+          IN: ["super_admin"]
+
+
         }
       }
     },
