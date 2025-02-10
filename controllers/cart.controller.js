@@ -11,16 +11,16 @@ const {
   emptyCart
 } = require("../services/cart.service");
 
-router.post("/add", checkPermission("cart", "update"), async (req, res, next) => {
+router.post("/add", async (req, res, next) => {
   try {
-    const { customerId, productId, quantity } = req.body;
+    const { userId, productId, quantity } = req.body;
 
     // Validate input
-    if (!customerId || !productId || !quantity) {
-      throw new AppError("Customer ID, product ID, and quantity are required", 400);
+    if (!userId || !productId || !quantity) {
+      throw new AppError("User ID, product ID, and quantity are required", 400);
     }
 
-    const cart = await addProductToCart(customerId, productId, quantity);
+    const cart = await addProductToCart(userId, productId, quantity);
     res.status(200).json({ success: true, data: cart });
   } catch (error) {
     next(error);
@@ -29,10 +29,10 @@ router.post("/add", checkPermission("cart", "update"), async (req, res, next) =>
 
 
 // Get cart by customer ID
-router.get("/:customerId", checkPermission("cart", "read"), async (req, res, next) => {
+router.get("/:userId", async (req, res, next) => {
   try {
-    const { customerId } = req.params;
-    const cart = await getCart(customerId);
+    const { userId } = req.params;
+    const cart = await getCart(userId);
     res.status(200).json({ success: true, data: cart });
   } catch (error) {
     next(error);
@@ -40,37 +40,37 @@ router.get("/:customerId", checkPermission("cart", "read"), async (req, res, nex
 });
 
 // Delete cart
-// router.delete("/:customerId", checkPermission("cart", "delete"), async (req, res, next) => {
+// router.delete("/:userId", checkPermission("cart", "delete"), async (req, res, next) => {
 //   try {
-//     const { customerId } = req.params;
-//     await deleteCart(customerId);
+//     const { userId } = req.params;
+//     await deleteCart(userId);
 //     res.status(204).send();
 //   } catch (error) {
 //     next(error);
 //   }
 // });
 
-router.delete("/empty", checkPermission("cart", "delete"), async (req, res, next) => {
+router.delete("/empty",  async (req, res, next) => {
   try {
-    const { customerId } = req.body;
+    const { userId } = req.body;
 
     // Validate input
-    if (!customerId) {
+    if (!userId) {
       throw new AppError("Customer ID is required", 400);
     }
 
-    const cart = await emptyCart(customerId);
+    const cart = await emptyCart(userId);
     res.status(200).json({ success: true, data: cart });
   } catch (error) {
     next(error);
   }
 });
 // Add product to cart
-router.post("/:customerId/add", checkPermission("cart", "update"), async (req, res, next) => {
+router.post("/:userId/add", async (req, res, next) => {
   try {
-    const { customerId } = req.params;
+    const { userId } = req.params;
     const { productId, requiredQty } = req.body;
-    const cart = await addProductToCart(customerId, productId, requiredQty);
+    const cart = await addProductToCart(userId, productId, requiredQty);
     res.status(200).json({ success: true, data: cart });
   } catch (error) {
     next(error);
@@ -78,11 +78,11 @@ router.post("/:customerId/add", checkPermission("cart", "update"), async (req, r
 });
 
 // Remove product from cart
-router.post("/:customerId/remove", checkPermission("cart", "update"), async (req, res, next) => {
+router.post("/:userId/remove", async (req, res, next) => {
   try {
-    const { customerId } = req.params;
+    const { userId } = req.params;
     const { productId } = req.body;
-    const cart = await removeProductFromCart(customerId, productId);
+    const cart = await removeProductFromCart(userId, productId);
     res.status(200).json({ success: true, data: cart });
   } catch (error) {
     next(error);
