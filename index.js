@@ -7,6 +7,7 @@ const productController = require('./controllers/product.controller');
 const authenticationMiddleware = require("./middlewares/authentication.middleware");
 const {  errorHandler } = require('./utils/errorHandler'); 
 const { notFound } = require('./utils/notFound'); 
+const cartController = require("./controllers/cart.controller");
 
 
 
@@ -24,6 +25,7 @@ app.use("/users", [authenticationMiddleware,],usersController);
 app.use('/categories', [authenticationMiddleware],categoryController);
 app.use('/products', [authenticationMiddleware],productController);
 
+app.use("/carts", [authenticationMiddleware], cartController);
 app.use(notFound);
 // Error handling
 app.use(errorHandler);

@@ -30,8 +30,6 @@ const checkPermission = (resource, action) => {
       if (!permission) {
         return next(new AppError(`You don't have permission to ${action} this ${resource}`, 403));
       }
-
-     
       next();
     } catch (error) {
      
