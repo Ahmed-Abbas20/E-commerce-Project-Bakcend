@@ -27,6 +27,7 @@ const userSchema = Joi.object({
     then: Joi.string().valid("super_admin", "clerk", "cashier", "manager").required(),
     otherwise: Joi.forbidden(), // Prevents role if userType is not staff
   }),
+  guestCartId:Joi.string().optional()
 });
 
 // Middleware for validating user registration
@@ -40,6 +41,5 @@ exports.validateUserRegistration = (req, res, next) => {
     err.details = messages;
     return next(err);
   }
-
   next();
 };

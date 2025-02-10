@@ -2,16 +2,17 @@ const express = require("express");
 const router = express.Router();
 const {
   getUsers,
-  getUserByEmail,
-  updateUser,
-  deleteUser,
+  getCustomerByEmail,
+  updateCustomer,
+  deleteCustomer,
+  getCustomer,
 } = require("../services/user.service");
 const {AppError} = require("../utils/errorHandler");  
 
 // Get all users
 router.get("/",async (req, res, next) => {
   try {
-    const users = await getUsers();
+    const users = await getCustomer();
     res.status(200).json({ success: true, data: users });
   } catch (error) {
    
@@ -23,7 +24,7 @@ router.get("/",async (req, res, next) => {
 router.get("/email", async (req, res, next) => {
   try {
     const { email } = req.query;
-    const user = await getUserByEmail({ email });
+    const user = await getCustomerByEmail({ email });
     res.status(200).json({ success: true, data: user });
   } catch (error) {
    
@@ -36,7 +37,7 @@ router.put("/:userId", async (req, res, next) => {
   try {
     const { userId } = req.params;
     const updatedData = req.body;
-    const updatedUser = await updateUser(userId, updatedData);
+    const updatedUser = await updateCustomer(userId, updatedData);
     res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
   
@@ -48,7 +49,7 @@ router.put("/:userId", async (req, res, next) => {
 router.delete("/:userId",async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const deletedUser = await deleteUser(userId);
+    const deletedUser = await deleteCustomer(userId);
     res.status(200).json({ success: true, data: deletedUser });
   } catch (error) {
     

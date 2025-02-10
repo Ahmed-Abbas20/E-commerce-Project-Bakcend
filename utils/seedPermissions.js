@@ -264,7 +264,19 @@ const uniquePermissions = [
         }
       }
     },
+    {
+      effect: "allow",
+      resource: "cart",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows customers to manage their cart",
+      condition: {
+        role: {
+          IN: ["customer","seller"],
+        },
+      },
+    },
   ];
+  
   
   
 

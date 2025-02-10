@@ -22,7 +22,9 @@ const PermissionSchema = new mongoose.Schema({
       "cus_orders",
       "supplier_orders",
       "category",
-      "staff"
+      "staff",
+      "cart",
+      
     ], 
   },
   action: {
