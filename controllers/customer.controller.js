@@ -11,12 +11,12 @@ const {
   addCustomerAddress,
 } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
-const { validateAddress } = require("../middlewares/addressValidation.midleware"); // Import the validation
+const { validateAddress } = require("../middlewares/addressValidation.midleware"); 
 
 
 router.post("/", async (req, res, next) => {
   try {
-    const { firstName, lastName, email, phone1, password, addresses = [] } = req.body; // ✅ Extract addresses
+    const { firstName, lastName, email, phone1, password, addresses = [] } = req.body; 
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -28,7 +28,7 @@ router.post("/", async (req, res, next) => {
       phone1,
       password: hashedPassword,
       salt,
-      addresses, // ✅ Pass addresses to createCustomer
+      addresses, 
     });
 
     res.status(201).json({ success: true, data: newCustomer });
@@ -48,7 +48,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-// ✅ Get a customer by ID
+//  Get a customer by ID
 router.get("/:customerId", async (req, res, next) => {
   try {
     const { customerId } = req.params;
@@ -58,7 +58,7 @@ router.get("/:customerId", async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 });
-// ✅ Get a customer's addresses
+//  Get a customer's addresses
 router.get("/:customerId/addresses", async (req, res, next) => {
   try {
     const { customerId } = req.params;
@@ -71,7 +71,7 @@ router.get("/:customerId/addresses", async (req, res, next) => {
 
 
 
-// ✅ Update a customer
+//  Update a customer
 router.put("/:customerId", async (req, res, next) => {
   try {
     const { customerId } = req.params;
@@ -86,7 +86,7 @@ router.put("/:customerId", async (req, res, next) => {
 });
 
 
-// ✅ Add a new address to a customer
+//  Add a new address to a customer
 router.post("/:customerId/addresses", validateAddress, async (req, res, next) => {
   try {
     const { customerId } = req.params;
@@ -102,7 +102,7 @@ router.post("/:customerId/addresses", validateAddress, async (req, res, next) =>
 
 
 
-// ✅ Delete a customer
+//  Delete a customer
 router.delete("/:customerId", async (req, res, next) => {
   try {
     const { customerId } = req.params;
