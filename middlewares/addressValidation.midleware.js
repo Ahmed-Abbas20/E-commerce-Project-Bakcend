@@ -4,13 +4,13 @@ const { AppError } = require("../utils/errorHandler");
 const addressSchema = Joi.object({
     city: Joi.string().trim().min(2).max(100).required(),
     street: Joi.string().trim().min(2).max(255).required(),
-    gov: Joi.string().trim().min(2).max(100).required(), // Governorate / State
+    gov: Joi.string().trim().min(2).max(100).required(), 
     zipCode: Joi.string()
       .trim()
-      .pattern(/^\d{4,10}$/, "valid zip code") // Zip code must be between 4-10 digits
+      .pattern(/^\d{4,10}$/, "valid zip code") 
       .required(),
   });
-// ✅ Middleware for validating new address
+
 exports.validateAddress = (req, res, next) => {
     const { error } = addressSchema.validate(req.body, { abortEarly: false });
   

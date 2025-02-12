@@ -6,12 +6,12 @@ const DEFAULT_IMAGE = {
   filePath: "https://yourcdn.com/default-profile.jpg",
 };
 
-// ✅ Address Schema with Zip Code & Gov
+
 const AddressSchema = new mongoose.Schema({
   city: { type: String, required: true },
   street: { type: String, required: true },
-  gov: { type: String, required: true }, // Governorate / State
-  zipCode: { type: String, required: true }, // Postal / Zip Code
+  gov: { type: String, required: true }, 
+  zipCode: { type: String, required: true }, 
   
 });
 
@@ -34,7 +34,7 @@ const UserBaseSchema = new mongoose.Schema(
     },
     salt: { type: String, required: true },
 
-    // ✅ Address List (Optional)
+   
     addresses: { type: [AddressSchema], default: [] },
   },
   { discriminatorKey: "userType", timestamps: true }
@@ -45,6 +45,6 @@ UserBaseSchema.methods.comparePassword = async function (enteredPassword) {
   return hashedPassword === this.password;
 };
 
-// ✅ Export the User model
+
 const User = mongoose.model("User", UserBaseSchema);
 module.exports = User;

@@ -12,8 +12,8 @@ module.exports.createCustomer = async ({
   phone1,
   password,
   salt,
-  addresses = [], // ✅ Optional addresses, default empty array
-  image, // ✅ Optional image object
+  addresses = [], 
+  image, 
 }) => {
   try {
     const customer = new User({
@@ -24,8 +24,8 @@ module.exports.createCustomer = async ({
       password,
       salt,
       userType: "customer",
-      addresses: Array.isArray(addresses) ? addresses : [], // ✅ Ensures valid array
-      image: image || undefined, // ✅ Supports optional image
+      addresses: Array.isArray(addresses) ? addresses : [], 
+      image: image || undefined, 
     });
 
     await customer.save();
@@ -36,7 +36,7 @@ module.exports.createCustomer = async ({
 };
 
 
-// ✅ Get all customers
+//  Get all customers
 module.exports.getAllCustomers = async () => {
   try {
     const customers = await User.find({ userType: "customer" });
@@ -46,7 +46,7 @@ module.exports.getAllCustomers = async () => {
   }
 };
 
-// ✅ Get a customer by ID
+//  Get a customer by ID
 module.exports.getCustomerById = async (customerId) => {
   try {
     const customer = await User.findOne({ _id: customerId, userType: "customer" });
@@ -59,8 +59,7 @@ module.exports.getCustomerById = async (customerId) => {
 };
 
 
-
-// ✅ Update a customer
+//  Update a customer
 module.exports.updateCustomer = async (customerId, updatedData, uploadedFile = []) => {
   try {
     const existingCustomer = await User.findOne({ _id: customerId, userType: "customer" });
@@ -83,12 +82,12 @@ module.exports.updateCustomer = async (customerId, updatedData, uploadedFile = [
   }
 };
 
-// ✅ Get a customer's addresses
+//  Get a customer's addresses
 module.exports.getCustomerAddresses = async (customerId) => {
   try {
     const customer = await User.findOne(
       { _id: customerId, userType: "customer" },
-      { addresses: 1, _id: 0 } // ✅ Only return addresses field
+      { addresses: 1, _id: 0 } 
     );
 
     if (!customer) throw new AppError("Customer not found", 404);
@@ -101,7 +100,7 @@ module.exports.getCustomerAddresses = async (customerId) => {
 
 
 
-// ✅ Add a new address to a customer
+//  Add a new address to a customer
 module.exports.addCustomerAddress = async (customerId, newAddress) => {
   try {
     const customer = await User.findOne({ _id: customerId, userType: "customer" });
@@ -110,7 +109,7 @@ module.exports.addCustomerAddress = async (customerId, newAddress) => {
       throw new AppError("Customer not found", 404);
     }
 
-    // ✅ Add new address to the addresses array
+   
     customer.addresses.push(newAddress);
 
     await customer.save();
@@ -122,7 +121,7 @@ module.exports.addCustomerAddress = async (customerId, newAddress) => {
 };
 
 
-// ✅ Delete a customer
+//  Delete a customer
 module.exports.deleteCustomer = async (customerId) => {
   try {
     const deletedCustomer = await User.findOneAndDelete({ _id: customerId, userType: "customer" });
