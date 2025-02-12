@@ -3,8 +3,17 @@ const bcrypt = require("bcrypt");
 
 const DEFAULT_IMAGE = {
   fileId: "default-file-id",
-  filePath: "https://yourcdn.com/default-profile.jpg" // Replace with your actual default image URL
+  filePath: "https://yourcdn.com/default-profile.jpg",
 };
+
+
+const AddressSchema = new mongoose.Schema({
+  city: { type: String, required: true },
+  street: { type: String, required: true },
+  gov: { type: String, required: true }, 
+  zipCode: { type: String, required: true }, 
+  
+});
 
 const UserBaseSchema = new mongoose.Schema(
   {
@@ -24,6 +33,9 @@ const UserBaseSchema = new mongoose.Schema(
       filePath: { type: String, default: DEFAULT_IMAGE.filePath },
     },
     salt: { type: String, required: true },
+
+   
+    addresses: { type: [AddressSchema], default: [] },
   },
   { discriminatorKey: "userType", timestamps: true }
 );
@@ -33,6 +45,6 @@ UserBaseSchema.methods.comparePassword = async function (enteredPassword) {
   return hashedPassword === this.password;
 };
 
-// ✅ Export the User model
+
 const User = mongoose.model("User", UserBaseSchema);
 module.exports = User;

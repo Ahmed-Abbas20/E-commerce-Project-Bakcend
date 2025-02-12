@@ -2,12 +2,32 @@ const mongoose = require("mongoose");
 const Permission = require("../models/permission.model");  
 
 const uniquePermissions = [
-    // Super Admin Permissions
+    // Super Admin Restrictions
+    {
+      effect: "deny",
+      resource: "super_admin",
+      action: ["create", "read", "update", "delete"],
+      description: "Prevents anyone from making CRUD operations on super_admin",
+      condition: {}
+    },
+    
+    // Super Admin Permissions (excluding super_admin CRUD)
     {
       effect: "allow",
       resource: "managers",
       action: ["create", "read", "update", "delete"],
       description: "Allows super admin to manage managers",
+      condition: {
+        role: {
+          IN: ["super_admin"] 
+        }
+      }
+    },
+    {
+      effect: "allow",
+      resource: "clerks",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin and managers to manage clerks",
       condition: {
         role: {
           IN: ["super_admin", "manager"] 
@@ -18,7 +38,7 @@ const uniquePermissions = [
       effect: "allow",
       resource: "cashiers",
       action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage cashiers",
+      description: "Allows super admin and managers to manage cashiers",
       condition: {
         role: {
           IN: ["super_admin", "manager"] 
@@ -27,117 +47,46 @@ const uniquePermissions = [
     },
     {
       effect: "allow",
-      resource: "customers",
+      resource: "sellers",
       action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage customers",
+      description: "Allows super admin and managers to manage sellers",
       condition: {
         role: {
           IN: ["super_admin", "manager"] 
         }
       }
     },
+    {
+      effect: "deny",
+      resource: "managers",
+      action: ["update"],
+      description: "Prevents managers from updating other managers or super admins",
+      condition: {
+        role: {
+          IN: ["manager"]
+        }
+      }
+    },
+    
+    // Product Management
     {
       effect: "allow",
       resource: "products",
       action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage products",
+      description: "Allows super admin and managers to manage products",
       condition: {
         role: {
           IN: ["super_admin", "manager"] 
         }
       }
     },
-    {
-      "effect": "allow",
-      "resource": "sellers",
-      "action": ["create", "read", "update", "delete"],
-      "description": "Allows super admin and manager to manage sellers, and sellers to update their own profile",
-      "condition": {
-        "$or": [
-          { "role": { "IN": ["super_admin", "manager"] } },
-          { "requester.id": "params.sellerId" }
-        ]
-      }
-    }
     
-    
-    
-,    
-    
-    
-    {
-      effect: "allow",
-      resource: "suppliers",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage suppliers",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "seller_inventory",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage seller inventories",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "supplier_inventory",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage supplier inventories",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "cus_orders",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage customer orders",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "supplier_orders",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage supplier orders",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "category",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage product categories",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-  
     // Clerk Permissions
     {
       effect: "allow",
       resource: "products",
       action: ["read"],
-      description: "Allows clerk to read products",
+      description: "Allows clerks to read products",
       condition: {
         role: {
           IN: ["clerk", "manager"]
@@ -148,33 +97,33 @@ const uniquePermissions = [
       effect: "allow",
       resource: "cus_orders",
       action: ["read", "update"],
-      description: "Allows clerk to read and update customer orders",
+      description: "Allows clerks to read and update customer orders",
       condition: {
         role: {
           IN: ["clerk", "manager"]
         }
       }
     },
-  
+    
     // Cashier Permissions
     {
       effect: "allow",
       resource: "cus_orders",
       action: ["read", "update"],
-      description: "Allows cashier to read and update customer orders",
+      description: "Allows cashiers to read and update customer orders",
       condition: {
         role: {
           IN: ["cashier"]
         }
       }
     },
-  
+    
     // Seller Permissions
     {
       effect: "allow",
       resource: "products",
-      action: ["create", "read", "update", "delete"], 
-      description: "Allows seller to manage his own products",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows sellers to manage their own products",
       condition: {
         role: {
           IN: ["seller"]
@@ -185,7 +134,7 @@ const uniquePermissions = [
       effect: "deny",
       resource: "products",
       action: ["create", "update", "delete"],
-      description: "Restricts seller from managing other sellers' products",
+      description: "Restricts sellers from managing other sellers' products",
       condition: {
         role: {
           IN: ["seller"]
@@ -196,45 +145,23 @@ const uniquePermissions = [
       effect: "allow",
       resource: "category",
       action: ["read"],
-      description: "Allows seller to read product categories",
+      description: "Allows sellers to read product categories",
       condition: {
         role: {
           IN: ["seller", "manager"]
         }
       }
     },
-    {
-      effect: "allow",
-      resource: "cus_orders",
-      action: ["read", "delete"],
-      description: "Allows seller to read and delete their customer orders",
-      condition: {
-        role: {
-          IN: ["seller"]
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "supplier_orders",
-      action: ["read"],
-      description: "Allows seller to read supplier orders",
-      condition: {
-        role: {
-          IN: ["seller"]
-        }
-      }
-    },
-  
+    
     // Customer Permissions
     {
       effect: "allow",
       resource: "products",
       action: ["read"],
-      description: "Allows customer to read products",
+      description: "Allows customers to read products",
       condition: {
         role: {
-          IN: ["customer", "seller"]
+          IN: ["customer"]
         }
       }
     },
@@ -242,10 +169,10 @@ const uniquePermissions = [
       effect: "allow",
       resource: "cus_orders",
       action: ["read"],
-      description: "Allows customer to read their orders",
+      description: "Allows customers to read their orders",
       condition: {
         role: {
-          IN: ["customer", "seller"]
+          IN: ["customer"]
         }
       }
     },
@@ -253,13 +180,21 @@ const uniquePermissions = [
       effect: "allow",
       resource: "category",
       action: ["read"],
-      description: "Allows customer to read product categories",
+      description: "Allows customers to read product categories",
       condition: {
         role: {
-          IN: ["customer", "seller"]
+          IN: ["customer"]
         }
       }
     },
+
+    // Self-Update Permissions
+    { effect: "allow", resource: "clerks", action: ["read", "update"], description: "Allows clerks to read and update their own profile", condition: { role: { IN: ["clerk"] }, self: true } },
+    { effect: "allow", resource: "managers", action: ["read", "update"], description: "Allows managers to read and update their own profile", condition: { role: { IN: ["manager"] }, self: true } },
+    { effect: "allow", resource: "cashiers", action: ["read", "update"], description: "Allows cashiers to read and update their own profile", condition: { role: { IN: ["cashier"] }, self: true } },
+    { effect: "allow", resource: "sellers", action: ["read", "update"], description: "Allows sellers to read and update their own profile", condition: { role: { IN: ["seller"] }, self: true } },
+    { effect: "allow", resource: "customers", action: ["read", "update"], description: "Allows customers to read and update their own profile", condition: { role: { IN: ["customer"] }, self: true } },
+
     {
       effect: "allow",
       resource: "clerk",
@@ -312,23 +247,23 @@ const uniquePermissions = [
   
   
 
+
 // Function to seed permissions
 async function seedPermissions() {
     try {
-      const permissionExists = await Permission.countDocuments();  
-  
-      if (permissionExists > 0) {
-        console.log("Permissions already seeded, skipping...");
-        return;  
-      }
-  
-      
-      await Permission.insertMany(uniquePermissions);
-  
-      console.log("Permissions successfully seeded!");
+        const permissionExists = await Permission.countDocuments();  
+
+        if (permissionExists > 0) {
+            console.log("Permissions already seeded, skipping...");
+            return;  
+        }
+
+        await Permission.insertMany(uniquePermissions);
+
+        console.log("Permissions successfully seeded!");
     } catch (error) {
-      console.error("Error seeding permissions:", error);
+        console.error("Error seeding permissions:", error);
     }
-  }
-  
-  module.exports = seedPermissions;
+}
+
+module.exports = seedPermissions;

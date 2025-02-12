@@ -8,9 +8,9 @@ const {
   deleteCashier,
 } = require("../repos/cashier.repo");
 const { AppError } = require("../utils/errorHandler");
-
+const checkPermission = require("../middlewares/authorization.middleware"); 
 // ✅ Create a new cashier (Uses `createCashier` from the repo)
-router.post("/", async (req, res, next) => {
+router.post("/", checkPermission("cashiers","create"),async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone1, SSN, managerId } = req.body;
 
@@ -35,7 +35,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // ✅ Get all cashiers
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("cashiers","read"),async (req, res, next) => {
   try {
     const cashiers = await getAllCashiers();
     res.status(200).json({ success: true, data: cashiers });
@@ -45,7 +45,7 @@ router.get("/", async (req, res, next) => {
 });
 
 // ✅ Get a cashier by ID
-router.get("/:cashierId", async (req, res, next) => {
+router.get("/:cashierId", checkPermission("cashiers","read"),async (req, res, next) => {
   try {
     const { cashierId } = req.params;
     const cashier = await getCashierById(cashierId);
@@ -56,7 +56,7 @@ router.get("/:cashierId", async (req, res, next) => {
 });
 
 // ✅ Update a cashier (Supports image upload)
-router.put("/:cashierId", async (req, res, next) => {
+router.put("/:cashierId",checkPermission("cashiers","update"), async (req, res, next) => {
   try {
     const { cashierId } = req.params;
     const updatedData = req.body;
@@ -70,7 +70,7 @@ router.put("/:cashierId", async (req, res, next) => {
 });
 
 // ✅ Delete a cashier
-router.delete("/:cashierId", async (req, res, next) => {
+router.delete("/:cashierId", checkPermission("cashiers","delete"),async (req, res, next) => {
   try {
     const { cashierId } = req.params;
     const deletedCashier = await deleteCashier(cashierId);
