@@ -187,14 +187,66 @@ const uniquePermissions = [
         }
       }
     },
-    
+
     // Self-Update Permissions
     { effect: "allow", resource: "clerks", action: ["read", "update"], description: "Allows clerks to read and update their own profile", condition: { role: { IN: ["clerk"] }, self: true } },
     { effect: "allow", resource: "managers", action: ["read", "update"], description: "Allows managers to read and update their own profile", condition: { role: { IN: ["manager"] }, self: true } },
     { effect: "allow", resource: "cashiers", action: ["read", "update"], description: "Allows cashiers to read and update their own profile", condition: { role: { IN: ["cashier"] }, self: true } },
     { effect: "allow", resource: "sellers", action: ["read", "update"], description: "Allows sellers to read and update their own profile", condition: { role: { IN: ["seller"] }, self: true } },
     { effect: "allow", resource: "customers", action: ["read", "update"], description: "Allows customers to read and update their own profile", condition: { role: { IN: ["customer"] }, self: true } }
-];
+
+    {
+      effect: "allow",
+      resource: "clerk",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin to manage staff",
+      condition: {
+        role: {
+          IN: ["super_admin", "manager"]
+
+        }
+      }
+    },
+    {
+      effect: "allow",
+      resource: "cashier",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin to manage staff",
+      condition: {
+        role: {
+          IN: ["super_admin", "manager"]
+        }
+      }
+    },
+    {
+      effect: "allow",
+      resource: "manager",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows super admin to manage staff",
+      condition: {
+        role: {
+          IN: ["super_admin"]
+
+
+        }
+      }
+    },
+    {
+      effect: "allow",
+      resource: "cart",
+      action: ["create", "read", "update", "delete"],
+      description: "Allows customers to manage their cart",
+      condition: {
+        role: {
+          IN: ["customer","seller"],
+        },
+      },
+    },
+  ];
+  
+  
+  
+
 
 // Function to seed permissions
 async function seedPermissions() {

@@ -26,7 +26,9 @@ const PermissionSchema = new mongoose.Schema(
         "clerk",
         "cashier",
         "manager",
-        "super_admin"
+        "super_admin",
+        "cart"
+
       ],
     },
     action: {

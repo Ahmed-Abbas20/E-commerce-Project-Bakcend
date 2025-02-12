@@ -4,6 +4,8 @@ const bcrypt = require("bcrypt");
 const { createCustomer } = require("../repos/customer.repo");
 const { createSeller } = require("../repos/seller.repo");
 const User = require("../models/base.model");
+const Cart = require("../models/cart.model");
+
 
 
 
@@ -12,7 +14,8 @@ const User = require("../models/base.model");
 // Register user
 const registerUser = async (userData) => {
   try {
-    const { firstName, lastName, email, password, phone1, userType = "customer", companyName, companyRegistrationNumber, SSN } = userData;
+    const { firstName, lastName, email, password, phone1, userType = "customer", companyName, 
+      companyRegistrationNumber, SSN ,guestCartId} = userData;
 
     
     const salt = await bcrypt.genSalt(10);
@@ -21,16 +24,47 @@ const registerUser = async (userData) => {
     let user;
 
     if (userType === "seller") {
-      user = await createSeller({ firstName, lastName, email, phone1, password: hashedPassword, salt, companyName, companyRegistrationNumber, SSN });
+      user = await createSeller({ firstName, lastName, email, phone1, password: hashedPassword, salt,
+         companyName, companyRegistrationNumber, SSN });
     } else {
       user = await createCustomer({ firstName, lastName, email, phone1, password: hashedPassword, salt });
     }
 
-    
+    ////////////////////
+
+    let cart;
+
+    // Check if a guest cart ID was provided
+    if (guestCartId) {
+      // Find the guest cart
+      const guestCart = await Cart.findById(guestCartId);
+      if (guestCart) {
+        // Create a new cart for the customer and transfer products from the guest cart
+        cart = new Cart({
+          userId: user._id,
+          products: guestCart.products, // Transfer products
+        });
+        await cart.save();
+
+        // Delete the guest cart (optional)
+        await Cart.findByIdAndDelete(guestCartId);
+      } else {
+        // If the guest cart doesn't exist, create an empty cart
+        cart = new Cart({ userId: user._id, products: [] });
+        await cart.save();
+      }
+    } else {
+      // If no guest cart ID was provided, create an empty cart
+      cart = new Cart({ userId: user._id, products: [] });
+      await cart.save();
+    }
+////////////////////
+
     const claims = {
       sub: user._id,
       email: user.email,
       userType: user.userType,
+      cartId: cart._id,
     };
 
     return { token: signToken({ claims }) };
