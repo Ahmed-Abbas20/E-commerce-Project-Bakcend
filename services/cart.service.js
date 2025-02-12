@@ -22,11 +22,36 @@ exports.createOrUpdateCart = async (userId, products) => {
 // Get cart by customer ID
 exports.getCart = async (userId) => {
   try {
+    // Fetch the cart
     const cart = await getCartByUserId(userId);
     if (!cart) {
       throw new AppError("Cart not found", 404);
     }
-    return cart;
+
+    // Array to store changes for products with insufficient stock or unavailability
+    const changes = [];
+
+    // Validate each product in the cart
+    for (const item of cart.products) {
+      const product = await Product.findById(item.productId);
+
+      if (!product) {
+        // Product is no longer available
+        changes.push({
+          productName:product?.name || "Unknown product", // If product is deleted, we don't have a name
+          status: "Product no longer available",
+        });
+      } else if (product.quantity < item.quantity) {
+        // Product quantity in stock is less than the quantity in the cart
+        changes.push({
+          productName: product.name,
+          status: `Only ${product.quantity} units available (requested ${item.quantity})`,
+        });
+      }
+    }
+
+    // Return the cart and the changes (if any)
+    return { cart, changes };
   } catch (error) {
     throw new AppError("Error fetching cart: " + error.message, 500);
   }
