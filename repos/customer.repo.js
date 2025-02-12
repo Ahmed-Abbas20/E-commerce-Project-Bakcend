@@ -3,7 +3,18 @@ const { uploadUserImage } = require("../services/userImageUpload.service");
 const { AppError } = require("../utils/errorHandler");
 
 // ✅ Create a new customer
-module.exports.createCustomer = async ({ firstName, lastName, email, phone1, password, salt }) => {
+
+
+module.exports.createCustomer = async ({
+  firstName,
+  lastName,
+  email,
+  phone1,
+  password,
+  salt,
+  addresses = [], // ✅ Optional addresses, default empty array
+  image, // ✅ Optional image object
+}) => {
   try {
     const customer = new User({
       firstName,
@@ -13,6 +24,8 @@ module.exports.createCustomer = async ({ firstName, lastName, email, phone1, pas
       password,
       salt,
       userType: "customer",
+      addresses: Array.isArray(addresses) ? addresses : [], // ✅ Ensures valid array
+      image: image || undefined, // ✅ Supports optional image
     });
 
     await customer.save();
@@ -21,6 +34,7 @@ module.exports.createCustomer = async ({ firstName, lastName, email, phone1, pas
     throw new AppError(`Error creating customer: ${error.message}`, 500);
   }
 };
+
 
 // ✅ Get all customers
 module.exports.getAllCustomers = async () => {
@@ -68,6 +82,45 @@ module.exports.updateCustomer = async (customerId, updatedData, uploadedFile = [
     throw new AppError(`Error updating customer: ${error.message}`, 500);
   }
 };
+
+// ✅ Get a customer's addresses
+module.exports.getCustomerAddresses = async (customerId) => {
+  try {
+    const customer = await User.findOne(
+      { _id: customerId, userType: "customer" },
+      { addresses: 1, _id: 0 } // ✅ Only return addresses field
+    );
+
+    if (!customer) throw new AppError("Customer not found", 404);
+
+    return customer.addresses;
+  } catch (error) {
+    throw new AppError(`Error fetching customer addresses: ${error.message}`, 500);
+  }
+};
+
+
+
+// ✅ Add a new address to a customer
+module.exports.addCustomerAddress = async (customerId, newAddress) => {
+  try {
+    const customer = await User.findOne({ _id: customerId, userType: "customer" });
+
+    if (!customer) {
+      throw new AppError("Customer not found", 404);
+    }
+
+    // ✅ Add new address to the addresses array
+    customer.addresses.push(newAddress);
+
+    await customer.save();
+
+    return customer.addresses; // Return updated addresses
+  } catch (error) {
+    throw new AppError(`Error adding address: ${error.message}`, 500);
+  }
+};
+
 
 // ✅ Delete a customer
 module.exports.deleteCustomer = async (customerId) => {

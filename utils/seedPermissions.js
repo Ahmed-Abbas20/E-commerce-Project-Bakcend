@@ -193,7 +193,7 @@ const uniquePermissions = [
     { effect: "allow", resource: "managers", action: ["read", "update"], description: "Allows managers to read and update their own profile", condition: { role: { IN: ["manager"] }, self: true } },
     { effect: "allow", resource: "cashiers", action: ["read", "update"], description: "Allows cashiers to read and update their own profile", condition: { role: { IN: ["cashier"] }, self: true } },
     { effect: "allow", resource: "sellers", action: ["read", "update"], description: "Allows sellers to read and update their own profile", condition: { role: { IN: ["seller"] }, self: true } },
-    { effect: "allow", resource: "customers", action: ["read", "update"], description: "Allows customers to read and update their own profile", condition: { role: { IN: ["customer"] }, self: true } }
+    { effect: "allow", resource: "customers", action: ["read", "update"], description: "Allows customers to read and update their own profile", condition: { role: { IN: ["customer"] }, self: true } },
 
     {
       effect: "allow",

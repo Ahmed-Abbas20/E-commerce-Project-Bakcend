@@ -3,8 +3,17 @@ const bcrypt = require("bcrypt");
 
 const DEFAULT_IMAGE = {
   fileId: "default-file-id",
-  filePath: "https://yourcdn.com/default-profile.jpg" // Replace with your actual default image URL
+  filePath: "https://yourcdn.com/default-profile.jpg",
 };
+
+// ✅ Address Schema with Zip Code & Gov
+const AddressSchema = new mongoose.Schema({
+  city: { type: String, required: true },
+  street: { type: String, required: true },
+  gov: { type: String, required: true }, // Governorate / State
+  zipCode: { type: String, required: true }, // Postal / Zip Code
+  
+});
 
 const UserBaseSchema = new mongoose.Schema(
   {
@@ -24,6 +33,9 @@ const UserBaseSchema = new mongoose.Schema(
       filePath: { type: String, default: DEFAULT_IMAGE.filePath },
     },
     salt: { type: String, required: true },
+
+    // ✅ Address List (Optional)
+    addresses: { type: [AddressSchema], default: [] },
   },
   { discriminatorKey: "userType", timestamps: true }
 );
