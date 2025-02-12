@@ -18,6 +18,13 @@ const userSchema = Joi.object({
   phone1: Joi.string()
     .pattern(/^(010|011|012|015)\d{8}$/, "Egyptian phone number")
     .required(),
+    // terms: Joi.boolean()
+    // .valid(true)
+    // .required()
+    // .messages({
+    //   'any.only': 'You must accept the terms and conditions',
+    //   'any.required': 'Terms acceptance is required'
+    // }),
   userType: Joi.string().valid("staff", "customer", "seller").default("customer"),
 
   // ✅ Staff-specific validation
@@ -56,6 +63,7 @@ const userSchema = Joi.object({
     then: Joi.string().trim().required(),
     otherwise: Joi.forbidden(),
   }),
+  guestCartId:Joi.string().optional()
 });
 
 // ✅ Middleware for validating user registration
@@ -65,6 +73,5 @@ exports.validateUserRegistration = (req, res, next) => {
   if (error) {
     return next(new AppError(error.details.map(detail => detail.message).join("; "), 400));
   }
-
   next();
 };
