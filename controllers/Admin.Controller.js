@@ -1,29 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const {
-  processRequest,
-  getPendingRequests
-} = require('../services/sellerRequest.service');
+const sellerRequestService = require('../services/SellerReq.service');
 
 
-router.get('/requests', async (req, res, next) => {
+// Get all pending requests
+router.get('/requests', /*isAdmin or manager*/ async (req, res, next) => {
   try {
-    const requests = await getPendingRequests();
+    const requests = await sellerRequestService.getPendingRequests(); //git all requests from the sellers that their status are pending in the admin page
     res.json({ status: 'success', data: requests });
   } catch (error) {
     next(error);
   }
 });
 
-router.patch('/requests/:id', async (req, res, next) => {
+// Process request (approve/reject)
+router.put('/requests/:requestId', /*isAdmin or manager*/ async (req, res, next) => {
   try {
-    const request = await processRequest(
-      req.params.id,
-      req.user._id,
-      req.body.action,
-      req.body.reason
+    const { action, rejectionReason } = req.body; //action --> approve or reject(reject reason)
+    const processedRequest = await sellerRequestService.processSellerRequest(
+      req.params.requestId, //the id of the request
+      action, //approve or rejected
+      req.user._id, //processed by
+      rejectionReason // incase reject action
     );
-    res.json({ status: 'success', data: request });
+    res.json({ status: 'success', data: processedRequest });
   } catch (error) {
     next(error);
   }

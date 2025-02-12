@@ -1,19 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const {
-  createSellerRequest
-} = require('../services/sellerRequest.service');
-const { validateRequest, productRequestSchema } = require('../middlewares/productvalidate.middleware');
+const sellerRequestService = require('../services/SellerReq.service');
+const { validateRequest } = require('../middlewares/productvalidate.middleware');
 
+const { productRequestSchema } = require('../middlewares/productvalidate.middleware');
 
-router.post('/requests', 
+// Create new request
+router.post('/',
   validateRequest(productRequestSchema),
   async (req, res, next) => {
     try {
-      const request = await createSellerRequest(req.user._id, req.body);
+      const requestData = {
+        operationType: req.body.operationType,
+        productData: req.body.productData,
+        product: req.body.product,
+        images: req.body.images || []
+      };
+      
+      const newRequest = await sellerRequestService.createSellerRequest(
+        req.user._id,
+        requestData
+      );
+      
       res.status(201).json({
         status: 'success',
-        data: request
+        data: newRequest
       });
     } catch (error) {
       next(error);
@@ -21,17 +32,38 @@ router.post('/requests',
   }
 );
 
-router.get('/requests', async (req, res, next) => {
-  try {
-    const requests = await getSellerRequests(req.user._id);
-    res.json({ status: 'success', data: requests });
-  } catch (error) {
-    next(error);
+// Update existing request
+router.put('/requests/:requestId',
+  
+  validateRequest(productRequestSchema),
+  async (req, res, next) => {
+    try {
+      const updatedRequest = await sellerRequestService.updateSellerRequest(
+        req.user._id,
+        req.params.requestId,
+        req.body
+      );
+      res.json({ status: 'success', data: updatedRequest });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-async function getSellerRequests(sellerId) {
-  // Implementation to get seller's requests
-}
+// Delete request
+router.delete('/requests/:requestId',
+  
+  async (req, res, next) => {
+    try {
+      const result = await sellerRequestService.deleteSellerRequest(
+        req.user._id,
+        req.params.requestId
+      );
+      res.json({ status: 'success', data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = router;

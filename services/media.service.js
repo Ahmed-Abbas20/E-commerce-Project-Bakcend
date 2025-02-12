@@ -134,4 +134,4 @@ async function deleteProductImages(imageFileIds) {
 
 
 
-module.exports = { uploadImages ,deleteProductImages};
+module.exports = { uploadImages ,deleteProductImages}; 
