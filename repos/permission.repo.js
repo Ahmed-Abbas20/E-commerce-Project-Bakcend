@@ -63,29 +63,48 @@ module.exports.getPermissions = async () => {
     }
   };
 
-  module.exports.getPermissionByResourceName = async (resource, userRole, action, context) => {
-    console.log(`🛠️ Fetching permission for resource: ${resource}, role: ${userRole}, action: ${action}`);
-    console.log("🛠️ Evaluating Permission Context:", context);
+  module.exports.getPermissionByResourceName = async (resource, role, action, userId, paramsId) => {
+    try {
+      // 🚫 Check if there's a DENY rule first
+      const denyPermission = await permissionModel.findOne({
+        resource: resource,
+        effect: "deny",
+        "condition.role.IN": { $in: [role] },
+        action: { $in: [action] },
+      });
   
-    const sellerId = context.params?.sellerId; // ✅ Extract sellerId correctly
+      if (denyPermission) {
+        throw new AppError(`Access denied: ${role} cannot ${action} ${resource}`, 403);
+      }
   
-    const permission = await permissionModel.findOne({
-      resource,
-      action: { $in: [action] },
-      $or: [
-        { "condition.role.IN": { $in: [userRole] } },  // ✅ Match super_admin or manager
-        { "condition.requester.id": sellerId }  // ✅ Match seller updating their own profile
-      ]
-    });
+      // ✅ Check if there's an ALLOW rule
+      let allowPermission = await permissionModel.findOne({
+        resource: resource,
+        effect: "allow",
+        "condition.role.IN": { $in: [role] },
+        action: { $in: [action] },
+      });
   
-    if (!permission) {
-      console.log("❌ No matching permission found!");
-      return null;
+      // 🔹 If permission has "self: true", allow only if userId matches paramsId
+      if (allowPermission && allowPermission.condition?.self) {
+        if (userId !== paramsId) {
+          throw new AppError(`You can only ${action} your own profile`, 403);
+        }
+      }
+  
+      if (!allowPermission) {
+        throw new AppError(`Permission not found: ${role} cannot ${action} ${resource}`, 403);
+      }
+  
+      return allowPermission;
+    } catch (error) {
+      if (error.statusCode !== 403) {
+        throw new AppError("Error fetching permission: " + error.message, 500);
+      }
+      throw error;
     }
-  
-    console.log("✅ Found Permission:", permission);
-    return permission;
   };
+  
   
   
   

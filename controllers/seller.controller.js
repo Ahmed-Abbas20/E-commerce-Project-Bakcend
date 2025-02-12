@@ -1,15 +1,43 @@
 const express = require("express");
 const router = express.Router();
 const {
+  createSeller,
   getAllSellers,
   getSellerById,
   updateSeller,
   deleteSeller,
 } = require("../repos/seller.repo");
 const { AppError } = require("../utils/errorHandler");
+const checkPermission = require("../middlewares/authorization.middleware"); 
+
+// ✅ Create a new seller (Uses `createSeller` from the repo)
+router.post("/", checkPermission("sellers", "create"), async (req, res, next) => {
+  try {
+    const { firstName, lastName, email, password, phone1, companyName, companyRegistrationNumber, SSN } = req.body;
+
+    if (!firstName || !lastName || !email || !password || !phone1 || !companyName || !companyRegistrationNumber || !SSN) {
+      return next(new AppError("All required fields must be provided", 400));
+    }
+
+    const newSeller = await createSeller({
+      firstName,
+      lastName,
+      email,
+      password,
+      phone1,
+      companyName,
+      companyRegistrationNumber,
+      SSN,
+    });
+
+    res.status(201).json({ success: true, data: newSeller });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
 
 // ✅ Get all sellers
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("sellers","read"),async (req, res, next) => {
   try {
     const sellers = await getAllSellers();
     res.status(200).json({ success: true, data: sellers });
@@ -19,7 +47,7 @@ router.get("/", async (req, res, next) => {
 });
 
 // ✅ Get a seller by ID
-router.get("/:sellerId", async (req, res, next) => {
+router.get("/:sellerId", checkPermission("sellers","read"),async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const seller = await getSellerById(sellerId);
@@ -32,7 +60,7 @@ router.get("/:sellerId", async (req, res, next) => {
 
 
 // ✅ Update a seller
-router.put("/:sellerId", async (req, res, next) => {
+router.put("/:sellerId", checkPermission("sellers","update"),async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const updatedData = req.body;
@@ -46,7 +74,7 @@ router.put("/:sellerId", async (req, res, next) => {
 });
 
 // ✅ Delete a seller
-router.delete("/:sellerId", async (req, res, next) => {
+router.delete("/:sellerId",checkPermission("sellers","delete"), async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const deletedSeller = await deleteSeller(sellerId);

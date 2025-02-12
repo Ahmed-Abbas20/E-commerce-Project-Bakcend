@@ -3,7 +3,18 @@ const { uploadUserImage } = require("../services/userImageUpload.service");
 const { AppError } = require("../utils/errorHandler");
 
 // ✅ Create a new customer
-module.exports.createCustomer = async ({ firstName, lastName, email, phone1, password, salt }) => {
+
+
+module.exports.createCustomer = async ({
+  firstName,
+  lastName,
+  email,
+  phone1,
+  password,
+  salt,
+  addresses = [], 
+  image, 
+}) => {
   try {
     const customer = new User({
       firstName,
@@ -13,6 +24,8 @@ module.exports.createCustomer = async ({ firstName, lastName, email, phone1, pas
       password,
       salt,
       userType: "customer",
+      addresses: Array.isArray(addresses) ? addresses : [], 
+      image: image || undefined, 
     });
 
     await customer.save();
@@ -22,7 +35,8 @@ module.exports.createCustomer = async ({ firstName, lastName, email, phone1, pas
   }
 };
 
-// ✅ Get all customers
+
+//  Get all customers
 module.exports.getAllCustomers = async () => {
   try {
     const customers = await User.find({ userType: "customer" });
@@ -32,7 +46,7 @@ module.exports.getAllCustomers = async () => {
   }
 };
 
-// ✅ Get a customer by ID
+//  Get a customer by ID
 module.exports.getCustomerById = async (customerId) => {
   try {
     const customer = await User.findOne({ _id: customerId, userType: "customer" });
@@ -45,8 +59,7 @@ module.exports.getCustomerById = async (customerId) => {
 };
 
 
-
-// ✅ Update a customer
+//  Update a customer
 module.exports.updateCustomer = async (customerId, updatedData, uploadedFile = []) => {
   try {
     const existingCustomer = await User.findOne({ _id: customerId, userType: "customer" });
@@ -69,7 +82,46 @@ module.exports.updateCustomer = async (customerId, updatedData, uploadedFile = [
   }
 };
 
-// ✅ Delete a customer
+//  Get a customer's addresses
+module.exports.getCustomerAddresses = async (customerId) => {
+  try {
+    const customer = await User.findOne(
+      { _id: customerId, userType: "customer" },
+      { addresses: 1, _id: 0 } 
+    );
+
+    if (!customer) throw new AppError("Customer not found", 404);
+
+    return customer.addresses;
+  } catch (error) {
+    throw new AppError(`Error fetching customer addresses: ${error.message}`, 500);
+  }
+};
+
+
+
+//  Add a new address to a customer
+module.exports.addCustomerAddress = async (customerId, newAddress) => {
+  try {
+    const customer = await User.findOne({ _id: customerId, userType: "customer" });
+
+    if (!customer) {
+      throw new AppError("Customer not found", 404);
+    }
+
+   
+    customer.addresses.push(newAddress);
+
+    await customer.save();
+
+    return customer.addresses; // Return updated addresses
+  } catch (error) {
+    throw new AppError(`Error adding address: ${error.message}`, 500);
+  }
+};
+
+
+//  Delete a customer
 module.exports.deleteCustomer = async (customerId) => {
   try {
     const deletedCustomer = await User.findOneAndDelete({ _id: customerId, userType: "customer" });
