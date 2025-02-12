@@ -8,9 +8,10 @@ const {
   deleteClerk,
 } = require("../repos/clerk.repo");
 const { AppError } = require("../utils/errorHandler");
+const checkPermission = require("../middlewares/authorization.middleware"); 
 
 // ✅ Create a new clerk (Uses `createClerk` from the repo)
-router.post("/", async (req, res, next) => {
+router.post("/", checkPermission("clerks","create"),async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone1, SSN, managerId } = req.body;
 
@@ -35,7 +36,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // ✅ Get all clerks
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("clerks","read"),async (req, res, next) => {
   try {
     const clerks = await getAllClerks();
     res.status(200).json({ success: true, data: clerks });
@@ -45,7 +46,7 @@ router.get("/", async (req, res, next) => {
 });
 
 // ✅ Get a clerk by ID
-router.get("/:clerkId", async (req, res, next) => {
+router.get("/:clerkId", checkPermission("clerks","read"),async (req, res, next) => {
   try {
     const { clerkId } = req.params;
     const clerk = await getClerkById(clerkId);
@@ -56,7 +57,7 @@ router.get("/:clerkId", async (req, res, next) => {
 });
 
 // ✅ Update a clerk (Supports image upload)
-router.put("/:clerkId", async (req, res, next) => {
+router.put("/:clerkId", checkPermission("clerks","update"),async (req, res, next) => {
   try {
     const { clerkId } = req.params;
     const updatedData = req.body;
@@ -70,7 +71,7 @@ router.put("/:clerkId", async (req, res, next) => {
 });
 
 // ✅ Delete a clerk
-router.delete("/:clerkId", async (req, res, next) => {
+router.delete("/:clerkId", checkPermission("clerks","delete"),async (req, res, next) => {
   try {
     const { clerkId } = req.params;
     const deletedClerk = await deleteClerk(clerkId);
