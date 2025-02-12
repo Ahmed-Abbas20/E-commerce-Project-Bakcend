@@ -38,7 +38,7 @@ exports.getCart = async (userId) => {
       if (!product) {
         // Product is no longer available
         changes.push({
-          productName:product.name, // If product is deleted, we don't have a name
+          productName:product?.name || "Unknown product", // If product is deleted, we don't have a name
           status: "Product no longer available",
         });
       } else if (product.quantity < item.quantity) {
