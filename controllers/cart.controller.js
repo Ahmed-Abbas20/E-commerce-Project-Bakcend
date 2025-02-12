@@ -29,11 +29,30 @@ router.post("/add", async (req, res, next) => {
 
 
 // Get cart by customer ID
-router.get("/:userId", async (req, res, next) => {
+// router.get("/:userId", async (req, res, next) => {
+//   try {
+//     const { userId } = req.params;
+//     const cart = await getCart(userId);
+//     res.status(200).json({ success: true, data: cart });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+router.get("/", async (req, res, next) => {
   try {
-    const { userId } = req.params;
-    const cart = await getCart(userId);
-    res.status(200).json({ success: true, data: cart });
+    const { userId } = req.query; // Extract userId from query parameters
+
+    // Validate input
+    if (!userId) {
+      throw new AppError("User ID is required", 400);
+    }
+
+    // Fetch the cart and validate product quantities
+    const { cart, changes } = await getCart(userId);
+
+    // Return the cart and changes (if any)
+    res.status(200).json({ success: true, data: { cart, changes } });
   } catch (error) {
     next(error);
   }
