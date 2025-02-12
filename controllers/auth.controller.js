@@ -16,6 +16,7 @@ router.post("/register", validateUserRegistration, async (req, res, next) => {
 
 
 
+
 // Login Route
 router.post("/login", async (req, res, next) => {
   try {

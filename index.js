@@ -13,6 +13,8 @@ const managerController=require('./controllers/manager.controller');
 const {  errorHandler } = require('./utils/errorHandler'); 
 const { notFound } = require('./utils/notFound'); 
 const fileUpload = require("express-fileupload");
+const cartController = require("./controllers/cart.controller");
+
 
 const cors = require('cors');
 
@@ -50,6 +52,7 @@ app.use("/sellers", [authenticationMiddleware,],sellersController);
 app.use("/managers", [authenticationMiddleware,],managersController);
 app.use("/clerks", [authenticationMiddleware,],clerksController);
 app.use("/cashiers", [authenticationMiddleware,],cashiersController);
+app.use("/carts", [authenticationMiddleware], cartController);//////
 
 app.use('/categories', [authenticationMiddleware],categoryController);
 app.use('/products', [authenticationMiddleware],productController);
