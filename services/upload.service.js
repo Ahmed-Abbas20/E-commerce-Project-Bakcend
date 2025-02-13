@@ -28,7 +28,18 @@ async function handleImageUpload(model, documentId, uploadedFiles) {
       throw new AppError(`${model.modelName} not found.`, 404);
     }
 
-    const folderName = `product_images/${document.name.replace(/\s+/g, "_")}`;
+    let folderName;
+
+    
+    if (document.images.length > 0) {
+      
+      folderName = document.images[0].filePath.split("/").slice(0, -1).join("/");
+    } else {
+      
+      folderName = `product_images/${document.name.replace(/\s+/g, "_")}`;
+    }
+
+    console.log(`Uploading images to folder: ${folderName}`);
 
     const uploadPayload = uploadedFiles.map((file) => ({
       src: file.data,
@@ -37,7 +48,7 @@ async function handleImageUpload(model, documentId, uploadedFiles) {
       size: file.size,
     }));
 
-  
+    
     const response = await uploadImages({ files: uploadPayload, folderName });
 
     if (!response || !response.fileDetails) {
