@@ -2,6 +2,7 @@ const Seller = require("../models/seller.model");
 const { uploadUserImage } = require("../services/userImageUpload.service");
 const { AppError } = require("../utils/errorHandler");
 
+
 // ✅ Create a new seller
 module.exports.createSeller = async ({ firstName, lastName, email, phone1, password, salt, companyName, companyRegistrationNumber, SSN }) => {
   try {
@@ -28,7 +29,7 @@ module.exports.createSeller = async ({ firstName, lastName, email, phone1, passw
 // ✅ Get all sellers
 module.exports.getAllSellers = async () => {
   try {
-    const sellers = await Seller.find({ userType: "seller" });
+    const sellers = await Seller.find({ userType: "seller", isActive:true });
     return sellers;
   } catch (error) {
     throw new AppError(`Error fetching sellers: ${error.message}`, 500);
