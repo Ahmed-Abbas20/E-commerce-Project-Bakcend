@@ -5,6 +5,8 @@ const SellerSchema = new mongoose.Schema({
   companyName: { type: String, required: true },
   companyRegistrationNumber: { type: String, required: true },
   SSN: { type: String, required: true },
+  isActive: { type: Boolean, default: true },
+
 });
 
 // ✅ Create Seller using `User.discriminator`
