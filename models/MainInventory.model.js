@@ -1,7 +1,6 @@
 
-
 const mongoose = require('mongoose');
-const ProductSchema = new mongoose.Schema({
+const MainInventory = new mongoose.Schema({
 
   name: {
     type: String,
@@ -9,7 +8,12 @@ const ProductSchema = new mongoose.Schema({
     trim: true,
     unique: true
   },
-  price: {
+  costPrice: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  soldPrice: {
     type: Number,
     required: true,
     min: 0
@@ -37,10 +41,10 @@ const ProductSchema = new mongoose.Schema({
   },
 
 
-  sellerId:{type: String, ref:'User'},
+  sellerId:{type: String, ref:'User' ,required:true},
 
   createdAt: {
-    type: Date,
+    type: Date, 
     default: Date.now()
   },
   updatedAt: {
@@ -48,4 +52,4 @@ const ProductSchema = new mongoose.Schema({
     default: Date.now()
   }
 });
-module.exports = mongoose.model('Product', ProductSchema);
+module.exports = mongoose.model('MainInventory', MainInventory);

@@ -1,4 +1,4 @@
-const Product = require('../models/product.model');
+const Product = require('../models/MainInventory.model');
 
 const BASE_IMAGE_URL = "https://ik.imagekit.io/cwe4zwtml"; 
 const {AppError} = require("../utils/errorHandler"); 
@@ -56,9 +56,14 @@ exports.getProductById = async (id) => {
 
 exports.getAllProducts = async (page = 1, filters = {}) => {
   const products = await Product.find(filters)
+  . populate({
+    path: 'sellerId', 
+    select: 'firstName lastName email phone1 ' 
+  })
     .sort('-createdAt')
     .skip((page - 1) * 20)
-    .limit(20);
+    .limit(20)
+    
 
 
   const updatedProducts = products.map(product => ({

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Product = require("./product.model"); // Import Product model
+const Product = require("./MainInventory.model"); // Import Product model
 const { AppError } = require("../utils/errorHandler"); // Import AppError
 
 const CartSchema = new mongoose.Schema({
