@@ -1,6 +1,6 @@
-const { createProduct, getProductById, getAllProducts, updateProduct, deleteProduct, searchProducts,filterProducts } = require('../repos/product.repo');
+const { createProduct, getProductById, getAllProducts, updateProduct, deleteProduct, searchProducts,filterProducts } = require('../repos/MainInventory.repo');
 const { getCategoryById } = require('../repos/category.repo');
-const Product = require('../models/product.model'); 
+const Product = require('../models/MainInventory.model'); 
 const {AppError} = require('../utils/errorHandler'); 
 const { deleteProductImages} = require("./media.service");
 const { handleImageUpload } = require("./upload.service");

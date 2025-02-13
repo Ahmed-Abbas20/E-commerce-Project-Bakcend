@@ -4,7 +4,8 @@ const { AppError } = require('../utils/errorHandler');
 // Schema for Creating a Product (POST)
 const createProductSchema = Joi.object({
   name: Joi.string().trim().required().min(2).max(100),
-  price: Joi.number().min(0).required(),
+  costPrice: Joi.number().min(0).required(),
+  soldPrice:Joi.number().min(0).required(),
   quantity: Joi.number().min(0).required(),
   categoryId: Joi.string().required(),
   description: Joi.string().allow(''),
@@ -15,7 +16,8 @@ const createProductSchema = Joi.object({
 // Schema for Updating a Product (PUT)
 const updateProductSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100), // Optional in update
-  price: Joi.number().min(0),
+  costPrice: Joi.number().min(0).required(),
+  soldPrice:Joi.number().min(0).required(),
   quantity: Joi.number().min(0),
   categoryId: Joi.string(),
   description: Joi.string().allow(''),
@@ -63,37 +65,3 @@ exports.validateProduct = (req, res, next) => {
   }
   next();
 };
-
-
-
-
-exports.validateRequest = (schema) => (req, res, next) => {
-  const { error } = schema.validate(req.body);
-  if (error) return next(new AppError(error.details[0].message, 400));
-  next();
-};
-
-exports.productRequestSchema = Joi.object({
-  operationType: Joi.string().valid('create', 'update', 'delete').required(),
-  productData: Joi.when('operationType', {
-    is: Joi.valid('create', 'update'),
-    then: Joi.object({
-      name: Joi.string().required(),
-      price: Joi.number().min(0).required(),
-      quantity: Joi.number().min(0).required(),
-      categoryId: Joi.string().required(),
-      description: Joi.string().allow(''),
-      images: Joi.array().items(Joi.object({
-        fileId: Joi.string().required(),
-        filePath: Joi.string().required()
-      }))
-    }).required(),
-    otherwise: Joi.forbidden()
-  }),
-  productId: Joi.when('operationType', {
-    is: Joi.valid('update', 'delete'),
-    then: Joi.string().required(),
-    otherwise: Joi.forbidden()
-  })
-});
-

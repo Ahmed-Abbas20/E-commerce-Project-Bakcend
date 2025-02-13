@@ -2,16 +2,16 @@ const express = require('express');
 const router = express.Router();
 const {  getCategoryById} = require('../repos/category.repo');
 const { handleImageUpload } = require("../services/upload.service");
-const Product = require("../models/product.model");
+const Product = require("../models/MainInventory.model");
 const { AppError } = require("../utils/errorHandler");
 const checkPermission = require("../middlewares/authorization.middleware"); 
 const {validateProduct} = require('../middlewares/productvalidate.middleware');
-const productService = require('../services/product.service');
+const productService = require('../services/MainInventory.service');
 // const SellerRequestService = require('../services/sellerRequest.service');
 
 router.post(
   "/",
-  checkPermission("products", "create"),
+  
   validateProduct,
   async (req, res, next) => {
     try {
