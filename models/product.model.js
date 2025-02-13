@@ -9,7 +9,12 @@ const ProductSchema = new mongoose.Schema({
     trim: true,
     unique: true
   },
-  price: {
+    costPrice: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  soldPrice: {
     type: Number,
     required: true,
     min: 0
@@ -21,15 +26,13 @@ const ProductSchema = new mongoose.Schema({
     }
   ],
   description: String,
-  quantity: {
+  mainStock: {
     type: Number,
     required: true,
     min: 0
   },
   categoryId: {
-    type: String,
-    ref: 'Category',
-    required: true
+    type: mongoose.Schema.Types.ObjectId, ref: "User", required: true 
   },
   categoryName: {
     type: String,
@@ -37,7 +40,7 @@ const ProductSchema = new mongoose.Schema({
   },
 
 
-  sellerId:{type: String, ref:'User'},
+  sellerId:{type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
   createdAt: {
     type: Date,
