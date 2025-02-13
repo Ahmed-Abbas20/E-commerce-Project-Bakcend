@@ -8,7 +8,11 @@ const MainInventory = new mongoose.Schema({
     trim: true,
     unique: true
   },
+<<<<<<< HEAD:models/MainInventory.model.js
   costPrice: {
+=======
+    costPrice: {
+>>>>>>> origin/Abbas:models/product.model.js
     type: Number,
     required: true,
     min: 0
@@ -25,23 +29,26 @@ const MainInventory = new mongoose.Schema({
     }
   ],
   description: String,
-  quantity: {
+  mainStock: {
     type: Number,
     required: true,
     min: 0
   },
-  categoryId: {
-    type: String,
-    ref: 'Category',
-    required: true
-  },
+  
+    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
+
+  
   categoryName: {
     type: String,
     required: true
   },
 
 
+<<<<<<< HEAD:models/MainInventory.model.js
   sellerId:{type: String, ref:'User' ,required:true},
+=======
+  sellerId:{type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+>>>>>>> origin/Abbas:models/product.model.js
 
   createdAt: {
     type: Date, 

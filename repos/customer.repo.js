@@ -39,7 +39,7 @@ module.exports.createCustomer = async ({
 //  Get all customers
 module.exports.getAllCustomers = async () => {
   try {
-    const customers = await User.find({ userType: "customer" });
+    const customers = await User.find({ userType: "customer",isActive:true });
     return customers;
   } catch (error) {
     throw new AppError(`Error fetching customers: ${error.message}`, 500);

@@ -2,6 +2,7 @@ const { loginUser } = require("../services/auth.service");
 const router = require("express").Router();
 const { validateUserRegistration } = require("../middlewares/RegisterValidation.middleware");
 const { registerUser }= require("../services/auth.service");
+const { softDeleteUser } = require("../services/auth.service");
 
 // Register Route
 router.post("/register", validateUserRegistration, async (req, res, next) => {
@@ -15,7 +16,18 @@ router.post("/register", validateUserRegistration, async (req, res, next) => {
 
 
 
+router.delete("/:userId", async (req, res, next) => {
+  try {
+    const { userId } = req.params;
 
+    // Call the softDeleteUser function
+    const user = await softDeleteUser(userId);
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Login Route
 router.post("/login", async (req, res, next) => {

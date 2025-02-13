@@ -33,6 +33,7 @@ const UserBaseSchema = new mongoose.Schema(
       filePath: { type: String, default: DEFAULT_IMAGE.filePath },
     },
     salt: { type: String, required: true },
+    isActive: { type: Boolean, default: true },
 
    
     addresses: { type: [AddressSchema], default: [] },
