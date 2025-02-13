@@ -7,8 +7,13 @@ const managersController = require("./controllers/manager.controller");
 const clerksController = require("./controllers/clerk.controller");
 const cashiersController = require("./controllers/cashier.controller");
 const categoryController = require('./controllers/category.controller');
+<<<<<<< HEAD
 const MainInventory = require('./controllers/MainInventory.controller');
 
+=======
+const productController = require('./controllers/product.controller');
+const branchController = require('./controllers/branch.controller');
+>>>>>>> origin/Abbas
 const authenticationMiddleware = require("./middlewares/authentication.middleware");
 const managerController=require('./controllers/manager.controller');
 const {  errorHandler } = require('./utils/errorHandler'); 
@@ -59,6 +64,7 @@ app.use("/carts", [authenticationMiddleware], cartController);//////
 app.use('/categories', [authenticationMiddleware],categoryController);
 app.use('/products', [authenticationMiddleware],MainInventory);
 app.use('/managers', [authenticationMiddleware],managerController);
+app.use('/branches', [authenticationMiddleware],branchController);
 
 app.use("/sellerRequest",sellersController);
 

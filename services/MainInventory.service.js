@@ -21,29 +21,36 @@ const imagekit = new ImageKit({
 
 
 
-exports.createProduct = async (productData) => {
-  // 1. Validate category exists
+exports.createProductService = async (productData, uploadedFiles = []) => {
+ 
   const category = await getCategoryById(productData.categoryId);
-  if (!category) {
-    throw new AppError('Category not found', 404);  
-  }
+  if (!category) throw new AppError("Category not found", 404);
 
-  // 2. Check for existing product WITH SAME NAME AND SELLER
+
+ 
   const existingProduct = await Product.findOne({
     name: productData.name.trim(),
-    sellerId: productData.sellerId 
+    sellerId: productData.sellerId,
   });
+  
+  if (existingProduct) throw new AppError("You already have a product with this name", 409);
+  
 
-  if (existingProduct) {
-    throw new AppError('You already have a product with this name', 409);  
-  }
-
-  // 3. Create product with trimmed name and category name
-  return createProduct({
+ 
+  const product = await createProduct({
     ...productData,
     name: productData.name.trim(),
-    categoryName: category.name
+    categoryName: category.name,
   });
+
+ 
+  if (uploadedFiles.length > 0) {
+    const uploadedImages = await handleImageUpload(Product, product._id, uploadedFiles);
+    product.images = uploadedImages;
+    await product.save();
+  }
+
+  return product;
 };
 
 exports.getProduct = async (id) => {

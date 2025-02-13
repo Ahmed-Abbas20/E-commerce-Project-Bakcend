@@ -7,7 +7,23 @@ const User = require("../models/base.model");
 const Cart = require("../models/cart.model");
 
 
+const softDeleteUser = async (userId) => {
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
 
+    // Set isActive to false
+    user.isActive = false;
+    await user.save();
+
+    return user;
+  } catch (error) {
+    throw new AppError("Error soft deleting user: " + error.message, 500);
+  }
+};
 
 
 
@@ -77,26 +93,30 @@ const registerUser = async (userData) => {
 // Login user
 const loginUser = async ({ email, password }) => {
   try {
-    
+    // Find the user by email
     const user = await User.findOne({ email });
-
     if (!user) {
       throw new AppError("Invalid email or password", 401);
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Check if the user is active
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
 
+    // Compare passwords
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       throw new AppError("Invalid email or password", 401);
     }
 
+    // Generate a token
     const claims = {
       sub: user._id,
       email: user.email,
       userType: user.userType,
-      role: user.role,
+      role:user.role
     };
-
     const token = signToken({ claims });
 
     return { token };
@@ -108,4 +128,5 @@ const loginUser = async ({ email, password }) => {
 module.exports = {
   registerUser,
   loginUser,
+  softDeleteUser,
 };
