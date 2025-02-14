@@ -2,21 +2,14 @@ const express = require('express');
 const router = express.Router();
 const {  getCategoryById} = require('../repos/category.repo');
 const { handleImageUpload } = require("../services/upload.service");
-const Product = require("../models/MainInventory.model");
+const Product = require("../models/product.model");
 const { AppError } = require("../utils/errorHandler");
 const checkPermission = require("../middlewares/authorization.middleware"); 
 const {validateProduct} = require('../middlewares/productvalidate.middleware');
-const productService = require('../services/MainInventory.service');
-// const SellerRequestService = require('../services/sellerRequest.service');
+const productService = require('../services/product.service');
 
-<<<<<<< HEAD:controllers/MainInventory.controller.js
-router.post(
-  "/",
-  
-  validateProduct,
-  async (req, res, next) => {
+router.post("/",validateProduct, async (req, res, next) => {
     try {
-      
       const productData = req.body;
       const uploadedFiles = req.files?.images 
         ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) 
@@ -60,23 +53,25 @@ router.post(
       });
     } catch (error) {
       next(error);
-=======
-// ✅ Create product
-router.post("/", checkPermission("products", "create"), validateProduct, async (req, res, next) => {
-  try {
-    const productData = req.body;
-    const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
-    if (uploadedFiles.length === 0) {
-      return res.status(400).json({ success: false, message: "At least one image is required." });
->>>>>>> origin/Abbas:controllers/product.controller.js
     }
+  });
 
-    const product = await productService.createProductService(productData, uploadedFiles);
-    res.status(201).json({ success: true, message: "Product created successfully.", data: product });
-  } catch (error) {
-    next(error);
-  }
-});
+// // ✅ Create product
+// router.post("/", checkPermission("products", "create"), validateProduct, async (req, res, next) => {
+//   try {
+//     const productData = req.body;
+//     const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
+//     if (uploadedFiles.length === 0) {
+//       return res.status(400).json({ success: false, message: "At least one image is required." });
+
+//     }
+
+//     const product = await productService.createProductService(productData, uploadedFiles);
+//     res.status(201).json({ success: true, message: "Product created successfully.", data: product });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 router.get('/', async (req, res, next) => {
   try {
