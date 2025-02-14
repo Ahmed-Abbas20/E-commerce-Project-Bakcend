@@ -1,4 +1,4 @@
-const Product = require('../models/MainInventory.model');
+const Product = require('../models/product.model');
 
 const BASE_IMAGE_URL = "https://ik.imagekit.io/cwe4zwtml"; 
 const {AppError} = require("../utils/errorHandler"); 
@@ -115,5 +115,15 @@ exports.deleteProduct = async (id) => {
 };
 
 
-
 exports.filterProducts = (query, page = 1) =>  Product.find(query).skip((page - 1) *20).limit(20);
+
+exports.findProductById = async (productId, session = null) => {
+  return Product.findById(productId).session(session);
+};
+exports.updateMainStock = async (productId, quantity, session = null) => {
+  return Product.findByIdAndUpdate(
+    productId,
+    { $inc: { mainStock: quantity } },
+    { session }
+  );
+};

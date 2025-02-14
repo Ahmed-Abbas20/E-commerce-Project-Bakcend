@@ -7,7 +7,7 @@ const {
 } = require("../repos/cart.repo");
 const { AppError } = require("../utils/errorHandler");
 const Cart = require("../models/cart.model");
-const Product = require("../models/MainInventory.model");
+const Product = require("../models/product.model");
 
 // Create or update cart
 exports.createOrUpdateCart = async (userId, products) => {

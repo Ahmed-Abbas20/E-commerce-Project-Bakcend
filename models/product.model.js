@@ -1,6 +1,6 @@
 
 const mongoose = require('mongoose');
-const MainInventory = new mongoose.Schema({
+const product = new mongoose.Schema({
 
   name: {
     type: String,
@@ -8,11 +8,10 @@ const MainInventory = new mongoose.Schema({
     trim: true,
     unique: true
   },
-<<<<<<< HEAD:models/MainInventory.model.js
-  costPrice: {
-=======
+
+
     costPrice: {
->>>>>>> origin/Abbas:models/product.model.js
+
     type: Number,
     required: true,
     min: 0
@@ -33,7 +32,7 @@ const MainInventory = new mongoose.Schema({
     type: Number,
     required: true,
     min: 0
-  },
+  }, 
   
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
 
@@ -44,11 +43,10 @@ const MainInventory = new mongoose.Schema({
   },
 
 
-<<<<<<< HEAD:models/MainInventory.model.js
-  sellerId:{type: String, ref:'User' ,required:true},
-=======
+
+
   sellerId:{type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
->>>>>>> origin/Abbas:models/product.model.js
+
 
   createdAt: {
     type: Date, 
@@ -59,4 +57,4 @@ const MainInventory = new mongoose.Schema({
     default: Date.now()
   }
 });
-module.exports = mongoose.model('MainInventory', MainInventory);
+module.exports = mongoose.model('Product', product);

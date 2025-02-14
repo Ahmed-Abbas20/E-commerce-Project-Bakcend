@@ -5,15 +5,10 @@ const { AppError } = require('../utils/errorHandler');
 const createProductSchema = Joi.object({
   name: Joi.string().trim().required().min(2).max(100),
   costPrice: Joi.number().min(0).required(),
-<<<<<<< HEAD
-  soldPrice:Joi.number().min(0).required(),
-  quantity: Joi.number().min(0).required(),
-=======
   soldPrice: Joi.number().min(0).required(),
   mainStock: Joi.number().min(0).required(),
->>>>>>> origin/Abbas
   categoryId: Joi.string().required(),
-  categoryName: Joi.string().required(),
+  categoryName: Joi.string(),
   description: Joi.string().allow(''),
   images: Joi.array().items(
     Joi.object({
@@ -27,15 +22,10 @@ const createProductSchema = Joi.object({
 // Schema for Updating a Product (PUT)
 const updateProductSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100), // Optional in update
-<<<<<<< HEAD
+
   costPrice: Joi.number().min(0).required(),
   soldPrice:Joi.number().min(0).required(),
-  quantity: Joi.number().min(0),
-=======
-  costPrice: Joi.number().min(0),
-  soldPrice: Joi.number().min(0),
   mainStock: Joi.number().min(0),
->>>>>>> origin/Abbas
   categoryId: Joi.string(),
   categoryName: Joi.string(),
   description: Joi.string().allow(''),
@@ -87,8 +77,7 @@ exports.validateProduct = (req, res, next) => {
     });
   }
   next();
-<<<<<<< HEAD
+
+
 };
-=======
-};
->>>>>>> origin/Abbas
+
