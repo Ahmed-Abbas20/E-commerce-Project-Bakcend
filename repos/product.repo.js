@@ -56,9 +56,14 @@ exports.getProductById = async (id) => {
 
 exports.getAllProducts = async (page = 1, filters = {}) => {
   const products = await Product.find(filters)
+  . populate({
+    path: 'sellerId', 
+    select: 'firstName lastName email phone1 ' 
+  })
     .sort('-createdAt')
     .skip((page - 1) * 20)
-    .limit(20);
+    .limit(20)
+    
 
 
   const updatedProducts = products.map(product => ({
@@ -110,5 +115,15 @@ exports.deleteProduct = async (id) => {
 };
 
 
-
 exports.filterProducts = (query, page = 1) =>  Product.find(query).skip((page - 1) *20).limit(20);
+
+exports.findProductById = async (productId, session = null) => {
+  return Product.findById(productId).session(session);
+};
+exports.updateMainStock = async (productId, quantity, session = null) => {
+  return Product.findByIdAndUpdate(
+    productId,
+    { $inc: { mainStock: quantity } },
+    { session }
+  );
+};

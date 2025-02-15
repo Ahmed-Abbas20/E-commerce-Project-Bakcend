@@ -17,7 +17,7 @@ const imagekit = new ImageKit({
 
 // Allowed formats and max size (5MB)
 const allowedFormats = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; //5 MB
 
 /**
  * Upload images to ImageKit inside a specific folder with unique filenames.
@@ -134,4 +134,4 @@ async function deleteProductImages(imageFileIds) {
 
 
 
-module.exports = { uploadImages ,deleteProductImages};
+module.exports = { uploadImages ,deleteProductImages}; 
