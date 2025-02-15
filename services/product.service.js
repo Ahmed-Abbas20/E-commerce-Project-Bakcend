@@ -105,19 +105,15 @@ exports.updateProduct = async (id, updateData, uploadedFiles = [], imagesToRemov
 
 
 
-
-
-
-
 exports.deleteProduct = deleteProduct;
 exports.searchProducts = searchProducts;
-exports.filterProductsService = async (categoryId = null, min = null, max = null, page = 1) => {
+exports.filterProductsService = async (categoryname = null, min = null, max = null, page = 1) => {
   try {
     const query = {};
 
     // ✅ Add category filter if provided
-    if (categoryId) {
-      query.categoryId = categoryId;
+    if (categoryname) {
+      query.categoryname = categoryname;
     }
 
     // ✅ Add price filters
