@@ -5,20 +5,11 @@ const { handleImageUpload } = require("../services/upload.service");
 const Product = require("../models/product.model");
 const { AppError } = require("../utils/errorHandler");
 const checkPermission = require("../middlewares/authorization.middleware"); 
-const {
-  validateProduct
-  
-} = require('../middlewares/productvalidate.middleware');
-
+const {validateProduct} = require('../middlewares/productvalidate.middleware');
 const productService = require('../services/product.service');
 
-router.post(
-  "/",
-  checkPermission("products", "create"),
-  validateProduct,
-  async (req, res, next) => {
+router.post("/",validateProduct, async (req, res, next) => {
     try {
-      
       const productData = req.body;
       const uploadedFiles = req.files?.images 
         ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) 
@@ -63,9 +54,24 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
-);
+  });
 
+// // ✅ Create product
+// router.post("/", checkPermission("products", "create"), validateProduct, async (req, res, next) => {
+//   try {
+//     const productData = req.body;
+//     const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
+//     if (uploadedFiles.length === 0) {
+//       return res.status(400).json({ success: false, message: "At least one image is required." });
+
+//     }
+
+//     const product = await productService.createProductService(productData, uploadedFiles);
+//     res.status(201).json({ success: true, message: "Product created successfully.", data: product });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 router.get('/', async (req, res, next) => {
   try {
@@ -89,7 +95,7 @@ router.get('/search', async (req, res, next) => {
 
 router.get('/filter', async (req, res, next) => {
   try {
-    const { categoryId, min, max, page = 1 } = req.query;
+    const { categoryname, min, max, page = 1 } = req.query;
 
     // Parse query parameters with default values
     const parsedMin = min ? parseFloat(min) : null;
@@ -105,7 +111,7 @@ router.get('/filter', async (req, res, next) => {
     }
 
     // Call the service function
-    const products = await productService.filterProductsService(categoryId, parsedMin, parsedMax, parsedPage);
+    const products = await productService.filterProductsService(categoryname, parsedMin, parsedMax, parsedPage);
 
 
     res.json({ success: true, data: products });
@@ -154,6 +160,5 @@ router.put('/:id', checkPermission("products", "update"), validateProduct, async
     next(error);
   }
 });
-
 
 module.exports = router;

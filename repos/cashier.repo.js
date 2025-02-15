@@ -5,9 +5,9 @@ const mongoose = require("mongoose");
 const { uploadUserImage } = require("../services/userImageUpload.service");
 
 // ✅ Create a new cashier
-module.exports.createCashier = async ({ firstName, lastName, email, password, phone1, SSN, managerId }) => {
+module.exports.createCashier = async ({ firstName, lastName, email, password, phone1, SSN, branchId }) => {
   try {
-    const managerObjectId = managerId ? new mongoose.Types.ObjectId(managerId) : undefined;
+    const branchObjectId = new mongoose.Types.ObjectId(branchId);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -21,7 +21,7 @@ module.exports.createCashier = async ({ firstName, lastName, email, password, ph
       salt,
       role: "cashier",
       SSN,
-      managerId: managerObjectId,
+      branchId: branchObjectId,
     });
 
     await cashier.save();
@@ -34,7 +34,7 @@ module.exports.createCashier = async ({ firstName, lastName, email, password, ph
 // ✅ Get all cashiers
 module.exports.getAllCashiers = async () => {
   try {
-    return await Staff.find({ role: "cashier" }).populate("managerId", "firstName lastName email");
+    return await Staff.find({ role: "cashier" }).populate("branchId", "name location phone");
   } catch (error) {
     throw new AppError(`Error fetching cashiers: ${error.message}`, 500);
   }
@@ -43,7 +43,7 @@ module.exports.getAllCashiers = async () => {
 // ✅ Get a cashier by ID
 module.exports.getCashierById = async (cashierId) => {
   try {
-    const cashier = await Staff.findOne({ _id: cashierId, role: "cashier" });
+    const cashier = await Staff.findOne({ _id: cashierId, role: "cashier" }).populate("branchId", "name location phone");
     if (!cashier) throw new AppError("Cashier not found", 404);
     return cashier;
   } catch (error) {

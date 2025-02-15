@@ -1,25 +1,41 @@
 const Joi = require('joi');
+const { AppError } = require('../utils/errorHandler');
 
 // Schema for Creating a Product (POST)
 const createProductSchema = Joi.object({
   name: Joi.string().trim().required().min(2).max(100),
-  price: Joi.number().min(0).required(),
-  quantity: Joi.number().min(0).required(),
+  costPrice: Joi.number().min(0).required(),
+  soldPrice: Joi.number().min(0).required(),
+  mainStock: Joi.number().min(0).required(),
   categoryId: Joi.string().required(),
+  categoryName: Joi.string(),
   description: Joi.string().allow(''),
-  images: Joi.array().items(Joi.string()),
+  images: Joi.array().items(
+    Joi.object({
+      fileId: Joi.string().required(),
+      filePath: Joi.string().required()
+    })
+  ),
   sellerId: Joi.string().required()
 });
 
 // Schema for Updating a Product (PUT)
 const updateProductSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100), // Optional in update
-  price: Joi.number().min(0),
-  quantity: Joi.number().min(0),
+
+  costPrice: Joi.number().min(0).required(),
+  soldPrice:Joi.number().min(0).required(),
+  mainStock: Joi.number().min(0),
   categoryId: Joi.string(),
+  categoryName: Joi.string(),
   description: Joi.string().allow(''),
-  images: Joi.array().items(Joi.string()), // New images to be uploaded
-  imagesToRemove: Joi.alternatives().try( // Accept array or convert string to array
+  images: Joi.array().items(
+    Joi.object({
+      fileId: Joi.string().required(),
+      filePath: Joi.string().required()
+    })
+  ), // New images to be uploaded
+  imagesToRemove: Joi.alternatives().try(
     Joi.array().items(Joi.string()),
     Joi.string().custom((value) => {
       try {
@@ -61,5 +77,7 @@ exports.validateProduct = (req, res, next) => {
     });
   }
   next();
+
+
 };
 

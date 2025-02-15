@@ -7,7 +7,9 @@ const managersController = require("./controllers/manager.controller");
 const clerksController = require("./controllers/clerk.controller");
 const cashiersController = require("./controllers/cashier.controller");
 const categoryController = require('./controllers/category.controller');
-const productController = require('./controllers/product.controller');
+const productcontroller = require('./controllers/product.controller');
+const branchController = require('./controllers/branch.controller');
+
 const authenticationMiddleware = require("./middlewares/authentication.middleware");
 const managerController=require('./controllers/manager.controller');
 const {  errorHandler } = require('./utils/errorHandler'); 
@@ -54,14 +56,16 @@ app.use("/clerks", [authenticationMiddleware,],clerksController);
 app.use("/cashiers", [authenticationMiddleware,],cashiersController);
 app.use("/carts", [authenticationMiddleware], cartController);//////
 
+
 app.use('/categories', [authenticationMiddleware],categoryController);
-app.use('/products', [authenticationMiddleware],productController);
+app.use('/products', [authenticationMiddleware],productcontroller);
 app.use('/managers', [authenticationMiddleware],managerController);
+app.use('/branches', [authenticationMiddleware],branchController);
+
 
 
 
 app.use(notFound);
-// Error handling
 app.use(errorHandler);
 
 // 404 handler
