@@ -8,8 +8,6 @@ const branchSchema = Joi.object({
   name: Joi.string().trim().required().min(2).max(100),
   location: Joi.string().trim().required(),
   phone: Joi.string().trim().required(),
-  managerId: Joi.string().trim().required(),
-  cashierId: Joi.string().trim().required(),
   stock: Joi.array().items(
     Joi.object({
       productId: Joi.string().trim().required(),

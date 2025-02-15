@@ -8,14 +8,14 @@ const {
   deleteManager,
 } = require("../repos/manager.repo");
 const { AppError } = require("../utils/errorHandler");
-const checkPermission = require("../middlewares/authorization.middleware"); 
+const checkPermission = require("../middlewares/authorization.middleware");
 
-// ✅ Create a new manager (Uses `createManager` from the repo)
-router.post("/", checkPermission("managers","create"),async (req, res, next) => {
+// ✅ Create a new manager
+router.post("/", checkPermission("managers", "create"), async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password, phone1, SSN, managerId } = req.body;
+    const { firstName, lastName, email, password, phone1, SSN, branchId } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !phone1 || !SSN) {
+    if (!firstName || !lastName || !email || !password || !phone1 || !SSN || !branchId) {
       return next(new AppError("All required fields must be provided", 400));
     }
 
@@ -26,7 +26,7 @@ router.post("/", checkPermission("managers","create"),async (req, res, next) => 
       password,
       phone1,
       SSN,
-      managerId,
+      branchId,
     });
 
     res.status(201).json({ success: true, data: newManager });
@@ -36,7 +36,7 @@ router.post("/", checkPermission("managers","create"),async (req, res, next) => 
 });
 
 // ✅ Get all managers
-router.get("/",checkPermission("managers","read"), async (req, res, next) => {
+router.get("/", checkPermission("managers", "read"), async (req, res, next) => {
   try {
     const managers = await getAllManagers();
     res.status(200).json({ success: true, data: managers });
@@ -46,7 +46,7 @@ router.get("/",checkPermission("managers","read"), async (req, res, next) => {
 });
 
 // ✅ Get a manager by ID
-router.get("/:managerId", checkPermission("managers","read"),async (req, res, next) => {
+router.get("/:managerId", checkPermission("managers", "read"), async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const manager = await getManagerById(managerId);
@@ -56,10 +56,8 @@ router.get("/:managerId", checkPermission("managers","read"),async (req, res, ne
   }
 });
 
-
-
 // ✅ Update a manager (Supports image upload)
-router.put("/:managerId", checkPermission("managers","update"),async (req, res, next) => {
+router.put("/:managerId", checkPermission("managers", "update"), async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const updatedData = req.body;
@@ -73,7 +71,7 @@ router.put("/:managerId", checkPermission("managers","update"),async (req, res, 
 });
 
 // ✅ Delete a manager
-router.delete("/:managerId", checkPermission("managers","delete"),async (req, res, next) => {
+router.delete("/:managerId", checkPermission("managers", "delete"), async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const deletedManager = await deleteManager(managerId);
