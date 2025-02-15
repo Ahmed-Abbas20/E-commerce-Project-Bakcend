@@ -5,12 +5,12 @@ const mongoose = require("mongoose");
 const { uploadUserImage } = require("../services/userImageUpload.service");
 
 // ✅ Create a new manager
-module.exports.createManager = async ({ firstName, lastName, email, password, phone1, SSN, managerId }) => {
+module.exports.createManager = async ({ firstName, lastName, email, password, phone1, SSN, branchId }) => {
   try {
-    
-    const managerObjectId = managerId ? new mongoose.Types.ObjectId(managerId) : undefined;
+    const branchObjectId = new mongoose.Types.ObjectId(branchId);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
     const manager = new Staff({
       firstName,
       lastName,
@@ -21,7 +21,7 @@ module.exports.createManager = async ({ firstName, lastName, email, password, ph
       salt,
       role: "manager",
       SSN,
-      managerId: managerObjectId, 
+      branchId: branchObjectId, 
     });
 
     await manager.save();
@@ -34,7 +34,7 @@ module.exports.createManager = async ({ firstName, lastName, email, password, ph
 // ✅ Get all managers
 module.exports.getAllManagers = async () => {
   try {
-    return await Staff.find({ role: "manager" }).populate("managerId", "firstName lastName email");
+    return await Staff.find({ role: "manager" }).populate("branchId", "name location phone");
   } catch (error) {
     throw new AppError(`Error fetching managers: ${error.message}`, 500);
   }
@@ -43,15 +43,13 @@ module.exports.getAllManagers = async () => {
 // ✅ Get a manager by ID
 module.exports.getManagerById = async (managerId) => {
   try {
-    const manager = await Staff.findOne({ _id: managerId, role: "manager" });
+    const manager = await Staff.findOne({ _id: managerId, role: "manager" }).populate("branchId", "name location phone");
     if (!manager) throw new AppError("Manager not found", 404);
     return manager;
   } catch (error) {
     throw new AppError(`Error fetching manager: ${error.message}`, 500);
   }
 };
-
-
 
 // ✅ Update a manager (Supports image upload)
 module.exports.updateManager = async (managerId, updatedData, uploadedFile = []) => {
