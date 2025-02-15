@@ -30,10 +30,10 @@ const userSchema = Joi.object({
   // ✅ Staff-specific validation
   role: Joi.when("userType", {
     is: "staff",
-    then: Joi.string().valid("super_admin", "clerk", "cashier", "manager").required(),
+    then: Joi.string().valid("super_admin", "cashier", "manager").required(),
     otherwise: Joi.forbidden(),
   }),
-  managerId: Joi.when("userType", {
+  branchId: Joi.when("userType", {
     is: "staff",
     then: Joi.string()
       .trim()
