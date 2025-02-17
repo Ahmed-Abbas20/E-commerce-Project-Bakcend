@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const { AddressSchema } = require("./User"); // Import AddressSchema from User
+const User = require("./User"); // Import User model to fetch user details
 
 const OrderSchema = new mongoose.Schema({
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -15,10 +17,11 @@ const OrderSchema = new mongoose.Schema({
     required: function () { return this.orderType === "online"; },
   },
 
-  gov: { type: String, required: true },
-  address: { type: String, required: true },
-  phone1: { type: String, required: true },
-  phone2: { type: String },
+  address: {
+    type: AddressSchema,
+    required: function () { return this.orderType === "online"; }, 
+  },
+  phone: { type: String, required: true }, 
   customerNotes: { type: String },
 
   // Main Order Products
@@ -39,10 +42,10 @@ const OrderSchema = new mongoose.Schema({
     }
   ],
 
-  // Seller-Specific Orders (Sub-orders inside main order)
+  
   sellersOrders: [
     {
-      sellerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Seller Reference
+      sellerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
       products: [
         {
           productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
@@ -53,11 +56,11 @@ const OrderSchema = new mongoose.Schema({
       totalPrice: { type: Number, required: true },
       totalQty: { type: Number, required: true },
 
-      // Seller Order Status (References the main order status)
+      
       status: { 
         type: String,
         get: function () {
-          return this.parent().status; // Inherit main order status
+          return this.parent().status; 
         }
       }
     }
@@ -65,6 +68,19 @@ const OrderSchema = new mongoose.Schema({
 
   totalPrice: { type: Number, required: true },
   totalQty: { type: Number, required: true },
+});
+
+
+OrderSchema.pre("validate", async function (next) {
+  if (this.orderType === "online" && (!this.address || Object.keys(this.address).length === 0)) {
+    const user = await User.findById(this.customerId);
+    if (user && user.addresses.length > 0) {
+      this.address = user.addresses[0]; 
+    } else {
+      return next(new Error("No default address found for user"));
+    }
+  }
+  next();
 });
 
 const Order = mongoose.model("Order", OrderSchema);
