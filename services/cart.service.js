@@ -1,10 +1,4 @@
-const {
-  createOrUpdateCart,
-  getCartByUserId,
-  deleteCart,
-  addProductToCart,
-  removeProductFromCart,
-} = require("../repos/cart.repo");
+
 const { AppError } = require("../utils/errorHandler");
 const Cart = require("../models/cart.model");
 const Branch = require("../models/branch.model");
@@ -124,6 +118,24 @@ exports.editProductQuantity = async (userId, productId, quantity) => {
   } catch (error) {
     throw new AppError("Error editing product quantity: " + error.message, 500);
   }
+};
+
+exports.emptyCart = async (userId) => {
+  try {
+    // Find the customer's cart
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      throw new AppError("Cart not found", 404);
+    }
+
+    // Empty the cart by setting the products array to an empty array
+    cart.products = [];
+    await cart.save();
+
+    return cart;
+  } catch (error) {
+    throw new AppError("Error emptying cart: " + error.message, 500);
+  }
 };
 
 // Remove product from cart
