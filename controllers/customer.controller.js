@@ -9,6 +9,7 @@ const {
   deleteCustomer,
   getCustomerAddresses,
   addCustomerAddress,
+  getCustomerDetailsByToken,
 } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
 const { validateAddress } = require("../middlewares/addressValidation.midleware"); 
@@ -37,6 +38,22 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+// Get customer details using token
+router.get("/me", async (req, res, next) => {
+  try {
+    const userId = req.user.sub; 
+    console.log(userId);
+    if (!userId) {
+      throw new AppError("User ID is missing from token", 400);
+    }
+
+    const customer = await getCustomerDetailsByToken(userId);
+    res.status(200).json({ success: true, data: customer });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 // ✅ Get all customers
 router.get("/", async (req, res, next) => {
@@ -58,6 +75,8 @@ router.get("/:customerId", async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 });
+
+
 //  Get a customer's addresses
 router.get("/:customerId/addresses", async (req, res, next) => {
   try {
