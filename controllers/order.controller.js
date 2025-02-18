@@ -33,9 +33,11 @@ router.post("/add-product", async (req, res, next) => {
 router.post("/online", validateOnlineOrder, async (req, res, next) => {
     try {
         const userId = req.user.sub;
-        const { address, phone, paymentMethod, customerNotes, products } = req.body;
+        const { addressIndex, paymentMethod, customerNotes, products } = req.body; // ✅ Pass only index
 
-        const result = await createOnlineOrder(userId, address, phone, paymentMethod, customerNotes, products);
+        console.log("Received addressIndex:", addressIndex); // Debugging
+
+        const result = await createOnlineOrder(userId, addressIndex, paymentMethod, customerNotes, products);
 
         if (!result.success) {
             return res.status(400).json({ success: false, message: result.message, changes: result.changes });
