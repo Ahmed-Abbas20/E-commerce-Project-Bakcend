@@ -23,8 +23,8 @@ const createProductSchema = Joi.object({
 const updateProductSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100), // Optional in update
 
-  costPrice: Joi.number().min(0).required(),
-  soldPrice:Joi.number().min(0).required(),
+  costPrice: Joi.number().min(0),
+  soldPrice:Joi.number().min(0),
   mainStock: Joi.number().min(0),
   categoryId: Joi.string(),
   categoryName: Joi.string(),
