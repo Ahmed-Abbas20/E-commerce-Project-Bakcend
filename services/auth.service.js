@@ -107,7 +107,7 @@ const loginUser = async ({ email, password }) => {
       role: user.role,
     };
     const token = signToken({ claims });
-
+   
     return { token };
   } catch (error) {
     throw new AppError("Error logging in user: " + error.message, 500);
