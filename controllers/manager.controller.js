@@ -11,7 +11,7 @@ const { AppError } = require("../utils/errorHandler");
 const checkPermission = require("../middlewares/authorization.middleware");
 
 // ✅ Create a new manager
-router.post("/", checkPermission("managers", "create"), async (req, res, next) => {
+router.post("/",  async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone1, SSN, branchId } = req.body;
 

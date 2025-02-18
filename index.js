@@ -14,6 +14,7 @@ const { errorHandler } = require('./utils/errorHandler');
 const { notFound } = require('./utils/notFound');
 const fileUpload = require("express-fileupload");
 const cartController = require("./controllers/cart.controller");
+const orderController = require("./controllers/order.controller");
 const cors = require('cors');
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/categories', [authenticationMiddleware], categoryController);
 app.use('/products', [authenticationMiddleware], productcontroller);
 app.use('/managers', [authenticationMiddleware], managersController);
 app.use('/branches', [authenticationMiddleware], branchController);
+app.use('/orders', [authenticationMiddleware], orderController);
 
 app.use(notFound);
 app.use(errorHandler);
