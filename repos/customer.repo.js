@@ -58,6 +58,24 @@ module.exports.getCustomerById = async (customerId) => {
   }
 };
 
+// Fetch customer details using userId (from token)
+module.exports.getCustomerDetailsByToken = async (userId) => {
+  try {
+    const customer = await User.findOne(
+      { _id: userId, userType: "customer" },
+      { password: 0, salt: 0 } // Exclude sensitive fields
+    );
+
+    if (!customer) {
+      throw new AppError("Customer not found", 404);
+    }
+
+    return customer;
+  } catch (error) {
+    throw new AppError(`Error fetching customer details: ${error.message}`, 500);
+  }
+};
+
 
 //  Update a customer
 module.exports.updateCustomer = async (customerId, updatedData, uploadedFile = []) => {
