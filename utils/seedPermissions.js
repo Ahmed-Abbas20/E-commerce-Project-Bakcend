@@ -130,17 +130,7 @@ const uniquePermissions = [
         }
       }
     },
-    {
-      effect: "deny",
-      resource: "MainInventory",
-      action: ["create", "update", "delete"],
-      description: "Restricts sellers from managing other sellers' MainInventory",
-      condition: {
-        role: {
-          IN: ["seller"]
-        }
-      }
-    },
+ 
     {
       effect: "allow",
       resource: "category",
@@ -154,17 +144,7 @@ const uniquePermissions = [
     },
     
     // Customer Permissions
-    {
-      effect: "allow",
-      resource: "MainInventory",
-      action: ["read"],
-      description: "Allows customers to read products",
-      condition: {
-        role: {
-          IN: ["customer"]
-        }
-      }
-    },
+   
     {
       effect: "allow",
       resource: "cus_orders",

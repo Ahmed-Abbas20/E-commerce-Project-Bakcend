@@ -5,9 +5,16 @@ const { createCustomer } = require("../repos/customer.repo");
 const { createSeller } = require("../repos/seller.repo");
 const User = require("../models/base.model");
 const Cart = require("../models/cart.model");
+const Branch = require("../models/branch.model"); // Import the Branch model
 
-// Fixed branch ID for the "online" branch
-const FIXED_BRANCH_ID = "67ae0ec67902b97afe1be51a";
+// Helper function to get the branch by name
+const getBranchByName = async (branchName) => {
+  const branch = await Branch.findOne({ name: branchName });
+  if (!branch) {
+    throw new AppError(`Branch with name "${branchName}" not found`, 404);
+  }
+  return branch;
+};
 
 // Register user
 const registerUser = async (userData) => {
@@ -27,6 +34,9 @@ const registerUser = async (userData) => {
       user = await createCustomer({ firstName, lastName, email, phone1, password: hashedPassword, salt });
     }
 
+    // Fetch the branch by name
+    const branch = await getBranchByName("Website Branch");
+
     let cart;
 
     // Check if a guest cart ID was provided
@@ -37,7 +47,7 @@ const registerUser = async (userData) => {
         // Create a new cart for the customer and transfer products from the guest cart
         cart = new Cart({
           userId: user._id,
-          branchId: FIXED_BRANCH_ID, // Use the fixed branch ID
+          branchId: branch._id, // Use the branch ID fetched by name
           products: guestCart.products, // Transfer products
         });
         await cart.save();
@@ -46,12 +56,12 @@ const registerUser = async (userData) => {
         await Cart.findByIdAndDelete(guestCartId);
       } else {
         // If the guest cart doesn't exist, create an empty cart
-        cart = new Cart({ userId: user._id, branchId: FIXED_BRANCH_ID, products: [] });
+        cart = new Cart({ userId: user._id, branchId: branch._id, products: [] });
         await cart.save();
       }
     } else {
       // If no guest cart ID was provided, create an empty cart
-      cart = new Cart({ userId: user._id, branchId: FIXED_BRANCH_ID, products: [] });
+      cart = new Cart({ userId: user._id, branchId: branch._id, products: [] });
       await cart.save();
     }
 
