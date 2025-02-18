@@ -4,7 +4,7 @@ const { AppError } = require("../utils/errorHandler");
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
 const User = require("../models/base.model");
-
+const Staff = require("../models/staff.model");
 // ✅ Function to check if a product exists in "Website Branch" and return details
 module.exports.addProductToOrder = async (productId) => {
   try {
@@ -52,30 +52,30 @@ module.exports.addProductToOrder = async (productId) => {
 
 
 
-// ✅ Create Online Order
+
+// ✅ Create Online Order (Fetch Products from Cart)
 module.exports.createOnlineOrder = async (userId, addressIndex, paymentMethod, customerNotes) => {
     try {
-        // Fetch the user's cart
-        const cart = await Cart.findOne({ userId }).populate("products.productId");
-
-        if (!cart || cart.products.length === 0) {
-            throw new AppError("Cart is empty", 400);
-        }
-
-        // Fetch the "Website Branch"
-        const websiteBranch = await Branch.findOne({ name: "Website Branch" });
-        if (!websiteBranch) {
-            throw new AppError("Website Branch not found", 404);
-        }
-
-        // Fetch user details (for address)
+        // ✅ Fetch the user to get the correct address from index
         const user = await User.findById(userId).select("addresses phone1");
         if (!user || !user.addresses || addressIndex >= user.addresses.length) {
             throw new AppError("Invalid address index", 400);
         }
 
-        const address = user.addresses[addressIndex];
+        const address = user.addresses[addressIndex]; // ✅ Resolve the address inside the function
         const phone = user.phone1;
+
+        // ✅ Fetch the user's cart
+        const cart = await Cart.findOne({ userId });
+        if (!cart || cart.products.length === 0) {
+            throw new AppError("Cart is empty", 400);
+        }
+
+        // ✅ Fetch the "Website Branch"
+        const websiteBranch = await Branch.findOne({ name: "Website Branch" });
+        if (!websiteBranch) {
+            throw new AppError("Website Branch not found", 404);
+        }
 
         const changes = [];
         const validProducts = [];
@@ -83,30 +83,41 @@ module.exports.createOnlineOrder = async (userId, addressIndex, paymentMethod, c
         let totalQty = 0;
 
         for (const item of cart.products) {
+            // ✅ Fetch product details from the database
+            const product = await Product.findById(item.productId).select("name soldPrice images");
+            if (!product) {
+                changes.push({ productId: item.productId, status: "Product details not found" });
+                continue;
+            }
+
+            // ✅ Check stock availability
             const productInBranch = websiteBranch.stock.find(
-                (stockItem) => stockItem.productId.toString() === item.productId._id.toString()
+                (stockItem) => stockItem.productId.toString() === product._id.toString()
             );
 
             if (!productInBranch) {
-                changes.push({ productId: item.productId._id, status: "Product not available in Website Branch" });
+                changes.push({ productId: product._id, status: "Product not available in Website Branch" });
                 continue;
             }
 
             if (productInBranch.quantity < item.quantity) {
-                changes.push({ productId: item.productId._id, status: `Only ${productInBranch.quantity} available` });
+                changes.push({ productId: product._id, status: `Only ${productInBranch.quantity} available` });
                 continue;
             }
 
+            const itemPrice = product.soldPrice;
+            const itemTotalPrice = itemPrice * item.quantity;
+
             validProducts.push({
-                productId: item.productId._id,
-                productName: item.productId.name,
-                price: item.productId.soldPrice,
+                productId: product._id,
+                productName: product.name,
+                price: itemPrice,
                 requiredQty: item.quantity,
-                totalPrice: item.productId.soldPrice * item.quantity,
-                productImages: item.productId.images,
+                totalPrice: itemTotalPrice,
+                productImages: product.images,
             });
 
-            totalPrice += item.productId.soldPrice * item.quantity;
+            totalPrice += itemTotalPrice;
             totalQty += item.quantity;
         }
 
@@ -114,6 +125,7 @@ module.exports.createOnlineOrder = async (userId, addressIndex, paymentMethod, c
             return { success: false, message: "Some products have stock issues", changes };
         }
 
+        // ✅ Deduct stock from Website Branch
         for (const item of validProducts) {
             const productInBranch = websiteBranch.stock.find(
                 (stockItem) => stockItem.productId.toString() === item.productId.toString()
@@ -122,6 +134,7 @@ module.exports.createOnlineOrder = async (userId, addressIndex, paymentMethod, c
         }
         await websiteBranch.save();
 
+        // ✅ Create the order with the resolved address
         const order = new Order({
             customerId: userId,
             branchId: websiteBranch._id,
@@ -137,20 +150,28 @@ module.exports.createOnlineOrder = async (userId, addressIndex, paymentMethod, c
 
         await order.save();
 
+        await Cart.findOneAndUpdate(
+            { userId }, 
+            { $set: { products: [] } }, 
+            { new: true }
+        );
+        
         return { success: true, order };
     } catch (error) {
         throw new AppError(`Error creating online order: ${error.message}`, 500);
     }
 };
 
+
 // ✅ Create Offline Order
 module.exports.createOfflineOrder = async (cashierId, customerName, phone, paymentMethod, products) => {
     try {
         // ✅ Fetch the branch of the cashier
-        const cashier = await User.findById(cashierId).select("branchId");
+        const cashier = await Staff.findById(cashierId).select("branchId");
         if (!cashier || !cashier.branchId) {
             throw new AppError("Cashier does not have a branch assigned", 400);
         }
+       
 
         const branch = await Branch.findById(cashier.branchId);
         if (!branch) {
@@ -193,7 +214,7 @@ module.exports.createOfflineOrder = async (cashierId, customerName, phone, payme
                 productImages: product.images,
             });
 
-            totalPrice += product.soldPrice * item.quantity;
+            totalPrice += product.soldPrice * item.requiredQty;
             totalQty += item.requiredQty;
         }
 
