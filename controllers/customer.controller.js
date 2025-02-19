@@ -12,6 +12,8 @@ const {
 } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
 const { validateAddress } = require("../middlewares/addressValidation.midleware"); 
+const { softDeleteUser } = require("../services/auth.service");
+
 
 // Create a new customer
 router.post("/", async (req, res, next) => {
@@ -157,15 +159,26 @@ router.post("/:customerId/addresses", validateAddress, async (req, res, next) =>
 
 
 
-//  Delete a customer
+// //  Delete a customer
+// router.delete("/:customerId", async (req, res, next) => {
+//   try {
+//     const { customerId } = req.params;
+//     const deletedCustomer = await deleteCustomer(customerId);
+//     res.status(200).json({ success: true, data: deletedCustomer });
+//   } catch (error) {
+//     return next(new AppError(error.message, 500));
+//   }
+// });
 router.delete("/:customerId", async (req, res, next) => {
   try {
     const { customerId } = req.params;
-    const deletedCustomer = await deleteCustomer(customerId);
-    res.status(200).json({ success: true, data: deletedCustomer });
+
+    // Call the softDeleteUser function
+    const customer = await softDeleteUser(customerId);
+
+    res.status(200).json({ success: true, data: customer });
   } catch (error) {
-    return next(new AppError(error.message, 500));
+    next(error); // Pass the error to the errorHandler middleware
   }
 });
-
 module.exports = router;
