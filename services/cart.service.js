@@ -1,7 +1,7 @@
-
 const { AppError } = require("../utils/errorHandler");
 const Cart = require("../models/cart.model");
 const Branch = require("../models/branch.model");
+const User = require("../models/base.model");
 
 // Helper function to get the branch by name
 const getBranchByName = async (branchName) => {
@@ -15,6 +15,15 @@ const getBranchByName = async (branchName) => {
 // Add product to cart
 exports.addProductToCart = async (userId, productId, quantity) => {
   try {
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
     // Fetch the branch by name
     const branch = await getBranchByName("Website Branch");
 
@@ -27,10 +36,10 @@ exports.addProductToCart = async (userId, productId, quantity) => {
     }
 
     // Find the customer's cart
-    let cart = await Cart.findOne({ userId, branchId: branch._id });
+    let cart = await Cart.findOne({ userId });
     if (!cart) {
       // If the cart doesn't exist, create a new one
-      cart = new Cart({ userId, branchId: branch._id, products: [] });
+      cart = new Cart({ userId, products: [] });
     }
 
     // Check if the product is already in the cart
@@ -73,11 +82,20 @@ exports.addProductToCart = async (userId, productId, quantity) => {
 // Edit product quantity in cart
 exports.editProductQuantity = async (userId, productId, quantity) => {
   try {
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
     // Fetch the branch by name
     const branch = await getBranchByName("Website Branch");
 
-    // Find the cart for the user and branch
-    const cart = await Cart.findOne({ userId, branchId: branch._id });
+    // Find the cart for the user
+    const cart = await Cart.findOne({ userId });
     if (!cart) {
       throw new AppError("Cart not found", 404);
     }
@@ -120,32 +138,22 @@ exports.editProductQuantity = async (userId, productId, quantity) => {
   }
 };
 
-exports.emptyCart = async (userId) => {
-  try {
-    // Find the customer's cart
-    const cart = await Cart.findOne({ userId });
-    if (!cart) {
-      throw new AppError("Cart not found", 404);
-    }
 
-    // Empty the cart by setting the products array to an empty array
-    cart.products = [];
-    await cart.save();
-
-    return cart;
-  } catch (error) {
-    throw new AppError("Error emptying cart: " + error.message, 500);
-  }
-};
 
 // Remove product from cart
 exports.removeProductFromCart = async (userId, productId) => {
   try {
-    // Fetch the branch by name
-    const branch = await getBranchByName("Website Branch");
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
 
-    // Find the cart for the user and branch
-    const cart = await Cart.findOne({ userId, branchId: branch._id });
+    // Find the cart for the user
+    const cart = await Cart.findOne({ userId });
     if (!cart) {
       throw new AppError("Cart not found", 404);
     }
@@ -164,18 +172,58 @@ exports.removeProductFromCart = async (userId, productId) => {
   }
 };
 
+// Empty the cart (remove all products)
+exports.emptyCart = async (userId) => {
+  try {
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
+    // Find the cart for the user
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      throw new AppError("Cart not found", 404);
+    }
+
+    // Empty the cart by setting the products array to an empty array
+    cart.products = [];
+    await cart.save();
+
+    return cart;
+  } catch (error) {
+    throw new AppError("Error emptying cart: " + error.message, 500);
+  }
+};
+
 // Get cart by user ID
 exports.getCart = async (userId) => {
   try {
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
     // Fetch the branch by name
     const branch = await getBranchByName("Website Branch");
 
-    // Fetch the cart for the user and branch
-    let cart = await Cart.findOne({ userId, branchId: branch._id });
+    // Fetch the cart for the user and populate product details
+    let cart = await Cart.findOne({ userId }).populate({
+      path: "products.productId",
+      select: "name costPrice soldPrice images description mainStock categoryId categoryName sellerId createdAt updatedAt",
+    });
 
     // If the cart doesn't exist, create a new one
     if (!cart) {
-      cart = new Cart({ userId, branchId: branch._id, products: [] });
+      cart = new Cart({ userId, products: [] });
       await cart.save();
     }
 
@@ -185,7 +233,7 @@ exports.getCart = async (userId) => {
     // Validate each product in the cart
     for (const item of cart.products) {
       const productInBranch = branch.stock.find(
-        (stockItem) => stockItem.productId.toString() === item.productId.toString()
+        (stockItem) => stockItem.productId.toString() === item.productId._id.toString()
       );
 
       if (!productInBranch) {
