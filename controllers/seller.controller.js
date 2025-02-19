@@ -14,7 +14,7 @@ const { AppError } = require("../utils/errorHandler");
 const { validateAddress } = require("../middlewares/addressValidation.midleware"); 
 const checkPermission = require("../middlewares/authorization.middleware");
 
-const checkPermission = require("../middlewares/authorization.middleware"); 
+
 const { softDeleteUser } = require("../services/auth.service");
 
 
