@@ -15,7 +15,23 @@ const getBranchByName = async (branchName) => {
   }
   return branch;
 };
+const softDeleteUser = async (userId) => {
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
 
+    // Set isActive to false
+    user.isActive = false;
+    await user.save();
+
+    return user;
+  } catch (error) {
+    throw new AppError("Error soft deleting user: " + error.message, 500);
+  }
+};
 // Register user
 const registerUser = async (userData) => {
   try {
@@ -117,4 +133,5 @@ const loginUser = async ({ email, password }) => {
 module.exports = {
   registerUser,
   loginUser,
+  softDeleteUser
 };
