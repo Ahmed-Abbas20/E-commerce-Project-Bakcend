@@ -2,20 +2,25 @@ const User = require("../models/base.model");
 const { uploadUserImage } = require("../services/userImageUpload.service");
 const { AppError } = require("../utils/errorHandler");
 
-// ✅ Create a new customer
+// Create a new customer
 
 
-module.exports.createCustomer = async ({
+module.exports.createCustomer = async function ({
   firstName,
   lastName,
   email,
   phone1,
   password,
   salt,
-  addresses = [], 
-  image, 
-}) => {
+  addresses = [],
+  image,
+}) {
   try {
+   
+    const existingCustomer = await User.findOne({ $or: [{ email }, { phone1 }] });
+    if (existingCustomer) throw new AppError("Customer with this email or phone already exists", 400);
+
+    
     const customer = new User({
       firstName,
       lastName,
@@ -24,55 +29,70 @@ module.exports.createCustomer = async ({
       password,
       salt,
       userType: "customer",
-      addresses: Array.isArray(addresses) ? addresses : [], 
-      image: image || undefined, 
+      addresses: Array.isArray(addresses) ? addresses : [],
+      image: image || undefined,
     });
 
     await customer.save();
-    return customer;
+
+    
+    const formattedCustomer = customer.toObject();
+    delete formattedCustomer.password;
+    delete formattedCustomer.salt;
+
+    if (formattedCustomer.image?.filePath) {
+      formattedCustomer.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${formattedCustomer.image.filePath}`;
+    }
+
+    return formattedCustomer;
+
   } catch (error) {
     throw new AppError(`Error creating customer: ${error.message}`, 500);
   }
 };
 
 
+
 //  Get all customers
 module.exports.getAllCustomers = async () => {
   try {
-    const customers = await User.find({ userType: "customer",isActive:true });
+    const customers = await User.find(
+      { userType: "customer", isActive: true },
+      { password: 0, salt: 0 } 
+    ).lean(); // Convert to plain objects to modify response
+
+   
+    customers.forEach(customer => {
+      if (customer.image?.filePath) {
+        customer.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${customer.image.filePath}`;
+      }
+    });
+
     return customers;
   } catch (error) {
     throw new AppError(`Error fetching customers: ${error.message}`, 500);
   }
 };
 
+
 //  Get a customer by ID
 module.exports.getCustomerById = async (customerId) => {
   try {
-    const customer = await User.findOne({ _id: customerId, userType: "customer" });
+    const customer = await User.findOne(
+      { _id: customerId, userType: "customer" },
+      { password: 0, salt: 0 } 
+    ).lean(); // Convert to plain object to modify response
+
     if (!customer) throw new AppError("Customer not found", 404);
 
-    return customer;
-  } catch (error) {
-    throw new AppError(`Error fetching customer: ${error.message}`, 500);
-  }
-};
-
-// Fetch customer details using userId (from token)
-module.exports.getCustomerDetailsByToken = async (userId) => {
-  try {
-    const customer = await User.findOne(
-      { _id: userId, userType: "customer" },
-      { password: 0, salt: 0 } // Exclude sensitive fields
-    );
-
-    if (!customer) {
-      throw new AppError("Customer not found", 404);
+    
+    if (customer.image?.filePath) {
+      customer.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${customer.image.filePath}`;
     }
 
     return customer;
   } catch (error) {
-    throw new AppError(`Error fetching customer details: ${error.message}`, 500);
+    throw new AppError(`Error fetching customer: ${error.message}`, 500);
   }
 };
 
@@ -86,19 +106,34 @@ module.exports.updateCustomer = async (customerId, updatedData, uploadedFile = [
       throw new AppError("Customer not found", 404);
     }
 
+    
     const imageUpdate = await uploadUserImage(existingCustomer.image?.fileId, uploadedFile);
     if (imageUpdate) {
       updatedData.image = imageUpdate;
     }
 
+    
     Object.assign(existingCustomer, updatedData);
     await existingCustomer.save();
 
-    return existingCustomer;
+    
+    const formattedCustomer = existingCustomer.toObject();
+    delete formattedCustomer.password;
+    delete formattedCustomer.salt;
+
+   
+    if (formattedCustomer.image?.filePath) {
+      formattedCustomer.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${formattedCustomer.image.filePath}`;
+    }
+
+    return formattedCustomer;
+
   } catch (error) {
     throw new AppError(`Error updating customer: ${error.message}`, 500);
   }
 };
+
+
 
 //  Get a customer's addresses
 module.exports.getCustomerAddresses = async (customerId) => {

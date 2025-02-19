@@ -4,7 +4,7 @@ const { AppError } = require("../utils/errorHandler");
 const mongoose = require("mongoose");
 const { uploadUserImage } = require("../services/userImageUpload.service");
 
-// ✅ Create a new cashier
+// Create a new cashier
 module.exports.createCashier = async ({ firstName, lastName, email, password, phone1, SSN, branchId }) => {
   try {
     const branchObjectId = new mongoose.Types.ObjectId(branchId);
@@ -25,53 +25,109 @@ module.exports.createCashier = async ({ firstName, lastName, email, password, ph
     });
 
     await cashier.save();
-    return cashier;
+
+   
+    const formattedCashier = cashier.toObject();
+    delete formattedCashier.password;
+    delete formattedCashier.salt;
+
+   
+    if (formattedCashier.image?.filePath) {
+      formattedCashier.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${formattedCashier.image.filePath}`;
+    }
+
+    return formattedCashier;
+
   } catch (error) {
     throw new AppError(`Error creating cashier: ${error.message}`, 500);
   }
 };
 
-// ✅ Get all cashiers
+
+// Get all cashiers
 module.exports.getAllCashiers = async () => {
   try {
-    return await Staff.find({ role: "cashier" }).populate("branchId", "name location phone");
+    const cashiers = await Staff.find({ role: "cashier" })
+      .select("-password -salt") 
+      .populate("branchId", "name location phone");
+
+   
+    return cashiers.map(cashier => {
+      const formattedCashier = cashier.toObject();
+
+      if (formattedCashier.image?.filePath) {
+        formattedCashier.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${formattedCashier.image.filePath}`;
+      }
+
+      return formattedCashier;
+    });
+
   } catch (error) {
     throw new AppError(`Error fetching cashiers: ${error.message}`, 500);
   }
 };
 
-// ✅ Get a cashier by ID
+
+// Get a cashier by ID
 module.exports.getCashierById = async (cashierId) => {
   try {
-    const cashier = await Staff.findOne({ _id: cashierId, role: "cashier" }).populate("branchId", "name location phone");
+    const cashier = await Staff.findOne({ _id: cashierId, role: "cashier" })
+      .select("-password -salt") 
+      .populate("branchId", "name location phone");
+
     if (!cashier) throw new AppError("Cashier not found", 404);
-    return cashier;
+
+    const formattedCashier = cashier.toObject();
+    if (formattedCashier.image?.filePath) {
+      formattedCashier.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${formattedCashier.image.filePath}`;
+    }
+
+    return formattedCashier;
+
   } catch (error) {
     throw new AppError(`Error fetching cashier: ${error.message}`, 500);
   }
 };
 
-// ✅ Update a cashier (Supports image upload)
+
+// Update a cashier (Supports image upload)
 module.exports.updateCashier = async (cashierId, updatedData, uploadedFile = []) => {
   try {
     const existingCashier = await Staff.findOne({ _id: cashierId, role: "cashier" });
 
-    if (!existingCashier) throw new AppError("Cashier not found", 404);
+    if (!existingCashier) {
+      throw new AppError("Cashier not found", 404);
+    }
 
-    // ✅ Handle image upload (if a new image is uploaded)
+    
     const imageUpdate = await uploadUserImage(existingCashier.image?.fileId, uploadedFile);
-    if (imageUpdate) updatedData.image = imageUpdate;
+    if (imageUpdate) {
+      updatedData.image = imageUpdate;
+    }
 
+   
     Object.assign(existingCashier, updatedData);
     await existingCashier.save();
 
-    return existingCashier;
+    
+    const formattedCashier = existingCashier.toObject();
+    delete formattedCashier.password;
+    delete formattedCashier.salt;
+
+    
+    if (formattedCashier.image?.filePath) {
+      formattedCashier.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${formattedCashier.image.filePath}`;
+    }
+
+    return formattedCashier;
+
   } catch (error) {
     throw new AppError(`Error updating cashier: ${error.message}`, 500);
   }
 };
 
-// ✅ Delete a cashier
+
+// Delete a cashier
 module.exports.deleteCashier = async (cashierId) => {
   try {
     const deletedCashier = await Staff.findOneAndDelete({ _id: cashierId, role: "cashier" });

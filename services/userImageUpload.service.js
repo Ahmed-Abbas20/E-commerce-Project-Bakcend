@@ -14,19 +14,20 @@ const imagekit = new ImageKit({
   urlEndpoint: IMAGEKIT_ENDPOINT_URL,
 });
 
-// ✅ Function to handle image upload and return relative path
+const DEFAULT_IMAGE_ID = "67b63936432c47641646f3ae"; 
+
 module.exports.uploadUserImage = async (existingFileId, uploadedFile) => {
   try {
     if (!uploadedFile || uploadedFile.length === 0) {
-      return null; // No new image uploaded
+      return null; 
     }
 
-    // ✅ Delete previous image if it exists
-    if (existingFileId) {
+    
+    if (existingFileId && existingFileId !== DEFAULT_IMAGE_ID) {
       await imagekit.deleteFile(existingFileId);
     }
 
-    // ✅ Upload the new image to `/users/` folder
+    
     const file = uploadedFile[0];
     const uploadResponse = await imagekit.upload({
       file: file.data,
@@ -35,12 +36,13 @@ module.exports.uploadUserImage = async (existingFileId, uploadedFile) => {
       useUniqueFileName: true,
     });
 
-    // ✅ Return the new image data with relative path
+    
     return {
       fileId: uploadResponse.fileId,
-      filePath: `/users/${uploadResponse.name}`, // Only store relative path
+      filePath: `/users/${uploadResponse.name}`, 
     };
   } catch (error) {
     throw new AppError(`Image upload failed: ${error.message}`, 500);
   }
 };
+
