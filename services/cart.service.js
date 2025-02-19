@@ -135,7 +135,7 @@ exports.emptyCart = async (userId) => {
     return cart;
   } catch (error) {
     throw new AppError("Error emptying cart: " + error.message, 500);
-  }
+  }
 };
 
 // Remove product from cart
