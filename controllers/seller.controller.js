@@ -9,6 +9,7 @@ const {
 } = require("../repos/seller.repo");
 const { AppError } = require("../utils/errorHandler");
 const checkPermission = require("../middlewares/authorization.middleware"); 
+const { softDeleteUser } = require("../services/auth.service");
 
 // ✅ Create a new seller (Uses `createSeller` from the repo)
 router.post("/", checkPermission("sellers", "create"), async (req, res, next) => {
@@ -74,13 +75,26 @@ router.put("/:sellerId", checkPermission("sellers","update"),async (req, res, ne
 });
 
 // ✅ Delete a seller
-router.delete("/:sellerId",checkPermission("sellers","delete"), async (req, res, next) => {
+// router.delete("/:sellerId",checkPermission("sellers","delete"), async (req, res, next) => {
+//   try {
+//     const { sellerId } = req.params;
+//     const deletedSeller = await deleteSeller(sellerId);
+//     res.status(200).json({ success: true, data: deletedSeller });
+//   } catch (error) {
+//     return next(new AppError(error.message, 500));
+//   }
+// });
+
+router.delete("/:sellerId", async (req, res, next) => {
   try {
     const { sellerId } = req.params;
-    const deletedSeller = await deleteSeller(sellerId);
-    res.status(200).json({ success: true, data: deletedSeller });
+
+    // Call the softDeleteUser function
+    const seller = await softDeleteUser(sellerId);
+
+    res.status(200).json({ success: true, data: seller });
   } catch (error) {
-    return next(new AppError(error.message, 500));
+    next(error); // Pass the error to the errorHandler middleware
   }
 });
 

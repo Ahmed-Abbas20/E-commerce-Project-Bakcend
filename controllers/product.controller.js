@@ -98,7 +98,7 @@ router.delete('/:id', checkPermission("products", "delete"), async (req, res, ne
   }
 });
 
-router.put('/:id', checkPermission("products", "update"), validateProduct, async (req, res, next) => {
+router.put('/:id', validateProduct, async (req, res, next) => {
   try {
     const productId = req.params.id;
     const productData = req.body;
