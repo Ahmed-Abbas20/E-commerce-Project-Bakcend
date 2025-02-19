@@ -1,27 +1,10 @@
 const mongoose = require("mongoose");
 const { AddressSchema } = require("./base.model"); 
 
-const SellerOrderSchema = new mongoose.Schema({
-  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
-  products: [
-    {
-      productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-      quantity: { type: Number, required: true },
-      price: { type: Number, required: true },
-    }
-  ],
-  totalPrice: { type: Number, required: true },
-  totalQty: { type: Number, required: true },
-  status: { 
-    type: String, 
-    default: "pending",
-  }
-}, { _id: false });
-
 const OrderSchema = new mongoose.Schema(
   {
-    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Online orders only
-    cashierId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Offline orders only
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
+    cashierId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: true },
     paymentMethod: { type: String, enum: ["Cash", "Card"], required: true },
     orderType: { type: String, enum: ["online", "offline"], required: true },
@@ -65,7 +48,9 @@ const OrderSchema = new mongoose.Schema(
     totalQty: { type: Number, required: true },
 
     
-    sellersOrders: [SellerOrderSchema],
+    sellersOrders: [
+      { order: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true, ref: "SellersOrder" } }
+    ],
   },
   { timestamps: true }
 );

@@ -5,6 +5,16 @@ const Cart = require("../models/cart.model");
 const User = require("../models/base.model");
 const Staff = require("../models/staff.model");
 const { AppError } = require("../utils/errorHandler");
+const SellersOrder = require("../models/sellersOrder.model"); 
+
+
+
+async function saveSellersOrders(sellersOrders) {
+    const createdSellersOrders = await SellersOrder.insertMany(sellersOrders);
+    return createdSellersOrders.map(order => order._id); 
+}
+
+
 
 // Check Product Availability in Branch
 module.exports.addProductToOrder = async (userId, productId) => {
@@ -96,71 +106,79 @@ module.exports.createOfflineOrder = async (cashierId, customerName, phone, payme
   
 //  Process Products & Validate Stock
 async function processOrderItems(products, branch) {
-    const changes = [];
-    const validProducts = [];
-    let totalPrice = 0;
-    let totalQty = 0;
-    const sellersOrders = new Map(); // Group products by sellerId
+  const changes = [];
+  const validProducts = [];
+  let totalPrice = 0;
+  let totalQty = 0;
+  const sellersOrders = new Map();
 
-    for (const item of products) {
-        
-        const productInBranch = branch.stock.find(stockItem => stockItem.productId.toString() === item.productId.toString());
-        if (!productInBranch || productInBranch.quantity < item.requiredQty) {
-            changes.push({ productId: item.productId, status: `Insufficient stock` });
-            continue;
-        }
+  for (const item of products) {
+      
+      const productInBranch = branch.stock.find(stockItem => stockItem.productId.toString() === item.productId.toString());
+      if (!productInBranch || productInBranch.quantity < item.requiredQty) {
+          changes.push({ productId: item.productId, status: `Insufficient stock` });
+          continue;
+      }
 
-        
-        const product = await Product.findById(item.productId).select("name soldPrice images sellerId");
-        if (!product) {
-            changes.push({ productId: item.productId, status: "Product details not found" });
-            continue;
-        }
+      const product = await Product.findById(item.productId).select("name categoryName images sellerId soldPrice");
+      if (!product) {
+          changes.push({ productId: item.productId, status: "Product details not found" });
+          continue;
+      }
 
-        const itemTotalPrice = product.soldPrice * item.requiredQty;
-        validProducts.push({
-            productId: product._id,
-            productName: product.name,
-            price: product.soldPrice,
-            requiredQty: item.requiredQty, 
-            totalPrice: itemTotalPrice,
-            productImages: product.images,
-        });
+      const itemTotalPrice = product.soldPrice * item.requiredQty;
+      const formattedImages = product.images.map(img => ({
+          fileId: img.fileId,
+          filePath: `${process.env.IMAGEKIT_ENDPOINT_URL}${img.filePath}`
+      }));
 
-        totalPrice += itemTotalPrice;
-        totalQty += item.requiredQty;
-        productInBranch.quantity -= item.requiredQty;
+      validProducts.push({
+          productId: product._id,
+          productName: product.name,
+          price: product.soldPrice,
+          requiredQty: item.requiredQty, 
+          totalPrice: itemTotalPrice,
+          productImages: formattedImages,  
+      });
 
-        // Group products by sellerId
-        if (!sellersOrders.has(product.sellerId.toString())) {
-            sellersOrders.set(product.sellerId.toString(), {
-                sellerId: product.sellerId,
-                products: [],
-                totalPrice: 0,
-                totalQty: 0,
-                status: "pending"
-            });
-        }
+      totalPrice += itemTotalPrice;
+      totalQty += item.requiredQty;
+      productInBranch.quantity -= item.requiredQty;
 
-        const sellerOrder = sellersOrders.get(product.sellerId.toString());
-        sellerOrder.products.push({
-            productId: product._id,
-            quantity: item.requiredQty,
-            price: product.soldPrice,
-        });
+      // Group products by sellerId
+      if (!sellersOrders.has(product.sellerId.toString())) {
+          sellersOrders.set(product.sellerId.toString(), {
+              sellerId: product.sellerId,
+              products: [],
+              totalPrice: 0,
+              totalQty: 0,
+              status: "pending"
+          });
+      }
 
-        sellerOrder.totalPrice += itemTotalPrice;
-        sellerOrder.totalQty += item.requiredQty;
-    }
+      const sellerOrder = sellersOrders.get(product.sellerId.toString());
+      sellerOrder.products.push({
+          productId: product._id,
+          productName: product.name,
+          category: product.categoryName,
+          productImages: formattedImages, 
+          price: product.soldPrice,
+          totalPrice: itemTotalPrice,
+          requiredQty: item.requiredQty,
+      });
 
-    await branch.save();
-    return { 
-        validProducts, 
-        totalPrice, 
-        totalQty, 
-        sellersOrders: Array.from(sellersOrders.values()), 
-        changes 
-    };
+      sellerOrder.totalPrice += itemTotalPrice;
+      sellerOrder.totalQty += item.requiredQty;
+  }
+
+  await branch.save();
+  return { 
+      validProducts, 
+      totalPrice, 
+      totalQty, 
+      sellersOrders: Array.from(sellersOrders.values()), 
+      changes 
+  };
 }
 
 
@@ -168,35 +186,47 @@ async function processOrderItems(products, branch) {
 
 // Save Online Order 
 async function saveOnlineOrder(customerId, branchId, paymentMethod, customerNotes, address, phone, products, totalPrice, totalQty, sellersOrders) {
-    return await new Order({
-      customerId,
-      branchId,
-      orderType: "online",
-      paymentMethod,
-      customerNotes,
-      address,
-      phone,
-      products,
-      totalPrice,
-      totalQty,
-      sellersOrders, 
-    }).save();
-  }
+  const sellerOrderIds = await saveSellersOrders(sellersOrders);
+
+  const order = await new Order({
+    customerId,
+    branchId,
+    orderType: "online",
+    paymentMethod,
+    customerNotes,
+    address,
+    phone,
+    products,
+    totalPrice,
+    totalQty,
+    sellersOrders: sellerOrderIds.map(orderId => ({ order: orderId })), // Store references
+  }).save();
+
+  return order;
+}
+
+
   
 
 // Save Offline Order 
 async function saveOfflineOrder(cashierId, branchId, paymentMethod, phone, products, totalPrice, totalQty, customerName, sellersOrders) {
-    return await new Order({
-      cashierId,
-      branchId,
-      orderType: "offline",
-      paymentMethod,
-      phone,
-      customerName,
-      products,
-      totalPrice,
-      totalQty,
-      sellersOrders, 
-    }).save();
-  }
+  const sellerOrderIds = await saveSellersOrders(sellersOrders);
+
+  const order = await new Order({
+    cashierId,
+    branchId,
+    orderType: "offline",
+    paymentMethod,
+    phone,
+    customerName,
+    products,
+    totalPrice,
+    totalQty,
+    sellersOrders: sellerOrderIds.map(orderId => ({ order: orderId })), // Store references
+  }).save();
+
+  return order;
+}
+
+
   
