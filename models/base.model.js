@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 const DEFAULT_IMAGE = {
-  fileId: "default-file-id",
-  filePath: "https://yourcdn.com/default-profile.jpg",
+  fileId: "67b63936432c47641646f3ae",
+  filePath: "/users/user_default.png",
 };
 
 

@@ -9,12 +9,11 @@ const {
   deleteCustomer,
   getCustomerAddresses,
   addCustomerAddress,
-  getCustomerDetailsByToken,
 } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
 const { validateAddress } = require("../middlewares/addressValidation.midleware"); 
 
-
+// Create a new customer
 router.post("/", async (req, res, next) => {
   try {
     const { firstName, lastName, email, phone1, password, addresses = [] } = req.body; 
@@ -39,7 +38,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // Get customer details using token
-router.get("/me", async (req, res, next) => {
+router.get("/my/profile", async (req, res, next) => {
   try {
     const userId = req.user.sub; 
     console.log(userId);
@@ -47,7 +46,7 @@ router.get("/me", async (req, res, next) => {
       throw new AppError("User ID is missing from token", 400);
     }
 
-    const customer = await getCustomerDetailsByToken(userId);
+    const customer = await getCustomerById(userId);
     res.status(200).json({ success: true, data: customer });
   } catch (error) {
     next(error);
@@ -55,7 +54,7 @@ router.get("/me", async (req, res, next) => {
 });
 
 
-// ✅ Get all customers
+// Get all customers
 router.get("/", async (req, res, next) => {
   try {
     const customers = await getAllCustomers();
@@ -76,6 +75,16 @@ router.get("/:customerId", async (req, res, next) => {
   }
 });
 
+// Fetch Addresses Using Token
+router.get("/my/addresses", async (req, res, next) => {
+  try {
+    const customerId = req.user.sub; // Extract from token
+    const addresses = await getCustomerAddresses(customerId);
+    res.status(200).json({ success: true, data: addresses });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
 
 //  Get a customer's addresses
 router.get("/:customerId/addresses", async (req, res, next) => {
@@ -89,6 +98,19 @@ router.get("/:customerId/addresses", async (req, res, next) => {
 });
 
 
+// Update Customer Using Token
+router.put("/my/profile", async (req, res, next) => {
+  try {
+    const customerId = req.user.sub; // Extract from token
+    const updatedData = req.body;
+    const uploadedFile = req.files?.image ? [req.files.image] : [];
+
+    const updatedCustomer = await updateCustomer(customerId, updatedData, uploadedFile);
+    res.status(200).json({ success: true, data: updatedCustomer });
+  } catch (error) {
+    next(new AppError(error.message, 500));
+  }
+});
 
 //  Update a customer
 router.put("/:customerId", async (req, res, next) => {
@@ -104,6 +126,20 @@ router.put("/:customerId", async (req, res, next) => {
   }
 });
 
+
+// Add Address Using Token
+router.post("/my/addresses", validateAddress, async (req, res, next) => {
+  try {
+    const customerId = req.user.sub; // Extract from token
+    const newAddress = req.body;
+
+    const updatedAddresses = await addCustomerAddress(customerId, newAddress);
+
+    res.status(200).json({ success: true, data: updatedAddresses });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
 
 //  Add a new address to a customer
 router.post("/:customerId/addresses", validateAddress, async (req, res, next) => {
