@@ -138,8 +138,6 @@ exports.editProductQuantity = async (userId, productId, quantity) => {
   }
 };
 
-
-
 // Remove product from cart
 exports.removeProductFromCart = async (userId, productId) => {
   try {
@@ -215,10 +213,19 @@ exports.getCart = async (userId) => {
     // Fetch the branch by name
     const branch = await getBranchByName("Website Branch");
 
-    // Fetch the cart for the user and populate product details
+    // Fetch the cart for the user and populate all product details
     let cart = await Cart.findOne({ userId }).populate({
       path: "products.productId",
-      select: "name costPrice soldPrice images description mainStock categoryId categoryName sellerId createdAt updatedAt",
+      select: "name costPrice soldPrice images description mainStock categoryId categoryName sellerId createdAt updatedAt", // Include all fields from the Product schema
+      transform: (product) => {
+        if (product.images) {
+          // Format the images array to combine fileId and filePath into a single full path
+          product.images = product.images.map((img) => ({
+            filePath: `${process.env.IMAGEKIT_ENDPOINT_URL}${img.fileId}/${img.filePath}`,
+          }));
+        }
+        return product;
+      },
     });
 
     // If the cart doesn't exist, create a new one
