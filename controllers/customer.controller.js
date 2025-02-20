@@ -13,6 +13,7 @@ const {
 const { AppError } = require("../utils/errorHandler");
 const { validateAddress } = require("../middlewares/addressValidation.midleware"); 
 const { softDeleteUser } = require("../services/auth.service");
+const { verifyToken } = require("../utils/jwttoken.manager");
 
 
 // Create a new customer
@@ -169,9 +170,19 @@ router.post("/:customerId/addresses", validateAddress, async (req, res, next) =>
 //     return next(new AppError(error.message, 500));
 //   }
 // });
-router.delete("/:customerId", async (req, res, next) => {
+router.delete("/", async (req, res, next) => {
   try {
-    const { customerId } = req.params;
+    // Extract the token from the Authorization header
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Access denied. No token provided." });
+    }
+
+    // Verify and decode the token
+    const decoded = verifyToken(token);
+    const customerId = decoded.sub; // Assuming the user ID is stored in the 'sub' claim
 
     // Call the softDeleteUser function
     const customer = await softDeleteUser(customerId);
