@@ -56,22 +56,22 @@ router.post("/",validateProduct, async (req, res, next) => {
     }
   });
 
-// // ✅ Create product
-// router.post("/", checkPermission("products", "create"), validateProduct, async (req, res, next) => {
-//   try {
-//     const productData = req.body;
-//     const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
-//     if (uploadedFiles.length === 0) {
-//       return res.status(400).json({ success: false, message: "At least one image is required." });
+// ✅ Create product
+router.post("/", checkPermission("products", "create"), validateProduct, async (req, res, next) => {
+  try {
+    const productData = req.body;
+    const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
+    if (uploadedFiles.length === 0) {
+      return res.status(400).json({ success: false, message: "At least one image is required." });
 
-//     }
+    }
 
-//     const product = await productService.createProductService(productData, uploadedFiles);
-//     res.status(201).json({ success: true, message: "Product created successfully.", data: product });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+    const product = await productService.createProductService(productData, uploadedFiles);
+    res.status(201).json({ success: true, message: "Product created successfully.", data: product });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get('/', async (req, res, next) => {
   try {
@@ -133,8 +133,7 @@ router.get('/:id', async (req, res, next) => {
 
 
 
-
-router.delete('/:id', checkPermission("products", "delete"), async (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     await productService.deleteProduct(req.params.id);
     res.status(204).send();

@@ -176,6 +176,19 @@ router.delete('/remove-product/:branchId/', async (req, res, next) => {
   }
 });
 
+router.get('BranchProducts/:branchId/',async (req, res, next) => {
+  try {
+    const products = await BranchService.getProductsInBranch(req.params.branchId);
+    res.status(200).json({
+      status: "success",
+      results: products.length,
+      data: products
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 
 
