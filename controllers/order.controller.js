@@ -3,7 +3,14 @@ const router = express.Router();
 const { 
   addProductToOrder, 
   createOnlineOrder, 
-  createOfflineOrder 
+  createOfflineOrder,
+  getCustomerOrders,
+  getOnlineCustomerOrders,
+  getSellerOrders,
+  getBranchOrders,
+  updateOrder,
+  getAllOrders,
+  cancelOrder
 } = require("../repos/order.repo");
 const { validateOnlineOrder, validateOfflineOrder } = require("../middlewares/orderValidation.midleware"); 
 const { getCart } = require("../services/cart.service");
@@ -73,5 +80,96 @@ router.get("/checkout", async (req, res, next) => {
     next(error);
   }
 });
+
+// Get Customer Orders by Customer ID (from params)
+router.get("/customer/:customerId", async (req, res, next) => {
+  try {
+    const { customerId } = req.params;
+    const orders = await getCustomerOrders(customerId);
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// Get Customer Orders by Customer ID (from token)
+router.get("/customer/my/orders", async (req, res, next) => {
+  try {
+    const customerId = req.user.sub; 
+    const orders = await getOnlineCustomerOrders(customerId);
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// Get Seller Orders by Seller ID (from token)
+router.get("/seller/my/orders", async (req, res, next) => {
+  try {
+    const sellerId = req.user.sub; // Extract from token
+    const orders = await getSellerOrders(sellerId);
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// Get Seller Orders by Seller ID (from params)
+router.get("/seller/:sellerId/orders", async (req, res, next) => {
+  try {
+    const { sellerId } = req.params;
+    const orders = await getSellerOrders(sellerId);
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// Get Orders of the Branch (from token)
+router.get("/branch/my/orders", async (req, res, next) => {
+  try {
+    const branchId = req.user.branchId; // Extract from token
+    const orders = await getBranchOrders(branchId);
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// Update Order Status (also update related Seller Orders)
+router.put("/:orderId", async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const updatedData = req.body;
+
+    const updatedOrder = await updateOrder(orderId, updatedData);
+    res.status(200).json({ success: true, data: updatedOrder });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// Cancel Order (also cancel related Seller Orders)
+router.put("/:orderId/cancel", async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+
+    const cancelledOrder = await cancelOrder(orderId);
+    res.status(200).json({ success: true, data: cancelledOrder });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// Get All Orderss
+router.get("/", async (req, res, next) => {
+  try {
+    const orders = await getAllOrders();
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
 
 module.exports = router;

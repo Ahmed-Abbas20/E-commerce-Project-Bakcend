@@ -103,6 +103,102 @@ module.exports.createOfflineOrder = async (cashierId, customerName, phone, payme
       throw new AppError(`Error creating offline order: ${error.message}`, 500);
     }
   };
+
+
+
+// Get Customer Orders by Customer ID
+module.exports.getCustomerOrders = async (customerId) => {
+  try {
+    return await Order.find({ customerId }).populate("branchId", "name location");
+  } catch (error) {
+    throw new AppError(`Error fetching customer orders: ${error.message}`, 500);
+  }
+};
+
+// Get Online Customer Orders
+module.exports.getOnlineCustomerOrders = async (customerId) => {
+  try {
+    return await Order.find({ customerId, orderType: "online" }).select("-branchId");
+  } catch (error) {
+    throw new AppError(`Error fetching online customer orders: ${error.message}`, 500);
+  }
+};
+
+
+
+// Get Seller Orders by Seller ID (from params)
+module.exports.getSellerOrders = async (sellerId) => {
+  try {
+    return await SellersOrder.find({ sellerId });
+  } catch (error) {
+    throw new AppError(`Error fetching seller orders: ${error.message}`, 500);
+  }
+};
+
+// Get Orders of the Branch (from token)
+module.exports.getBranchOrders = async (branchId) => {
+  try {
+    return await Order.find({ branchId }).populate("customerId", "firstName lastName phone1");
+  } catch (error) {
+    throw new AppError(`Error fetching branch orders: ${error.message}`, 500);
+  }
+};
+
+// Update Order (also update related Seller Orders)
+module.exports.updateOrder = async (orderId, updatedData) => {
+  try {
+    const order = await Order.findByIdAndUpdate(orderId, updatedData, { new: true });
+
+    if (!order) throw new AppError("Order not found", 404);
+
+    if (updatedData.status) {
+      await SellersOrder.updateMany(
+        { _id: { $in: order.sellersOrders.map(sellerOrder => sellerOrder.order) } },
+        { status: updatedData.status }
+      );
+    }
+
+    return order;
+  } catch (error) {
+    throw new AppError(`Error updating order: ${error.message}`, 500);
+  }
+};
+
+
+// Cancel Order (also cancel related Seller Orders)
+module.exports.cancelOrder = async (orderId) => {
+  try {
+    const order = await Order.findById(orderId);
+
+    if (!order) throw new AppError("Order not found", 404);
+
+    order.status = "cancelled";
+    await order.save();
+
+    await SellersOrder.updateMany(
+      { _id: { $in: order.sellersOrders.map(sellerOrder => sellerOrder.order) } },
+      { status: "cancelled" }
+    );
+
+    return order;
+  } catch (error) {
+    throw new AppError(`Error cancelling order: ${error.message}`, 500);
+  }
+};
+
+// Get All Orders
+module.exports.getAllOrders = async () => {
+  try {
+    return await Order.find()
+      .populate("customerId", "firstName lastName email")
+      .populate("cashierId", "firstName lastName")
+      .populate("branchId", "name location");
+  } catch (error) {
+    throw new AppError(`Error fetching all orders: ${error.message}`, 500);
+  }
+};
+
+
   
 //  Process Products & Validate Stock
 async function processOrderItems(products, branch) {
@@ -152,7 +248,6 @@ async function processOrderItems(products, branch) {
               products: [],
               totalPrice: 0,
               totalQty: 0,
-              status: "pending"
           });
       }
 
@@ -199,11 +294,15 @@ async function saveOnlineOrder(customerId, branchId, paymentMethod, customerNote
     products,
     totalPrice,
     totalQty,
-    sellersOrders: sellerOrderIds.map(orderId => ({ order: orderId })), // Store references
+    sellersOrders: sellerOrderIds.map(orderId => ({ order: orderId })),
   }).save();
+
+  
+
 
   return order;
 }
+
 
 
   
@@ -224,6 +323,11 @@ async function saveOfflineOrder(cashierId, branchId, paymentMethod, phone, produ
     totalQty,
     sellersOrders: sellerOrderIds.map(orderId => ({ order: orderId })), // Store references
   }).save();
+
+  await SellersOrder.updateMany(
+    { _id: { $in: sellerOrderIds } },
+    { status: "delivered" }
+  );
 
   return order;
 }
