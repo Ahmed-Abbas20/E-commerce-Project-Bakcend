@@ -46,7 +46,7 @@ router.get("/", async (req, res, next) => {
 });
 
 // Get cashier details using the ID from the token
-router.get("/me", async (req, res, next) => {
+router.get("/my/profile", async (req, res, next) => {
   try {
     const cashierId = req.user.sub; // Extract cashier ID from token
     if (!cashierId) {

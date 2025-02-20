@@ -3,28 +3,29 @@ const { AddressSchema } = require("./base.model");
 
 const OrderSchema = new mongoose.Schema(
   {
-    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
-    cashierId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    cashierId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: true },
     paymentMethod: { type: String, enum: ["Cash", "Card"], required: true },
     orderType: { type: String, enum: ["online", "offline"], required: true },
-
-    // Only for offline orders
+    status: { 
+      type: String, 
+      enum: ["pending", "onTheWay", "delivered", "cancelled"], 
+      default: "pending" 
+    }, 
+    
     customerName: {
       type: String,
       required: function () {
         return this.orderType === "offline";
       },
     },
-
-    // Only for online orders
     address: {
       type: AddressSchema,
       required: function () {
         return this.orderType === "online";
       },
     },
-
     phone: { type: String, required: true },
 
     products: [
@@ -47,13 +48,13 @@ const OrderSchema = new mongoose.Schema(
     totalPrice: { type: Number, required: true },
     totalQty: { type: Number, required: true },
 
-    
     sellersOrders: [
       { order: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true, ref: "SellersOrder" } }
     ],
   },
   { timestamps: true }
 );
+
 
 const Order = mongoose.model("Order", OrderSchema);
 module.exports = Order;

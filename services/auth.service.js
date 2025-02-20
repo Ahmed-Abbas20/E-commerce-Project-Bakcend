@@ -122,6 +122,9 @@ const loginUser = async ({ email, password }) => {
       userType: user.userType,
       role: user.role,
     };
+    if (user.branchId) {
+      claims.branchId = user.branchId;
+    }
     const token = signToken({ claims });
    
     return { token };
