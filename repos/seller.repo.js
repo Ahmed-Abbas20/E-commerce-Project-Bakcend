@@ -154,25 +154,20 @@ module.exports.deleteSeller = async (sellerId) => {
 
 module.exports.getSellerDashboardData = async (sellerId) => {
   try {
-    // 1. Fetch Seller's Products
     const sellerProducts = await Product.find({ sellerId }).select(" _id name soldPrice costPrice");
-
-    // 2. Fetch Seller's Orders
     const sellerOrders = await SellersOrder.find({ sellerId }).populate({
       path: "products.productId",
       select: "name soldPrice costPrice",
     });
 
-    // 3. Remove Redundant Data from sellerOrders
     const cleanedSellerOrders = sellerOrders.map(order => ({
       ...order.toObject(),
       products: order.products.map(product => ({
         ...product.toObject(),
-        productId: product.productId._id, // Only include the product ID
+        productId: product.productId._id,
       })),
     }));
 
-    // 4. Calculate Most Sold Products
     const productSales = {};
     sellerOrders.forEach(order => {
       order.products.forEach(product => {
@@ -194,7 +189,6 @@ module.exports.getSellerDashboardData = async (sellerId) => {
 
     const mostSoldProducts = Object.values(productSales).sort((a, b) => b.soldQty - a.soldQty);
 
-    // 5. Calculate Total Profit
     let totalProfit = 0;
     sellerOrders.forEach(order => {
       order.products.forEach(product => {
@@ -202,10 +196,9 @@ module.exports.getSellerDashboardData = async (sellerId) => {
       });
     });
 
-    // 6. Return Dashboard Data
     return {
       sellerProducts,
-      sellerOrders: cleanedSellerOrders, // Use the cleaned data
+      sellerOrders: cleanedSellerOrders,
       mostSoldProducts,
       totalProfit,
     };
