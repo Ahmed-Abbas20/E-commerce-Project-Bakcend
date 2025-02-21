@@ -128,8 +128,9 @@ router.get("/seller/:sellerId/orders", async (req, res, next) => {
 // Get Orders of the Branch (from token)
 router.get("/branch/my/orders", async (req, res, next) => {
   try {
+    const page = parseInt(req.query.page) || 1;
     const branchId = req.user.branchId; // Extract from token
-    const orders = await getBranchOrders(branchId);
+    const orders = await getBranchOrders(branchId,page);
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     return next(new AppError(error.message, 500));
@@ -164,7 +165,8 @@ router.put("/:orderId/cancel", async (req, res, next) => {
 // Get All Orderss
 router.get("/", async (req, res, next) => {
   try {
-    const orders = await getAllOrders();
+    const page = parseInt(req.query.page) || 1;
+    const orders = await getAllOrders(page);
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     return next(new AppError(error.message, 500));
