@@ -12,6 +12,7 @@ const {
   getBranchById,
   updateBranch,
   deleteBranch,
+  getBranchByManagerId
 } = require("../repos/branch.repo");
 const { validateBranch } = require("../middlewares/branchValidation.midleware");
 
