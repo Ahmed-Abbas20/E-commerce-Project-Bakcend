@@ -92,7 +92,8 @@ const loginUser = async ({ email, password }) => {
     }
     let cart = await Cart.findOne({ userId: user._id });
     if (!cart) {
-      throw new AppError("User didn't have a cart !", 401);
+      cart = new Cart({ userId: user._id, products: [] });
+      await cart.save();
     }
 
     const claims = {
