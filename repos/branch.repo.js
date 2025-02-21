@@ -17,6 +17,22 @@ exports.getBranchById = async (branchId) => {
   return branch;
 };
 
+exports.getBranchByManagerId = async (managerId) => {
+  try {
+    const branch = await Branch.findOne({ manager: managerId })
+      .populate("stock.productId")
+      .populate("manager", "firstName lastName email"); // Optional: populate manager details
+
+    if (!branch) {
+      throw new AppError("Branch not found for this manager", 404);
+    }
+    
+    return branch;
+  } catch (error) {
+    throw new AppError(`Error finding branch by manager ID: ${error.message}`, 500);
+  }
+};
+
 exports.updateBranch = async (branchId, updatedData) => {
   const branch = await Branch.findByIdAndUpdate(branchId, updatedData, { new: true }).populate("stock.productId");
   if (!branch) throw new AppError("Branch not found", 404);

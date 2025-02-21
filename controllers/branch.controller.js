@@ -191,6 +191,15 @@ router.get('BranchProducts/:branchId/',async (req, res, next) => {
   }
 });
 
+router.get("/mybranch", async (req, res, next) => {
+  try {
+    const managerId = req.user.sub; 
+    const branch = await getBranchByManagerId(managerId);
+    res.status(200).json({ success: true, data: branch });
+  } catch (error) {
+    next(error);
+  }
+});
 
 
 

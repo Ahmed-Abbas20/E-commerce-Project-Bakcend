@@ -55,7 +55,7 @@ exports.getProductById = async (id) => {
 
 
 exports.getAllProducts = async (page = 1, filters = {}) => {
-  const products = await Product.find(filters)
+  const products = await Product.find(filters) 
     .sort('-createdAt')
     .skip((page - 1) * 20)
     .limit(20);
