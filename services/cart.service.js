@@ -221,7 +221,7 @@ exports.getCart = async (userId) => {
         if (product.images) {
           // Format the images array to combine fileId and filePath into a single full path
           product.images = product.images.map((img) => ({
-            filePath: `${process.env.IMAGEKIT_ENDPOINT_URL}${img.fileId}/${img.filePath}`,
+            filePath: `${process.env.IMAGEKIT_ENDPOINT_URL}${img.filePath}`,
           }));
         }
         return product;

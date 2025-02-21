@@ -1,249 +1,187 @@
 const mongoose = require("mongoose");
-const Permission = require("../models/permission.model");  
+const Permission = require("../models/permission.model");
+const User = require("../models/base.model");
+const bcrypt = require("bcrypt");
 
-const uniquePermissions = [
-    // Super Admin Restrictions
-    {
-      effect: "deny",
-      resource: "super_admin",
-      action: ["create", "read", "update", "delete"],
-      description: "Prevents anyone from making CRUD operations on super_admin",
-      condition: {}
-    },
-    
-    // Super Admin Permissions (excluding super_admin CRUD)
-    {
-      effect: "allow",
-      resource: "managers",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage managers",
-      condition: {
-        role: {
-          IN: ["super_admin"] 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "clerks",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin and managers to manage clerks",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "cashiers",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin and managers to manage cashiers",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "sellers",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin and managers to manage sellers",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    {
-      effect: "deny",
-      resource: "managers",
-      action: ["update"],
-      description: "Prevents managers from updating other managers or super admins",
-      condition: {
-        role: {
-          IN: ["manager"]
-        }
-      }
-    },
-    
-    // Product Management
-    {
-      effect: "allow",
-      resource: "products",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin and managers to manage products",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"] 
-        }
-      }
-    },
-    
-    // Clerk Permissions
-    {
-      effect: "allow",
-      resource: "products",
-      action: ["read"],
-      description: "Allows clerks to read products",
-      condition: {
-        role: {
-          IN: ["clerk", "manager"]
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "cus_orders",
-      action: ["read", "update"],
-      description: "Allows clerks to read and update customer orders",
-      condition: {
-        role: {
-          IN: ["clerk", "manager"]
-        }
-      }
-    },
-    
-    // Cashier Permissions
-    {
-      effect: "allow",
-      resource: "cus_orders",
-      action: ["read", "update"],
-      description: "Allows cashiers to read and update customer orders",
-      condition: {
-        role: {
-          IN: ["cashier"]
-        }
-      }
-    },
-    
-    // Seller Permissions
-    {
-      effect: "allow",
-      resource: "products",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows sellers to manage their own MainInventory",
-      condition: {
-        role: {
-          IN: ["seller"]
-        }
-      }
-    },
- 
-    {
-      effect: "allow",
-      resource: "category",
-      action: ["read"],
-      description: "Allows sellers to read product categories",
-      condition: {
-        role: {
-          IN: ["seller", "manager"]
-        }
-      }
-    },
-    
-    // Customer Permissions
-   
-    {
-      effect: "allow",
-      resource: "cus_orders",
-      action: ["read"],
-      description: "Allows customers to read their orders",
-      condition: {
-        role: {
-          IN: ["customer"]
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "category",
-      action: ["read"],
-      description: "Allows customers to read product categories",
-      condition: {
-        role: {
-          IN: ["customer"]
-        }
-      }
-    },
+// Define permissions
+const newPermissions = [
+  // Branch Permissions
+  {
+    effect: "allow",
+    resource: "branch",
+    action: [
+      "create", "getAll", "getById", "updateById", "deleteById",
+      "filterProductsByBranchId", "searchProductsByBranchId",
+      "addProductToBranchId", "removeProductFromBranchId", "getCurrentBranchProducts"
+    ],
+    description: "Super Admin permissions for managing branches and products by branch.",
+    condition: { role: { IN: ["super_admin"] } }
+  },
+  {
+    effect: "allow",
+    resource: "branch",
+    action: ["getCurrentBranchProducts"],
+    description: "Managers can get current branch products.",
+    condition: { role: { IN: ["manager"] } }
+  },
 
-    // Self-Update Permissions
-    { effect: "allow", resource: "clerks", action: ["read", "update"], description: "Allows clerks to read and update their own profile", condition: { role: { IN: ["clerk"] }, self: true } },
-    { effect: "allow", resource: "managers", action: ["read", "update"], description: "Allows managers to read and update their own profile", condition: { role: { IN: ["manager"] }, self: true } },
-    { effect: "allow", resource: "cashiers", action: ["read", "update"], description: "Allows cashiers to read and update their own profile", condition: { role: { IN: ["cashier"] }, self: true } },
-    { effect: "allow", resource: "sellers", action: ["read", "update"], description: "Allows sellers to read and update their own profile", condition: { role: { IN: ["seller"] }, self: true } },
-    { effect: "allow", resource: "customers", action: ["read", "update"], description: "Allows customers to read and update their own profile", condition: { role: { IN: ["customer"] }, self: true } },
+  // Cashier Permissions
+  {
+    effect: "allow",
+    resource: "cashier",
+    action: ["create", "getById", "updateById", "deleteById"],
+    description: "Super Admin and Managers can create and manage cashiers in their branch.",
+    condition: { role: { IN: ["super_admin", "manager"] } }
+  }
+  ,
+  {
+    effect: "allow",
+    resource: "cashier",
+    action: ["getAll"],
+    description: "Super Admin can get all cashiers.",
+    condition: { role: { IN: ["super_admin"] } }
+  }
+  ,
 
-    {
-      effect: "allow",
-      resource: "clerk",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage staff",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"]
+  // Category Permissions
+  {
+    effect: "allow",
+    resource: "category",
+    action: ["create", "updateById", "deleteById"],
+    description: "Super Admin manages categories.",
+    condition: { role: { IN: ["super_admin"] } }
+  },
 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "cashier",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage staff",
-      condition: {
-        role: {
-          IN: ["super_admin", "manager"]
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "manager",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows super admin to manage staff",
-      condition: {
-        role: {
-          IN: ["super_admin"]
+  // Customer Permissions - Super Admin Only
+  {
+    effect: "allow",
+    resource: "customer",
+    action: ["create", "getAll", "getById", "getAddressByCustomerId", "updateById", "addAddressByCustomerId"],
+    description: "Super Admin manages all customer-related actions.",
+    condition: { role: { IN: ["super_admin"] } }
+  },
 
+  // Manager Permissions
+  {
+    effect: "allow",
+    resource: "manager",
+    action: ["create", "getAll", "getById", "updateById", "deleteById"],
+    description: "Super Admin manages managers.",
+    condition: { role: { IN: ["super_admin"] } }
+  },
 
-        }
-      }
-    },
-    {
-      effect: "allow",
-      resource: "cart",
-      action: ["create", "read", "update", "delete"],
-      description: "Allows customers to manage their cart",
-      condition: {
-        role: {
-          IN: ["customer","seller"],
-        },
-      },
-    },
-  ];
-  
-  
-  
+  // Order Permissions
+  {
+    effect: "allow",
+    resource: "order",
+    action: ["addProduct", "createOfflineOrder"],
+    description: "Super Admin, Manager, and Cashier can add products and create offline orders.",
+    condition: { role: { IN: ["super_admin", "manager", "cashier"] } }
+  },
+  {
+    effect: "allow",
+    resource: "order",
+    action: ["getCustomerOrdersByCustomerId", "getSellerOrdersBySellerId","getAll"],
+    description: "Super Admin manages customer and seller orders.",
+    condition: { role: { IN: ["super_admin"] } }
+  },
 
+{
+  effect: "allow",
+  resource: "order",
+  action: [
+    "updateOrderById",
+    "cancelOrderById"
+  ],
+  description: "Super Admin and Manager can update and cancel orders.",
+  condition: { role: { IN: ["super_admin", "manager"] } }
+},
 
-// Function to seed permissions
+  // Product Permissions
+  {
+    effect: "allow",
+    resource: "product",
+    action: ["create", "getAllMainStock", "searchAllMainStock", "filterAllMainStock", "deleteById", "editById"],
+    description: "Super Admin manages all products in the main stock.",
+    condition: { role: { IN: ["super_admin"] } }
+  },
+  {
+    effect: "allow",
+    resource: "product",
+    action: ["getById"],
+    description: "Super Admin and Managers can access products in their branch.",
+    condition: { role: { IN: ["super_admin", "manager"] } }
+  },
+
+  // Seller Permissions - Super Admin Only
+  {
+    effect: "allow",
+    resource: "seller",
+    action: ["create", "getAll", "getById", "editById", "getSellerAddressesBySellerId", "addAddressToSellerById"],
+    description: "Super Admin manages all seller-related actions.",
+    condition: { role: { IN: ["super_admin"] } }
+  }
+];
+
+// ✅ Seed Permissions Function
 async function seedPermissions() {
-    try {
-        const permissionExists = await Permission.countDocuments();  
-
-        if (permissionExists > 0) {
-            console.log("Permissions already seeded, skipping...");
-            return;  
-        }
-
-        await Permission.insertMany(uniquePermissions);
-
-        console.log("Permissions successfully seeded!");
-    } catch (error) {
-        console.error("Error seeding permissions:", error);
-    }
+  try {
+    await Permission.deleteMany({});
+    await Permission.insertMany(newPermissions);
+    console.log("Permissions successfully seeded!");
+  } catch (error) {
+    console.error("Error seeding permissions:", error);
+  }
 }
 
-module.exports = seedPermissions;
+// ✅ Seed Super Admin Function
+async function seedSuperAdmin() {
+  try {
+    const existingAdmin = await User.findOne({ role: "super_admin" });
+
+    if (existingAdmin) {
+      console.log("Super Admin already exists.");
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(process.env.SUPER_ADMIN_PASSWORD, salt);
+
+    const superAdmin = new User({
+      firstName: "Super",
+      lastName: "Admin",
+      email: process.env.SUPER_ADMIN_EMAIL,
+      password: hashedPassword,
+      salt: salt,
+      phone1: process.env.SUPER_ADMIN_PHONE,
+      userType: "staff",
+      role: "super_admin",
+      branchId: new mongoose.Types.ObjectId(process.env.SUPER_ADMIN_BRANCH_ID),
+      SSN: process.env.SUPER_ADMIN_SSN,
+      isActive: true,
+      addresses: [
+        {
+          city: process.env.SUPER_ADMIN_CITY,
+          street: process.env.SUPER_ADMIN_STREET,
+          gov: process.env.SUPER_ADMIN_GOV,
+          zipCode: process.env.SUPER_ADMIN_ZIP,
+        }
+      ],
+    });
+
+    await superAdmin.save();
+    console.log("Super Admin account created successfully with real production data.");
+  } catch (error) {
+    console.error("Error seeding Super Admin:", error);
+  }
+}
+
+// ✅ Combined Seeding Function
+async function seedData() {
+  await seedPermissions();
+  await seedSuperAdmin();
+  console.log("Seeding process completed.");
+}
+
+// Export the combined seeding function
+module.exports = seedData;
