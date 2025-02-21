@@ -1,16 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const { AppError } = require("../utils/errorHandler"); 
-const checkPermission = require("../middlewares/authorization.middleware");
+const { AppError } = require("../utils/errorHandler");
 const {
-  createOrUpdateCart,
   getCart,
-  deleteCart,
   addProductToCart,
   removeProductFromCart,
-  emptyCart
+  emptyCart,
+  editProductQuantity
 } = require("../services/cart.service");
 
+// Add product to cart
 router.post("/add", async (req, res, next) => {
   try {
     const { userId, productId, quantity } = req.body;
@@ -27,55 +26,50 @@ router.post("/add", async (req, res, next) => {
   }
 });
 
+// Edit product quantity in cart
+router.post("/:userId/edit", async (req, res, next) => {
+  try {
+    const { userId } = req.params; // Get userId from URL
+    const { productId, quantity } = req.body; // Get productId and new quantity from body
 
-// Get cart by customer ID
-// router.get("/:userId", async (req, res, next) => {
-//   try {
-//     const { userId } = req.params;
-//     const cart = await getCart(userId);
-//     res.status(200).json({ success: true, data: cart });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+    // Validate input
+    if (!productId || !quantity) {
+      throw new AppError("Product ID and quantity are required", 400);
+    }
 
+    // Call the service to update the product quantity
+    const cart = await editProductQuantity(userId, productId, quantity);
+    res.status(200).json({ success: true, data: cart });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get cart by user ID
 router.get("/", async (req, res, next) => {
   try {
-    const { userId } = req.query; // Extract userId from query parameters
+    const { userId } = req.query;
 
     // Validate input
     if (!userId) {
       throw new AppError("User ID is required", 400);
     }
 
-    // Fetch the cart and validate product quantities
     const { cart, changes } = await getCart(userId);
-
-    // Return the cart and changes (if any)
     res.status(200).json({ success: true, data: { cart, changes } });
   } catch (error) {
     next(error);
   }
 });
 
-// Delete cart
-// router.delete("/:userId", checkPermission("cart", "delete"), async (req, res, next) => {
-//   try {
-//     const { userId } = req.params;
-//     await deleteCart(userId);
-//     res.status(204).send();
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-router.delete("/empty",  async (req, res, next) => {
+// Empty cart
+router.delete("/empty", async (req, res, next) => {
   try {
     const { userId } = req.body;
 
     // Validate input
     if (!userId) {
-      throw new AppError("Customer ID is required", 400);
+      throw new AppError("User ID is required", 400);
     }
 
     const cart = await emptyCart(userId);
@@ -84,23 +78,36 @@ router.delete("/empty",  async (req, res, next) => {
     next(error);
   }
 });
-// Add product to cart
-router.post("/:userId/add", async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const { productId, requiredQty } = req.body;
-    const cart = await addProductToCart(userId, productId, requiredQty);
-    res.status(200).json({ success: true, data: cart });
-  } catch (error) {
-    next(error);
-  }
-});
+
+// Add product to cart (alternative endpoint)
+// router.post("/:userId/add", async (req, res, next) => {
+//   try {
+//     const { userId } = req.params;
+//     const { productId, requiredQty } = req.body;
+
+//     // Validate input
+//     if (!productId || !requiredQty) {
+//       throw new AppError("Product ID and quantity are required", 400);
+//     }
+
+//     const cart = await addProductToCart(userId, productId, requiredQty);
+//     res.status(200).json({ success: true, data: cart });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // Remove product from cart
 router.post("/:userId/remove", async (req, res, next) => {
   try {
     const { userId } = req.params;
     const { productId } = req.body;
+
+    // Validate input
+    if (!productId) {
+      throw new AppError("Product ID is required", 400);
+    }
+
     const cart = await removeProductFromCart(userId, productId);
     res.status(200).json({ success: true, data: cart });
   } catch (error) {

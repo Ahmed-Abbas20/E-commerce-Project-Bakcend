@@ -13,7 +13,7 @@ const {
 const productService = require('../services/product.service');
 
 // ✅ Create product
-router.post("/", checkPermission("products", "create"), validateProduct, async (req, res, next) => {
+router.post("/", validateProduct, async (req, res, next) => {
   try {
     const productData = req.body;
     const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
@@ -98,7 +98,7 @@ router.delete('/:id', checkPermission("products", "delete"), async (req, res, ne
   }
 });
 
-router.put('/:id', checkPermission("products", "update"), validateProduct, async (req, res, next) => {
+router.put('/:id', validateProduct, async (req, res, next) => {
   try {
     const productId = req.params.id;
     const productData = req.body;

@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { AppError } = require('../utils/errorHandler');
 
 // Schema for Creating a Product (POST)
 const createProductSchema = Joi.object({
@@ -7,7 +8,7 @@ const createProductSchema = Joi.object({
   soldPrice: Joi.number().min(0).required(),
   mainStock: Joi.number().min(0).required(),
   categoryId: Joi.string().required(),
-  categoryName: Joi.string().required(),
+  categoryName: Joi.string(),
   description: Joi.string().allow(''),
   images: Joi.array().items(
     Joi.object({
@@ -21,8 +22,9 @@ const createProductSchema = Joi.object({
 // Schema for Updating a Product (PUT)
 const updateProductSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100), // Optional in update
+
   costPrice: Joi.number().min(0),
-  soldPrice: Joi.number().min(0),
+  soldPrice:Joi.number().min(0),
   mainStock: Joi.number().min(0),
   categoryId: Joi.string(),
   categoryName: Joi.string(),
@@ -75,4 +77,7 @@ exports.validateProduct = (req, res, next) => {
     });
   }
   next();
+
+
 };
+
