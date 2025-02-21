@@ -172,24 +172,14 @@ router.post("/:customerId/addresses", validateAddress, async (req, res, next) =>
 // });
 router.delete("/", async (req, res, next) => {
   try {
-    // Extract the token from the Authorization header
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-    if (!token) {
-      return res.status(401).json({ success: false, message: "Access denied. No token provided." });
-    }
-
-    // Verify and decode the token
-    const decoded = verifyToken(token);
-    const customerId = decoded.sub; // Assuming the user ID is stored in the 'sub' claim
+    const  userId  = req.user.sub;
 
     // Call the softDeleteUser function
-    const customer = await softDeleteUser(customerId);
+    const user = await softDeleteUser(userId);
 
-    res.status(200).json({ success: true, data: customer });
+    res.status(200).json({ success: true, data: user });
   } catch (error) {
-    next(error); // Pass the error to the errorHandler middleware
+    next(error);
   }
 });
 module.exports = router;
