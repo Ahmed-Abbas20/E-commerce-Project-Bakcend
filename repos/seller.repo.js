@@ -154,20 +154,48 @@ module.exports.deleteSeller = async (sellerId) => {
 
 module.exports.getSellerDashboardData = async (sellerId) => {
   try {
-    const sellerProducts = await Product.find({ sellerId }).select(" _id name soldPrice costPrice");
+    //products
+    const sellerProducts = await Product.find({ sellerId }).select("_id name soldPrice costPrice");
+//orders
     const sellerOrders = await SellersOrder.find({ sellerId }).populate({
       path: "products.productId",
       select: "name soldPrice costPrice",
     });
-
-    const cleanedSellerOrders = sellerOrders.map(order => ({
-      ...order.toObject(),
-      products: order.products.map(product => ({
-        ...product.toObject(),
-        productId: product.productId._id,
-      })),
+//monthly details
+    const monthlyData = Array.from({ length: 12 }, () => ({
+      ordersCount: 0,
+      totalProfit: 0,
+      orders: [],
     }));
 
+    sellerOrders.forEach(order => {
+      const orderMonth = new Date(order.createdAt).getMonth();
+      let monthlyProfit = 0;
+      order.products.forEach(product => {
+        const profit = (product.productId.soldPrice - product.productId.costPrice) * product.requiredQty;
+        monthlyProfit += profit;
+      });
+
+      monthlyData[orderMonth].ordersCount += 1;
+      monthlyData[orderMonth].totalProfit += monthlyProfit;
+
+      monthlyData[orderMonth].orders.push({
+        orderId: order._id,
+        createdAt: order.createdAt,
+        totalPrice: order.totalPrice,
+        totalQty: order.totalQty,
+        status: order.status,
+        products: order.products.map(product => ({
+          productId: product.productId._id,
+          productName: product.productId.name,
+          price: product.price,
+          requiredQty: product.requiredQty,
+          totalPrice: product.totalPrice,
+        })),
+      });
+    });
+
+    //most sold products
     const productSales = {};
     sellerOrders.forEach(order => {
       order.products.forEach(product => {
@@ -189,6 +217,7 @@ module.exports.getSellerDashboardData = async (sellerId) => {
 
     const mostSoldProducts = Object.values(productSales).sort((a, b) => b.soldQty - a.soldQty);
 
+    // total profit
     let totalProfit = 0;
     sellerOrders.forEach(order => {
       order.products.forEach(product => {
@@ -198,9 +227,10 @@ module.exports.getSellerDashboardData = async (sellerId) => {
 
     return {
       sellerProducts,
-      sellerOrders: cleanedSellerOrders,
+      sellerOrders,
       mostSoldProducts,
       totalProfit,
+      monthlyData,
     };
   } catch (error) {
     throw new AppError(`Error fetching seller dashboard data: ${error.message}`, 500);
