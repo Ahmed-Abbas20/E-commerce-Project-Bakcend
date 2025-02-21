@@ -168,22 +168,9 @@ router.put("/:orderId",checkPermission("order","updateOrderById"), async (req, r
 
 
 // Cancel Order (also cancel related Seller Orders)
-router.put("/:orderId/cancel",checkPermission("order","cancelOrderById"), async (req, res, next) => {
+router.put("/:orderId/cancel", checkPermission("order","cancelOrderById"),async (req, res, next) => {
   try {
     const { orderId } = req.params;
-    const { role: userRole, branchId: userBranchId } = req.user;
-
-    if (userRole === "manager") {
-      const order = await Order.findById(orderId).lean();
-
-      if (!order) {
-        throw new AppError("Order not found", 404);
-      }
-
-      if (order.branchId.toString() !== userBranchId) {
-        throw new AppError("You are not authorized to cancel this order", 403);
-      }
-    }
 
     const cancelledOrder = await cancelOrder(orderId);
     res.status(200).json({ success: true, data: cancelledOrder });
