@@ -14,10 +14,10 @@ const { AppError } = require("../utils/errorHandler");
 const { validateAddress } = require("../middlewares/addressValidation.midleware"); 
 const { softDeleteUser } = require("../services/auth.service");
 const { verifyToken } = require("../utils/jwttoken.manager");
-
+const checkPermission = require("../middlewares/authorization.middleware"); 
 
 // Create a new customer
-router.post("/", async (req, res, next) => {
+router.post("/",checkPermission("customer","create"),async (req, res, next) => {
   try {
     const { firstName, lastName, email, phone1, password, addresses = [] } = req.body; 
 
@@ -58,7 +58,7 @@ router.get("/my/profile", async (req, res, next) => {
 
 
 // Get all customers
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("customer","getAll"),async (req, res, next) => {
   try {
     const customers = await getAllCustomers();
     res.status(200).json({ success: true, data: customers });
@@ -68,7 +68,7 @@ router.get("/", async (req, res, next) => {
 });
 
 //  Get a customer by ID
-router.get("/:customerId", async (req, res, next) => {
+router.get("/:customerId",checkPermission("customer","getById"), async (req, res, next) => {
   try {
     const { customerId } = req.params;
     const customer = await getCustomerById(customerId);
@@ -90,7 +90,7 @@ router.get("/my/addresses", async (req, res, next) => {
 });
 
 //  Get a customer's addresses
-router.get("/:customerId/addresses", async (req, res, next) => {
+router.get("/:customerId/addresses",checkPermission("customer","getAddressByCustomerId"), async (req, res, next) => {
   try {
     const { customerId } = req.params;
     const addresses = await getCustomerAddresses(customerId);
@@ -116,7 +116,7 @@ router.put("/my/profile", async (req, res, next) => {
 });
 
 //  Update a customer
-router.put("/:customerId", async (req, res, next) => {
+router.put("/:customerId", checkPermission("customer","updateById"),async (req, res, next) => {
   try {
     const { customerId } = req.params;
     const updatedData = req.body;
@@ -145,7 +145,7 @@ router.post("/my/addresses", validateAddress, async (req, res, next) => {
 });
 
 //  Add a new address to a customer
-router.post("/:customerId/addresses", validateAddress, async (req, res, next) => {
+router.post("/:customerId/addresses",checkPermission("customer","addAddressByCustomerId"), validateAddress, async (req, res, next) => {
   try {
     const { customerId } = req.params;
     const newAddress = req.body;

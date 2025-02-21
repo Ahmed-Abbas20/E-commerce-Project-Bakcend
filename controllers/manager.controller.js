@@ -12,7 +12,7 @@ const checkPermission = require("../middlewares/authorization.middleware");
 
 
 // Create a new manager
-router.post("/", async (req, res, next) => {
+router.post("/",checkPermission("manager","create"), async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone1, SSN, branchId } = req.body;
 
@@ -29,7 +29,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // Get all managers
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("manager","getAll"),async (req, res, next) => {
   try {
     const managers = await getAllManagers();
     res.status(200).json({ success: true, data: managers });
@@ -49,7 +49,7 @@ router.get("/my/profile", async (req, res, next) => {
 });
 
 // Get manager by ID
-router.get("/:managerId", async (req, res, next) => {
+router.get("/:managerId", checkPermission("manager","getById"),async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const manager = await getManagerById(managerId);
@@ -76,7 +76,7 @@ router.put("/my/profile", async (req, res, next) => {
 });
 
 // Update a manager (Supports image upload)
-router.put("/:managerId", async (req, res, next) => {
+router.put("/:managerId", checkPermission("manager","updateById"),async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const updatedData = req.body;
@@ -92,7 +92,7 @@ router.put("/:managerId", async (req, res, next) => {
 
 
 // Delete a manager
-router.delete("/:managerId", async (req, res, next) => {
+router.delete("/:managerId", checkPermission("manager","deleteById"),async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const deletedManager = await deleteManager(managerId);

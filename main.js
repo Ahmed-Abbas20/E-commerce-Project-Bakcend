@@ -1,8 +1,9 @@
 require("dotenv").config();
 const { DATA_BASE } = require("./database/mongodb");
 const { APP_CONFIG } = require("./config/app.config");
-const app = require("./index");
-const seedPermissions = require("./utils/seedPermissions");  
+const app = require("./index"); 
+const seedData = require("./utils/seedPermissions");
+
 
 (async function () {
   
@@ -10,7 +11,7 @@ const seedPermissions = require("./utils/seedPermissions");
     console.log("App database has connected successfully");
 
    
-    await seedPermissions();
+    seedData();
 
   
     app.listen(APP_CONFIG.HTTP_PORT, "0.0.0.0", () => {

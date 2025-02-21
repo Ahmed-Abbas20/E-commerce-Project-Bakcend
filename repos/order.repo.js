@@ -149,6 +149,18 @@ module.exports.getBranchOrders = async (branchId, page) => {
   }
 };
 
+module.exports.getOrderById = async (orderId) => {
+  try {
+    const order = await Order.findById(orderId).populate("branchId", "name");
+    if (!order) {
+      throw new AppError("Order not found", 404);
+    }
+    return order;
+  } catch (error) {
+    throw new AppError(`Error fetching order: ${error.message}`, 500);
+  }
+};
+
 // Update Order (also update related Seller Orders)
 module.exports.updateOrder = async (orderId, updatedData) => {
   try {

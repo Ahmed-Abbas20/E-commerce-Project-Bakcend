@@ -16,7 +16,7 @@ const {
 } = require("../repos/branch.repo");
 const { validateBranch } = require("../middlewares/branchValidation.midleware");
 
-router.post("/", validateBranch, async (req, res, next) => {
+router.post("/",checkPermission("branch","create"), validateBranch, async (req, res, next) => {
   try {
     const branch = await createBranch(req.body);
     res.status(201).json({ success: true, data: branch });
@@ -25,7 +25,7 @@ router.post("/", validateBranch, async (req, res, next) => {
   }
 });
 
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("branch","getAll"),async (req, res, next) => {
   try {
     const branches = await getAllBranches();
     res.status(200).json({ success: true, data: branches });
@@ -34,7 +34,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:branchId", async (req, res, next) => {
+router.get("/:branchId", checkPermission("branch","getById"),async (req, res, next) => {
   try {
     const branch = await getBranchById(req.params.branchId);
     res.status(200).json({ success: true, data: branch });
@@ -43,7 +43,7 @@ router.get("/:branchId", async (req, res, next) => {
   }
 });
 
-router.put("/:branchId", validateBranch, async (req, res, next) => {
+router.put("/:branchId",checkPermission("branch","updateById"), validateBranch, async (req, res, next) => {
   try {
     const branch = await updateBranch(req.params.branchId, req.body);
     res.status(200).json({ success: true, data: branch });
@@ -52,7 +52,7 @@ router.put("/:branchId", validateBranch, async (req, res, next) => {
   }
 });
 
-router.delete("/:branchId", async (req, res, next) => {
+router.delete("/:branchId",checkPermission("branch","deleteById"), async (req, res, next) => {
   try {
     const branch = await deleteBranch(req.params.branchId);
     res.status(200).json({ success: true, data: branch });
@@ -66,7 +66,7 @@ router.delete("/:branchId", async (req, res, next) => {
 
 //filter by categoryname or soldprice max or min and with the page ll of them optional
 
-router.get('/filterproducts/:branchId', async (req, res, next) => {
+router.get('/filterproducts/:branchId',checkPermission("branch","filterProductsByBranchId"), async (req, res, next) => {
   try {
     // Validate parameters
     const { branchId } = req.params;
@@ -112,7 +112,7 @@ router.get('/filterproducts/:branchId', async (req, res, next) => {
 });
 
 //search for a specific product name in the branch
-router.get('/searchproducts/:branchId', async (req, res, next) => {
+router.get('/searchproducts/:branchId',checkPermission("branch","searchProductsByBranchId"), async (req, res, next) => {
   try {
     const { branchId } = req.params;
     const { term } = req.query;
@@ -137,7 +137,7 @@ router.get('/searchproducts/:branchId', async (req, res, next) => {
 
 
 // POST /branches/:branchId/add-product
-router.post('/add-product/:branchId',  async (req, res, next) => {
+router.post('/add-product/:branchId',checkPermission("branch","addProductToBranchId"),  async (req, res, next) => {
   try {
     const { branchId } = req.params;
     const { productId, quantity } = req.body;
@@ -159,7 +159,7 @@ router.post('/add-product/:branchId',  async (req, res, next) => {
 });
 
 // DELETE /branches/:branchId/remove-product
-router.delete('/remove-product/:branchId/', async (req, res, next) => {
+router.delete('/remove-product/:branchId/',checkPermission("branch","removeProductFromBranchId"), async (req, res, next) => {
   try {
     const { branchId } = req.params;
     const { productId, quantity } = req.body;
