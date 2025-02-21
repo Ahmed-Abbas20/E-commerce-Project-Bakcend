@@ -8,6 +8,7 @@ const {
   getSellerAddresses,
   addSellerAddress,
   deleteSeller,
+  getSellerDashboardData,
 } = require("../repos/seller.repo");
 const { AppError } = require("../utils/errorHandler");
 
@@ -52,7 +53,15 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-
+router.get("/dashboard", async (req, res, next) => {
+  try {
+    const sellerId = req.user.sub; // Extract seller ID from token
+    const dashboardData = await getSellerDashboardData(sellerId);
+    res.status(200).json({ success: true, data: dashboardData });
+  } catch (error) {
+    next(new AppError(error.message, 500));
+  }
+});
 // Get all sellers
 router.get("/", async (req, res, next) => {
   try {
@@ -188,4 +197,5 @@ router.delete("/", async (req, res, next) => {
     next(error);
   }
 });
+
 module.exports = router;
