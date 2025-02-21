@@ -11,7 +11,9 @@ const OrderSchema = new mongoose.Schema(
     status: { 
       type: String, 
       enum: ["pending", "onTheWay", "delivered", "cancelled"], 
-      default: "pending" 
+      required: function () {
+        return this.orderType === "online";
+      },
     }, 
     
     customerName: {
