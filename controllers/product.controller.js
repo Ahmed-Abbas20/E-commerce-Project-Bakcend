@@ -13,7 +13,7 @@ const {
 
 const productService = require('../services/product.service');
 
-// ✅ Create product
+// Create product
 router.post("/", checkPermission("product","create"),validateProduct, async (req, res, next) => {
   try {
     const productData = req.body;
