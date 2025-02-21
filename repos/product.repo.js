@@ -56,14 +56,9 @@ exports.getProductById = async (id) => {
 
 exports.getAllProducts = async (page = 1, filters = {}) => {
   const products = await Product.find(filters)
-  . populate({
-    path: 'sellerId', 
-    select: 'firstName lastName email phone1 ' 
-  })
     .sort('-createdAt')
     .skip((page - 1) * 20)
-    .limit(20)
-    
+    .limit(20);
 
 
   const updatedProducts = products.map(product => ({
@@ -81,13 +76,13 @@ exports.updateProduct = (id, updateData) =>
   Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 exports.deleteProduct = async (id) => {
   try {
-  
+    
     const product = await Product.findById(id);
     if (!product) {
       throw new AppError("Product not found", 404);
     }
 
-   
+    
     const imageFileIdsToRemove = product.images.map(img => img.fileId);
 
     
@@ -95,18 +90,29 @@ exports.deleteProduct = async (id) => {
       await deleteProductImages(imageFileIdsToRemove);
     }
 
-  
-    const folderPath = `product_images/${product.name.replace(/\s+/g, "_")}`;
+    
+    let folderPath = "";
+    if (product.images.length > 0) {
+      const imagePath = product.images[0].filePath; 
+      const match = imagePath.match(/\/product_images\/([^/]+)/); 
 
-   
-    try {
-      await imagekit.deleteFolder(`/${folderPath}`);
-    } catch (folderError) {
-      if (!folderError.message.includes("Folder not found")) {
-        throw new AppError(`Failed to delete folder: ${folderError.message}`, 500);
+      if (match && match[1]) {
+        folderPath = `/product_images/${match[1]}`; 
       }
     }
 
+    
+    if (folderPath) {
+      try {
+        await imagekit.deleteFolder(folderPath);
+      } catch (folderError) {
+        if (!folderError.message.includes("Folder not found")) {
+          throw new AppError(`Failed to delete folder: ${folderError.message}`, 500);
+        }
+      }
+    }
+
+    
     await Product.findByIdAndDelete(id);
 
   } catch (error) {
@@ -115,7 +121,10 @@ exports.deleteProduct = async (id) => {
 };
 
 
+
 exports.filterProducts = (query, page = 1) =>  Product.find(query).skip((page - 1) *20).limit(20);
+
+
 
 exports.findProductById = async (productId, session = null) => {
   return Product.findById(productId).session(session);

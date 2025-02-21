@@ -1,8 +1,6 @@
-const { loginUser } = require("../services/auth.service");
+const { loginUser, registerUser, softDeleteUser } = require("../services/auth.service");
 const router = require("express").Router();
 const { validateUserRegistration } = require("../middlewares/RegisterValidation.middleware");
-const { registerUser }= require("../services/auth.service");
-const { softDeleteUser } = require("../services/auth.service");
 
 // Register Route
 router.post("/register", validateUserRegistration, async (req, res, next) => {
@@ -14,8 +12,7 @@ router.post("/register", validateUserRegistration, async (req, res, next) => {
   }
 });
 
-
-
+// Soft Delete User Route
 router.delete("/:userId", async (req, res, next) => {
   try {
     const { userId } = req.params;
@@ -25,7 +22,7 @@ router.delete("/:userId", async (req, res, next) => {
 
     res.status(200).json({ success: true, data: user });
   } catch (error) {
-    next(error);
+    next(error); // Pass the error to the errorHandler middleware
   }
 });
 
@@ -33,14 +30,10 @@ router.delete("/:userId", async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const { token } = await loginUser({
-      email,
-      password,
-    });
-    res.status(200).json({ token });
+    const { token } = await loginUser({ email, password });
+    res.status(200).json({ success: true, token });
   } catch (error) {
-    next(error); // Pass the error to the errorHandler middleware
+    next(error);
   }
 });
-
 module.exports = router;
