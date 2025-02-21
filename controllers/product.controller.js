@@ -4,6 +4,7 @@ const {  getCategoryById} = require('../repos/category.repo');
 const { handleImageUpload } = require("../services/upload.service");
 const Product = require("../models/product.model");
 const { AppError } = require("../utils/errorHandler");
+const Branch = require("../models/branch.model"); 
 const checkPermission = require("../middlewares/authorization.middleware"); 
 const {
   validateProduct
@@ -13,7 +14,7 @@ const {
 const productService = require('../services/product.service');
 
 // ✅ Create product
-router.post("/", validateProduct, async (req, res, next) => {
+router.post("/", checkPermission("product","create"),validateProduct, async (req, res, next) => {
   try {
     const productData = req.body;
     const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
@@ -28,7 +29,7 @@ router.post("/", validateProduct, async (req, res, next) => {
   }
 });
 
-router.get('/', async (req, res, next) => {
+router.get('/', checkPermission("product","getAllMainStock"),async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const products = await productService.getAllProducts(page);
@@ -38,7 +39,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/search', async (req, res, next) => {
+router.get('/search',checkPermission("product","searchAllMainStock"), async (req, res, next) => {
   try {
     const results = await productService.searchProducts(req.query.term);
     res.json({ success: true, data: results });
@@ -48,7 +49,7 @@ router.get('/search', async (req, res, next) => {
 });
 
 
-router.get('/filter', async (req, res, next) => {
+router.get('/filter', checkPermission("product","filterAllMainStock"),async (req, res, next) => {
   try {
     const { categoryId, min, max, page = 1 } = req.query;
 
@@ -76,10 +77,31 @@ router.get('/filter', async (req, res, next) => {
 });
 
 
-router.get('/:id', async (req, res, next) => {
+
+
+router.get('/:id', checkPermission("product","getById"),async (req, res, next) => {
   try {
-    const product = await productService.getProduct(req.params.id);
+    const { id: productId } = req.params;
+    const { role: userRole, branchId: userBranchId } = req.user;
+
+    
+    if (userRole === "manager") {
+      const branch = await Branch.findById(userBranchId).lean();
+
+      if (!branch) {
+        throw new AppError("Branch not found", 404);
+      }
+
+      const productInBranch = branch.stock.some(item => item.productId.toString() === productId);
+
+      if (!productInBranch) {
+        throw new AppError("You are not authorized to view this product", 403);
+      }
+    }
+
+    const product = await productService.getProduct(productId);
     res.json({ success: true, data: product });
+
   } catch (error) {
     next(error);
   }
@@ -89,7 +111,8 @@ router.get('/:id', async (req, res, next) => {
 
 
 
-router.delete('/:id', checkPermission("products", "delete"), async (req, res, next) => {
+
+router.delete('/:id',checkPermission("product","deleteById"), async (req, res, next) => {
   try {
     await productService.deleteProduct(req.params.id);
     res.status(204).send();
@@ -98,7 +121,7 @@ router.delete('/:id', checkPermission("products", "delete"), async (req, res, ne
   }
 });
 
-router.put('/:id', validateProduct, async (req, res, next) => {
+router.put('/:id', checkPermission("product","editById"),validateProduct, async (req, res, next) => {
   try {
     const productId = req.params.id;
     const productData = req.body;

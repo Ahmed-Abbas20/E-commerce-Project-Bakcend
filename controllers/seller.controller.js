@@ -22,7 +22,7 @@ const { softDeleteUser } = require("../services/auth.service");
 // Create a new seller
 const bcrypt = require("bcrypt");
 
-router.post("/", async (req, res, next) => {
+router.post("/", checkPermission("seller","create"),async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone1, companyName, companyRegistrationNumber, SSN } = req.body;
 
@@ -54,7 +54,7 @@ router.post("/", async (req, res, next) => {
 
 
 // Get all sellers
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("seller","getAll"),async (req, res, next) => {
   try {
     const sellers = await getAllSellers();
     res.status(200).json({ success: true, data: sellers });
@@ -75,7 +75,7 @@ router.get("/my/profile", async (req, res, next) => {
 });
 
 // Get a seller by ID
-router.get("/:sellerId", async (req, res, next) => {
+router.get("/:sellerId",checkPermission("seller","getById"), async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const seller = await getSellerById(sellerId);
@@ -100,7 +100,7 @@ router.put("/my/profile", async (req, res, next) => {
 });
 
 // Update a seller
-router.put("/:sellerId", async (req, res, next) => {
+router.put("/:sellerId", checkPermission("seller","editById"),async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const updatedData = req.body;
@@ -125,7 +125,7 @@ router.get("/my/addresses", async (req, res, next) => {
 });
 
 // Get a Seller's Addresses (By ID)
-router.get("/:sellerId/addresses", async (req, res, next) => {
+router.get("/:sellerId/addresses", checkPermission("seller","getSellerAddressesBySellerId"),async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const addresses = await getSellerAddresses(sellerId);
@@ -150,7 +150,7 @@ router.post("/my/addresses", validateAddress, async (req, res, next) => {
 });
 
 // Add Address (By Seller ID)
-router.post("/:sellerId/addresses", validateAddress, async (req, res, next) => {
+router.post("/:sellerId/addresses",checkPermission("seller","addAddressToSellerById"), validateAddress, async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const newAddress = req.body;

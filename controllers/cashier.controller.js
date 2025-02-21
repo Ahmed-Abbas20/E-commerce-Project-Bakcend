@@ -11,7 +11,7 @@ const { AppError } = require("../utils/errorHandler");
 const checkPermission = require("../middlewares/authorization.middleware");
 
 // Create a new cashier (Uses `createCashier` from the repo)
-router.post("/", async (req, res, next) => {
+router.post("/",checkPermission("cashier","create"), async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phone1, SSN, branchId } = req.body;
 
@@ -36,7 +36,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // Get all cashiers
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("cashier","getAll"),async (req, res, next) => {
   try {
     const cashiers = await getAllCashiers();
     res.status(200).json({ success: true, data: cashiers });
@@ -60,15 +60,27 @@ router.get("/my/profile", async (req, res, next) => {
   }
 });
 // Get a cashier by ID
-router.get("/:cashierId", async (req, res, next) => {
+router.get("/:cashierId", checkPermission("cashier","getById"),async (req, res, next) => {
   try {
+    const { role: userRole, branchId: userBranchId } = req.user; 
     const { cashierId } = req.params;
+
     const cashier = await getCashierById(cashierId);
+
+    if (!cashier) {
+      throw new AppError("Cashier not found", 404);
+    }
+
+    if (userRole === "manager" && cashier.branchId._id.toString() !== userBranchId) {
+      throw new AppError("You do not have permission to access this cashier", 403);
+    }
+
     res.status(200).json({ success: true, data: cashier });
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
 });
+
 
 router.put("/my/profile", async (req, res, next) => {
   try {
@@ -85,11 +97,19 @@ router.put("/my/profile", async (req, res, next) => {
 
 
 // Update a cashier (Supports image upload)
-router.put("/:cashierId", async (req, res, next) => {
+router.put("/:cashierId", checkPermission("cashier","updateById"),async (req, res, next) => {
   try {
+    const { role: userRole, branchId: userBranchId } = req.user; 
     const { cashierId } = req.params;
     const updatedData = req.body;
     const uploadedFile = req.files?.image ? [req.files.image] : [];
+
+    const cashier = await getCashierById(cashierId);
+    if (!cashier) throw new AppError("Cashier not found", 404);
+
+    if (userRole === "manager" && cashier.branchId._id.toString() !== userBranchId) {
+      throw new AppError("You don't have permission to update this cashier.", 403);
+    }
 
     const updatedCashier = await updateCashier(cashierId, updatedData, uploadedFile);
     res.status(200).json({ success: true, data: updatedCashier });
@@ -99,9 +119,19 @@ router.put("/:cashierId", async (req, res, next) => {
 });
 
 // Delete a cashier
-router.delete("/:cashierId", async (req, res, next) => {
+router.delete("/:cashierId",checkPermission("cashier","deleteById"), async (req, res, next) => {
   try {
+    const { role: userRole, branchId: userBranchId } = req.user; 
     const { cashierId } = req.params;
+
+    
+    const cashier = await getCashierById(cashierId);
+    if (!cashier) throw new AppError("Cashier not found", 404);
+
+    if (userRole === "manager" && cashier.branchId._id.toString() !== userBranchId) {
+      throw new AppError("You don't have permission to delete this cashier.", 403);
+    }
+
     const deletedCashier = await deleteCashier(cashierId);
     res.status(200).json({ success: true, data: deletedCashier });
   } catch (error) {

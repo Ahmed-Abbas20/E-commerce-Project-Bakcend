@@ -10,15 +10,17 @@ const {
   getBranchOrders,
   updateOrder,
   getAllOrders,
+  getOrderById,
   cancelOrder
 } = require("../repos/order.repo");
 const { validateOnlineOrder, validateOfflineOrder } = require("../middlewares/orderValidation.midleware"); 
 const { getCart } = require("../services/cart.service");
 const { getCustomerAddresses } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
-
+const Order = require("../models/order.model"); 
+const checkPermission = require("../middlewares/authorization.middleware"); 
 // Check product availability in Branch
-router.post("/add-product", async (req, res, next) => {
+router.post("/add-product",checkPermission("order","addProduct"), async (req, res, next) => {
     try {
       const userId = req.user.sub; 
       const { productId } = req.body;
@@ -51,7 +53,7 @@ router.post("/online", validateOnlineOrder, async (req, res, next) => {
 });
 
 // Create Offline Order (Manual Entry)
-router.post("/offline", validateOfflineOrder, async (req, res, next) => {
+router.post("/offline",checkPermission("order","createOfflineOrder"), validateOfflineOrder, async (req, res, next) => {
   try {
     const cashierId = req.user.sub;
     const { customerName, phone, paymentMethod, products } = req.body;
@@ -82,7 +84,7 @@ router.get("/checkout", async (req, res, next) => {
 });
 
 // Get Customer Orders by Customer ID (from params)
-router.get("/customer/:customerId", async (req, res, next) => {
+router.get("/customer/:customerId",checkPermission("order","getCustomerOrdersByCustomerId"), async (req, res, next) => {
   try {
     const { customerId } = req.params;
     const orders = await getCustomerOrders(customerId);
@@ -115,7 +117,7 @@ router.get("/seller/my/orders", async (req, res, next) => {
 });
 
 // Get Seller Orders by Seller ID (from params)
-router.get("/seller/:sellerId/orders", async (req, res, next) => {
+router.get("/seller/:sellerId/orders",checkPermission("order","getSellerOrdersBySellerId"), async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const orders = await getSellerOrders(sellerId);
@@ -137,22 +139,51 @@ router.get("/branch/my/orders", async (req, res, next) => {
 });
 
 // Update Order Status (also update related Seller Orders)
-router.put("/:orderId", async (req, res, next) => {
+router.put("/:orderId",checkPermission("order","updateOrderById"), async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const updatedData = req.body;
+    const { role: userRole, branchId: userBranchId } = req.user; 
+
+   
+    if (userRole === "manager") {
+      const order = await getOrderById(orderId);
+
+      if (!order) {
+        throw new AppError("Order not found", 404);
+      }
+
+      if (order.branchId.toString() !== userBranchId) {
+        throw new AppError("You are not authorized to update this order", 403);
+      }
+    }
 
     const updatedOrder = await updateOrder(orderId, updatedData);
     res.status(200).json({ success: true, data: updatedOrder });
+
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
 });
 
+
 // Cancel Order (also cancel related Seller Orders)
-router.put("/:orderId/cancel", async (req, res, next) => {
+router.put("/:orderId/cancel",checkPermission("order","cancelOrderById"), async (req, res, next) => {
   try {
     const { orderId } = req.params;
+    const { role: userRole, branchId: userBranchId } = req.user;
+
+    if (userRole === "manager") {
+      const order = await Order.findById(orderId).lean();
+
+      if (!order) {
+        throw new AppError("Order not found", 404);
+      }
+
+      if (order.branchId.toString() !== userBranchId) {
+        throw new AppError("You are not authorized to cancel this order", 403);
+      }
+    }
 
     const cancelledOrder = await cancelOrder(orderId);
     res.status(200).json({ success: true, data: cancelledOrder });
@@ -161,8 +192,9 @@ router.put("/:orderId/cancel", async (req, res, next) => {
   }
 });
 
+
 // Get All Orderss
-router.get("/", async (req, res, next) => {
+router.get("/", checkPermission("order","getAll"),async (req, res, next) => {
   try {
     const orders = await getAllOrders();
     res.status(200).json({ success: true, data: orders });

@@ -11,30 +11,27 @@ const PermissionSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: [
-        "managers",
-        "cashiers",
-        "customers",
-        "clerks",
-        "products",
-        "sellers",
-        "suppliers",
-        "seller_inventory",
-        "supplier_inventory",
-        "cus_orders",
-        "supplier_orders",
-        "category",
-        "clerk",
+        "branch",
         "cashier",
+        "category",
+        "customer",
         "manager",
-        "super_admin",
-        "cart"
-
+        "order",
+        "product",
+        "seller"
       ],
     },
     action: {
       type: [String],
       required: true,
-      enum: ["create", "read", "update", "delete"],
+      enum: [
+        "create", "getAll", "getById", "updateById", "deleteById",
+        "filterProductsByBranchId", "searchProductsByBranchId", "addProductToBranchId", "removeProductFromBranchId", "getCurrentBranchProducts",
+        "getAddressByCustomerId", "addAddressByCustomerId", "addProduct", "createOfflineOrder",
+        "getCustomerOrdersByCustomerId", "getSellerOrdersBySellerId", "updateOrderById", "cancelOrderById",
+        "getAllMainStock", "searchAllMainStock", "filterAllMainStock", "editById",
+        "getSellerAddressesBySellerId", "addAddressToSellerById"
+      ],
     },
 
     description: {
@@ -43,8 +40,8 @@ const PermissionSchema = new mongoose.Schema(
     },
 
     condition: {
-      type: Object, // ✅ Make condition flexible to store any object
-      default: {},
+      type: Object, // ✅ Flexible to store any object
+      default: {},  // Simplified with no specific conditions required
     },
   },
   { timestamps: true }
