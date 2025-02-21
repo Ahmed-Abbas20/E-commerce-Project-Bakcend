@@ -212,3 +212,16 @@ exports.filterBranchProducts = async (branchId, filters) => {
       session.endSession();
     }
   };
+  
+  exports.getProductsInBranch = async (branchId) => {
+    const branch = await Branch.findById(branchId)
+      .populate("stock.productId")
+      .lean();
+  
+    if (!branch) throw new AppError("Branch not found", 404);
+    
+    return branch.stock.map(item => ({
+      product: item.productId,
+      quantity: item.quantity
+    }));
+  };
