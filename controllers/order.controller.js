@@ -17,7 +17,6 @@ const { validateOnlineOrder, validateOfflineOrder } = require("../middlewares/or
 const { getCart } = require("../services/cart.service");
 const { getCustomerAddresses } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
-const Order = require("../models/order.model"); 
 const checkPermission = require("../middlewares/authorization.middleware"); 
 // Check product availability in Branch
 router.post("/add-product",checkPermission("order","addProduct"), async (req, res, next) => {
