@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const { uploadUserImage } = require("../services/userImageUpload.service");
 const { AppError } = require("../utils/errorHandler");
 const mongoose = require("mongoose");
+const Product = require("../models/product.model");
+const SellersOrder = require("../models/sellersOrder.model");
 
 // Create a new seller
 module.exports.createSeller = async ({ firstName, lastName, email, phone1, password, companyName, companyRegistrationNumber, SSN, salt }) => {
@@ -147,5 +149,60 @@ module.exports.deleteSeller = async (sellerId) => {
     return deletedSeller;
   } catch (error) {
     throw new AppError(`Error deleting seller: ${error.message}`, 500);
+  }
+};
+
+module.exports.getSellerDashboardData = async (sellerId) => {
+  try {
+    const sellerProducts = await Product.find({ sellerId }).select(" _id name soldPrice costPrice");
+    const sellerOrders = await SellersOrder.find({ sellerId }).populate({
+      path: "products.productId",
+      select: "name soldPrice costPrice",
+    });
+
+    const cleanedSellerOrders = sellerOrders.map(order => ({
+      ...order.toObject(),
+      products: order.products.map(product => ({
+        ...product.toObject(),
+        productId: product.productId._id,
+      })),
+    }));
+
+    const productSales = {};
+    sellerOrders.forEach(order => {
+      order.products.forEach(product => {
+        const productId = product.productId._id.toString();
+        if (!productSales[productId]) {
+          productSales[productId] = {
+            productId: product.productId._id,
+            productName: product.productId.name,
+            soldQty: 0,
+            totalRevenue: 0,
+            totalProfit: 0,
+          };
+        }
+        productSales[productId].soldQty += product.requiredQty;
+        productSales[productId].totalRevenue += product.totalPrice;
+        productSales[productId].totalProfit += (product.productId.soldPrice - product.productId.costPrice) * product.requiredQty;
+      });
+    });
+
+    const mostSoldProducts = Object.values(productSales).sort((a, b) => b.soldQty - a.soldQty);
+
+    let totalProfit = 0;
+    sellerOrders.forEach(order => {
+      order.products.forEach(product => {
+        totalProfit += (product.productId.soldPrice - product.productId.costPrice) * product.requiredQty;
+      });
+    });
+
+    return {
+      sellerProducts,
+      sellerOrders: cleanedSellerOrders,
+      mostSoldProducts,
+      totalProfit,
+    };
+  } catch (error) {
+    throw new AppError(`Error fetching seller dashboard data: ${error.message}`, 500);
   }
 };
