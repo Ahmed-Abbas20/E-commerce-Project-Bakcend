@@ -13,14 +13,18 @@ const {
 
 const productService = require('../services/product.service');
 
+
 // Create product
 router.post("/", checkPermission("product","create"),validateProduct, async (req, res, next) => {
+
   try {
     const productData = req.body;
     const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
     if (uploadedFiles.length === 0) {
       return res.status(400).json({ success: false, message: "At least one image is required." });
+
     }
+
 
     const product = await productService.createProductService(productData, uploadedFiles);
     res.status(201).json({ success: true, message: "Product created successfully.", data: product });
@@ -112,7 +116,9 @@ router.get('/:id', checkPermission("product","getById"),async (req, res, next) =
 
 
 
+
 router.delete('/:id',checkPermission("product","deleteById"), async (req, res, next) => {
+
   try {
     await productService.deleteProduct(req.params.id);
     res.status(204).send();

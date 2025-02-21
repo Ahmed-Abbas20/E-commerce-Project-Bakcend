@@ -136,9 +136,14 @@ module.exports.getSellerOrders = async (sellerId) => {
 };
 
 // Get Orders of the Branch (from token)
-module.exports.getBranchOrders = async (branchId) => {
+module.exports.getBranchOrders = async (branchId, page) => {
   try {
-    return await Order.find({ branchId }).populate("customerId", "firstName lastName phone1");
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    return await Order.find({ branchId }).populate("customerId", "firstName lastName phone1")
+    .skip(page)
+    .limit(limit);
+   
   } catch (error) {
     throw new AppError(`Error fetching branch orders: ${error.message}`, 500);
   }
@@ -199,17 +204,21 @@ module.exports.cancelOrder = async (orderId) => {
 };
 
 // Get All Orders
-module.exports.getAllOrders = async () => {
+module.exports.getAllOrders = async (page) => {
   try {
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
     return await Order.find()
       .populate("customerId", "firstName lastName email")
       .populate("cashierId", "firstName lastName")
-      .populate("branchId", "name location");
+      .populate("branchId", "name location")
+      .skip(skip)
+      .limit(limit);
   } catch (error) {
     throw new AppError(`Error fetching all orders: ${error.message}`, 500);
   }
 };
-
 
   
 //  Process Products & Validate Stock

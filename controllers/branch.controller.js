@@ -12,6 +12,7 @@ const {
   getBranchById,
   updateBranch,
   deleteBranch,
+  getBranchByManagerId
 } = require("../repos/branch.repo");
 const { validateBranch } = require("../middlewares/branchValidation.midleware");
 
@@ -178,6 +179,28 @@ router.delete('/remove-product/:branchId/',checkPermission("branch","removeProdu
   }
 });
 
+router.get('BranchProducts/:branchId/',async (req, res, next) => {
+  try {
+    const products = await BranchService.getProductsInBranch(req.params.branchId);
+    res.status(200).json({
+      status: "success",
+      results: products.length,
+      data: products
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/mybranch", async (req, res, next) => {
+  try {
+    const managerId = req.user.sub; 
+    const branch = await getBranchByManagerId(managerId);
+    res.status(200).json({ success: true, data: branch });
+  } catch (error) {
+    next(error);
+  }
+});
 
 
 

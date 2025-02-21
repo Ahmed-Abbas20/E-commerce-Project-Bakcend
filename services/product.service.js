@@ -119,7 +119,7 @@ exports.filterProductsService = async (categoryId = null, min = null, max = null
     if (categoryId) {
       query.categoryId = categoryId;
     }
-
+                               
     // ✅ Add price filters
     if (min !== null || max !== null) {
       query.price = {};
