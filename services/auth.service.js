@@ -5,9 +5,8 @@ const { createCustomer } = require("../repos/customer.repo");
 const { createSeller } = require("../repos/seller.repo");
 const User = require("../models/base.model");
 const Cart = require("../models/cart.model");
-const Branch = require("../models/branch.model"); // Import the Branch model
+const Branch = require("../models/branch.model"); 
 
-// Helper function to get the branch by name
 const getBranchByName = async (branchName) => {
   const branch = await Branch.findOne({ name: branchName });
   if (!branch) {
@@ -17,27 +16,21 @@ const getBranchByName = async (branchName) => {
 };
 const softDeleteUser = async (userId) => {
   try {
-    // Find the user by ID
     const user = await User.findById(userId);
     if (!user) {
       throw new AppError("User not found", 404);
     }
-
-    // Set isActive to false
     user.isActive = false;
     await user.save();
-
     return user;
   } catch (error) {
     throw new AppError("Error soft deleting user: " + error.message, 500);
   }
 };
-// Register user
 const registerUser = async (userData) => {
   try {
     const { firstName, lastName, email, password, phone1, userType = "customer", companyName, companyRegistrationNumber, SSN, guestCartId } = userData;
 
-    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -50,12 +43,8 @@ const registerUser = async (userData) => {
       user = await createCustomer({ firstName, lastName, email, phone1, password: hashedPassword, salt });
     }
 
-    // Fetch the branch by name
-    const branch = await getBranchByName("Website Branch");
-
     let cart;
 
-    // Check if a guest cart ID was provided
     if (guestCartId) {
       // Find the guest cart
       const guestCart = await Cart.findById(guestCartId);
@@ -63,25 +52,16 @@ const registerUser = async (userData) => {
         // Create a new cart for the customer and transfer products from the guest cart
         cart = new Cart({
           userId: user._id,
-          branchId: branch._id, // Use the branch ID fetched by name
           products: guestCart.products, // Transfer products
         });
         await cart.save();
-
-        // Delete the guest cart (optional)
         await Cart.findByIdAndDelete(guestCartId);
       } else {
-        // If the guest cart doesn't exist, create an empty cart
-        cart = new Cart({ userId: user._id, branchId: branch._id, products: [] });
+        cart = new Cart({ userId: user._id, products: [] });
         await cart.save();
       }
-    } else {
-      // If no guest cart ID was provided, create an empty cart
-      cart = new Cart({ userId: user._id, branchId: branch._id, products: [] });
-      await cart.save();
     }
 
-    // Generate a token
     const claims = {
       sub: user._id,
       email: user.email,
@@ -95,36 +75,36 @@ const registerUser = async (userData) => {
   }
 };
 
-// Login user
 const loginUser = async ({ email, password }) => {
   try {
-    // Find the user by email
     const user = await User.findOne({ email });
     if (!user) {
       throw new AppError("Invalid email or password", 401);
     }
 
-    // Check if the user is active
     if (!user.isActive) {
       throw new AppError("This account has been deactivated", 403);
     }
 
-    // Compare passwords
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       throw new AppError("Invalid email or password", 401);
     }
+    let cart = await Cart.findOne({ userId: user._id });
+    if (!cart) {
+      throw new AppError("User didn't have a cart !", 401);
+    }
 
-    // Generate a token
     const claims = {
       sub: user._id,
       email: user.email,
       userType: user.userType,
       role: user.role,
+      cartId: cart._id,
     };
-    if (user.branchId) {
-      claims.branchId = user.branchId;
-    }
+    // if (user.branchId) {
+    //   claims.branchId = user.branchId;
+    // }
     const token = signToken({ claims });
    
     return { token };
