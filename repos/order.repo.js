@@ -95,7 +95,7 @@ module.exports.createOfflineOrder = async (cashierId, customerName, phone, payme
         totalPrice,
         totalQty,
         customerName,
-        sellersOrders
+        sellersOrders,
       );
   
       return { success: true, order };
@@ -294,6 +294,7 @@ async function saveOnlineOrder(customerId, branchId, paymentMethod, customerNote
     products,
     totalPrice,
     totalQty,
+    status:"pending",
     sellersOrders: sellerOrderIds.map(orderId => ({ order: orderId })),
   }).save();
 
