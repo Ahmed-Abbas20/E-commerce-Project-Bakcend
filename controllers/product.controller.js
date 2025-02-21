@@ -12,6 +12,49 @@ const {
 
 const productService = require('../services/product.service');
 
+
+router.post("/bulk-upload", async (req, res, next) => {
+  try {
+    const productsData = req.body; // Assuming products are sent in JSON format
+
+    if (!Array.isArray(productsData) || productsData.length === 0) {
+      return res.status(400).json({ success: false, message: "No products provided for upload." });
+    }
+
+    // Validate and process products
+    const createdProducts = [];
+    for (const productData of productsData) {
+      const category = await getCategoryById(productData.categoryId);
+      if (!category) throw new AppError(`Category not found for product: ${productData.name}`, 404);
+
+      const existingProduct = await Product.findOne({
+        name: productData.name.trim(),
+        sellerId: productData.sellerId,
+      });
+      if (existingProduct) throw new AppError(`Product "${productData.name}" already exists`, 409);
+
+      const newProduct = await Product.create({
+        ...productData,
+        name: productData.name.trim(),
+        categoryName: category.name,
+      });
+
+      // Save images directly from provided paths
+      if (productData.images && productData.images.length > 0) {
+        newProduct.images = productData.images;
+        await newProduct.save();
+      }
+
+      createdProducts.push(newProduct);
+    }
+
+    res.status(201).json({ success: true, message: "Products uploaded successfully", data: createdProducts });
+  } catch (error) {
+    next(new AppError(error.message, 500));
+  }
+});
+
+
 // ✅ Create product
 router.post("/", validateProduct, async (req, res, next) => {
   try {
