@@ -8,13 +8,14 @@ const {
   deleteCashier,
 } = require("../repos/cashier.repo");
 const { AppError } = require("../utils/errorHandler");
-const checkPermission = require("../middlewares/authorization.middleware"); 
-// ✅ Create a new cashier (Uses `createCashier` from the repo)
-router.post("/", checkPermission("cashiers","create"),async (req, res, next) => {
-  try {
-    const { firstName, lastName, email, password, phone1, SSN, managerId } = req.body;
+const checkPermission = require("../middlewares/authorization.middleware");
 
-    if (!firstName || !lastName || !email || !password || !phone1 || !SSN) {
+// Create a new cashier (Uses `createCashier` from the repo)
+router.post("/", async (req, res, next) => {
+  try {
+    const { firstName, lastName, email, password, phone1, SSN, branchId } = req.body;
+
+    if (!firstName || !lastName || !email || !password || !phone1 || !SSN || !branchId) {
       return next(new AppError("All required fields must be provided", 400));
     }
 
@@ -25,7 +26,7 @@ router.post("/", checkPermission("cashiers","create"),async (req, res, next) => 
       password,
       phone1,
       SSN,
-      managerId,
+      branchId,
     });
 
     res.status(201).json({ success: true, data: newCashier });
@@ -34,8 +35,8 @@ router.post("/", checkPermission("cashiers","create"),async (req, res, next) => 
   }
 });
 
-// ✅ Get all cashiers
-router.get("/", checkPermission("cashiers","read"),async (req, res, next) => {
+// Get all cashiers
+router.get("/", async (req, res, next) => {
   try {
     const cashiers = await getAllCashiers();
     res.status(200).json({ success: true, data: cashiers });
@@ -44,8 +45,22 @@ router.get("/", checkPermission("cashiers","read"),async (req, res, next) => {
   }
 });
 
-// ✅ Get a cashier by ID
-router.get("/:cashierId", checkPermission("cashiers","read"),async (req, res, next) => {
+// Get cashier details using the ID from the token
+router.get("/my/profile", async (req, res, next) => {
+  try {
+    const cashierId = req.user.sub; // Extract cashier ID from token
+    if (!cashierId) {
+      throw new AppError("Cashier ID is missing from token", 400);
+    }
+
+    const cashier = await getCashierById(cashierId);
+    res.status(200).json({ success: true, data: cashier });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+// Get a cashier by ID
+router.get("/:cashierId", async (req, res, next) => {
   try {
     const { cashierId } = req.params;
     const cashier = await getCashierById(cashierId);
@@ -55,8 +70,22 @@ router.get("/:cashierId", checkPermission("cashiers","read"),async (req, res, ne
   }
 });
 
-// ✅ Update a cashier (Supports image upload)
-router.put("/:cashierId",checkPermission("cashiers","update"), async (req, res, next) => {
+router.put("/my/profile", async (req, res, next) => {
+  try {
+    const cashierId = req.user.sub; // Extract from token
+    const updatedData = req.body;
+    const uploadedFile = req.files?.image ? [req.files.image] : [];
+
+    const updatedCashier = await updateCashier(cashierId, updatedData, uploadedFile);
+    res.status(200).json({ success: true, data: updatedCashier });
+  } catch (error) {
+    next(new AppError(error.message, 500));
+  }
+});
+
+
+// Update a cashier (Supports image upload)
+router.put("/:cashierId", async (req, res, next) => {
   try {
     const { cashierId } = req.params;
     const updatedData = req.body;
@@ -69,8 +98,8 @@ router.put("/:cashierId",checkPermission("cashiers","update"), async (req, res, 
   }
 });
 
-// ✅ Delete a cashier
-router.delete("/:cashierId", checkPermission("cashiers","delete"),async (req, res, next) => {
+// Delete a cashier
+router.delete("/:cashierId", async (req, res, next) => {
   try {
     const { cashierId } = req.params;
     const deletedCashier = await deleteCashier(cashierId);

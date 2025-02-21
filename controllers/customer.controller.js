@@ -12,8 +12,11 @@ const {
 } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
 const { validateAddress } = require("../middlewares/addressValidation.midleware"); 
+const { softDeleteUser } = require("../services/auth.service");
+const { verifyToken } = require("../utils/jwttoken.manager");
 
 
+// Create a new customer
 router.post("/", async (req, res, next) => {
   try {
     const { firstName, lastName, email, phone1, password, addresses = [] } = req.body; 
@@ -37,8 +40,24 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+// Get customer details using token
+router.get("/my/profile", async (req, res, next) => {
+  try {
+    const userId = req.user.sub; 
+    console.log(userId);
+    if (!userId) {
+      throw new AppError("User ID is missing from token", 400);
+    }
 
-// ✅ Get all customers
+    const customer = await getCustomerById(userId);
+    res.status(200).json({ success: true, data: customer });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+// Get all customers
 router.get("/", async (req, res, next) => {
   try {
     const customers = await getAllCustomers();
@@ -58,6 +77,18 @@ router.get("/:customerId", async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 });
+
+// Fetch Addresses Using Token
+router.get("/my/addresses", async (req, res, next) => {
+  try {
+    const customerId = req.user.sub; // Extract from token
+    const addresses = await getCustomerAddresses(customerId);
+    res.status(200).json({ success: true, data: addresses });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
 //  Get a customer's addresses
 router.get("/:customerId/addresses", async (req, res, next) => {
   try {
@@ -70,6 +101,19 @@ router.get("/:customerId/addresses", async (req, res, next) => {
 });
 
 
+// Update Customer Using Token
+router.put("/my/profile", async (req, res, next) => {
+  try {
+    const customerId = req.user.sub; // Extract from token
+    const updatedData = req.body;
+    const uploadedFile = req.files?.image ? [req.files.image] : [];
+
+    const updatedCustomer = await updateCustomer(customerId, updatedData, uploadedFile);
+    res.status(200).json({ success: true, data: updatedCustomer });
+  } catch (error) {
+    next(new AppError(error.message, 500));
+  }
+});
 
 //  Update a customer
 router.put("/:customerId", async (req, res, next) => {
@@ -85,6 +129,20 @@ router.put("/:customerId", async (req, res, next) => {
   }
 });
 
+
+// Add Address Using Token
+router.post("/my/addresses", validateAddress, async (req, res, next) => {
+  try {
+    const customerId = req.user.sub; // Extract from token
+    const newAddress = req.body;
+
+    const updatedAddresses = await addCustomerAddress(customerId, newAddress);
+
+    res.status(200).json({ success: true, data: updatedAddresses });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
 
 //  Add a new address to a customer
 router.post("/:customerId/addresses", validateAddress, async (req, res, next) => {
@@ -102,15 +160,36 @@ router.post("/:customerId/addresses", validateAddress, async (req, res, next) =>
 
 
 
-//  Delete a customer
-router.delete("/:customerId", async (req, res, next) => {
+// //  Delete a customer
+// router.delete("/:customerId", async (req, res, next) => {
+//   try {
+//     const { customerId } = req.params;
+//     const deletedCustomer = await deleteCustomer(customerId);
+//     res.status(200).json({ success: true, data: deletedCustomer });
+//   } catch (error) {
+//     return next(new AppError(error.message, 500));
+//   }
+// });
+router.delete("/", async (req, res, next) => {
   try {
-    const { customerId } = req.params;
-    const deletedCustomer = await deleteCustomer(customerId);
-    res.status(200).json({ success: true, data: deletedCustomer });
+    // Extract the token from the Authorization header
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Access denied. No token provided." });
+    }
+
+    // Verify and decode the token
+    const decoded = verifyToken(token);
+    const customerId = decoded.sub; // Assuming the user ID is stored in the 'sub' claim
+
+    // Call the softDeleteUser function
+    const customer = await softDeleteUser(customerId);
+
+    res.status(200).json({ success: true, data: customer });
   } catch (error) {
-    return next(new AppError(error.message, 500));
+    next(error); // Pass the error to the errorHandler middleware
   }
 });
-
 module.exports = router;

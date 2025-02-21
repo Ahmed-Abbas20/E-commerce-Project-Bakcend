@@ -5,29 +5,22 @@ const {
   getManagerById,
   createManager,
   updateManager,
-  deleteManager,
+  deleteManager
 } = require("../repos/manager.repo");
 const { AppError } = require("../utils/errorHandler");
-const checkPermission = require("../middlewares/authorization.middleware"); 
+const checkPermission = require("../middlewares/authorization.middleware");
 
-// ✅ Create a new manager (Uses `createManager` from the repo)
-router.post("/", checkPermission("managers","create"),async (req, res, next) => {
+
+// Create a new manager
+router.post("/", async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password, phone1, SSN, managerId } = req.body;
+    const { firstName, lastName, email, password, phone1, SSN, branchId } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !phone1 || !SSN) {
+    if (!firstName || !lastName || !email || !password || !phone1 || !SSN || !branchId) {
       return next(new AppError("All required fields must be provided", 400));
     }
 
-    const newManager = await createManager({
-      firstName,
-      lastName,
-      email,
-      password,
-      phone1,
-      SSN,
-      managerId,
-    });
+    const newManager = await createManager({ firstName, lastName, email, password, phone1, SSN, branchId });
 
     res.status(201).json({ success: true, data: newManager });
   } catch (error) {
@@ -35,8 +28,8 @@ router.post("/", checkPermission("managers","create"),async (req, res, next) => 
   }
 });
 
-// ✅ Get all managers
-router.get("/",checkPermission("managers","read"), async (req, res, next) => {
+// Get all managers
+router.get("/", async (req, res, next) => {
   try {
     const managers = await getAllManagers();
     res.status(200).json({ success: true, data: managers });
@@ -44,9 +37,19 @@ router.get("/",checkPermission("managers","read"), async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 });
+// Get manager profile (from token)
+router.get("/my/profile", async (req, res, next) => {
+  try {
+    const managerId = req.user.sub; // Extract from token
+    const manager = await getManagerById(managerId);
+    res.status(200).json({ success: true, data: manager });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
 
-// ✅ Get a manager by ID
-router.get("/:managerId", checkPermission("managers","read"),async (req, res, next) => {
+// Get manager by ID
+router.get("/:managerId", async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const manager = await getManagerById(managerId);
@@ -58,8 +61,22 @@ router.get("/:managerId", checkPermission("managers","read"),async (req, res, ne
 
 
 
-// ✅ Update a manager (Supports image upload)
-router.put("/:managerId", checkPermission("managers","update"),async (req, res, next) => {
+// Update personal profile
+router.put("/my/profile", async (req, res, next) => {
+  try {
+    const managerId = req.user.sub;
+    const updatedData = req.body;
+    const uploadedFile = req.files?.image ? [req.files.image] : [];
+
+    const updatedManager = await updateManager(managerId, updatedData, uploadedFile);
+    res.status(200).json({ success: true, data: updatedManager });
+  } catch (error) {
+    next(new AppError(error.message, 500));
+  }
+});
+
+// Update a manager (Supports image upload)
+router.put("/:managerId", async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const updatedData = req.body;
@@ -72,8 +89,10 @@ router.put("/:managerId", checkPermission("managers","update"),async (req, res, 
   }
 });
 
-// ✅ Delete a manager
-router.delete("/:managerId", checkPermission("managers","delete"),async (req, res, next) => {
+
+
+// Delete a manager
+router.delete("/:managerId", async (req, res, next) => {
   try {
     const { managerId } = req.params;
     const deletedManager = await deleteManager(managerId);

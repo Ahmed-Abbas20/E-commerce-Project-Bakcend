@@ -1,7 +1,6 @@
 
-
 const mongoose = require('mongoose');
-const ProductSchema = new mongoose.Schema({
+const product = new mongoose.Schema({
 
   name: {
     type: String,
@@ -9,7 +8,10 @@ const ProductSchema = new mongoose.Schema({
     trim: true,
     unique: true
   },
+
+
     costPrice: {
+
     type: Number,
     required: true,
     min: 0
@@ -30,7 +32,7 @@ const ProductSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 0
-  },
+  }, 
   
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
 
@@ -41,10 +43,13 @@ const ProductSchema = new mongoose.Schema({
   },
 
 
+
+
   sellerId:{type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
+
   createdAt: {
-    type: Date,
+    type: Date, 
     default: Date.now()
   },
   updatedAt: {
@@ -52,4 +57,4 @@ const ProductSchema = new mongoose.Schema({
     default: Date.now()
   }
 });
-module.exports = mongoose.model('Product', ProductSchema);
+module.exports = mongoose.model('Product', product);
