@@ -1,100 +1,45 @@
-const {
-  createOrUpdateCart,
-  getCartByUserId,
-  deleteCart,
-  addProductToCart,
-  removeProductFromCart,
-} = require("../repos/cart.repo");
 const { AppError } = require("../utils/errorHandler");
 const Cart = require("../models/cart.model");
-const Product = require("../models/product.model");
+const Branch = require("../models/branch.model");
+const User = require("../models/base.model");
 
-// Create or update cart
-exports.createOrUpdateCart = async (userId, products) => {
-  try {
-    const cart = await createOrUpdateCart(userId, products);
-    return cart;
-  } catch (error) {
-    throw new AppError("Error creating/updating cart: " + error.message, 500);
+// Helper function to get the branch by name
+const getBranchByName = async (branchName) => {
+  const branch = await Branch.findOne({ name: branchName });
+  if (!branch) {
+    throw new AppError(`Branch with name "${branchName}" not found`, 404);
   }
+  return branch;
 };
 
-// Get cart by customer ID
-exports.getCart = async (userId) => {
-  try {
-    // Fetch the cart
-    const cart = await getCartByUserId(userId);
-    if (!cart) {
-      throw new AppError("Cart not found", 404);
-    }
-
-    // Array to store changes for products with insufficient stock or unavailability
-    const changes = [];
-
-    // Validate each product in the cart
-    for (const item of cart.products) {
-      const product = await Product.findById(item.productId);
-
-      if (!product) {
-        // Product is no longer available
-        changes.push({
-          productName:product?.name || "Unknown product", // If product is deleted, we don't have a name
-          status: "Product no longer available",
-        });
-      } else if (product.quantity < item.quantity) {
-        // Product quantity in stock is less than the quantity in the cart
-        changes.push({
-          productName: product.name,
-          status: `Only ${product.quantity} units available (requested ${item.quantity})`,
-        });
-      }
-    }
-
-    // Return the cart and the changes (if any)
-    return { cart, changes };
-  } catch (error) {
-    throw new AppError("Error fetching cart: " + error.message, 500);
-  }
-};
-
-// Delete cart
-exports.deleteCart = async (userId) => {
-  try {
-    await deleteCart(userId);
-  } catch (error) {
-    throw new AppError("Error deleting cart: " + error.message, 500);
-  }
-};
-exports.emptyCart = async (userId) => {
-  try {
-    // Find the customer's cart
-    const cart = await Cart.findOne({ userId });
-    if (!cart) {
-      throw new AppError("Cart not found", 404);
-    }
-
-    // Empty the cart by setting the products array to an empty array
-    cart.products = [];
-    await cart.save();
-
-    return cart;
-  } catch (error) {
-    throw new AppError("Error emptying cart: " + error.message, 500);
-  }
-};
 // Add product to cart
 exports.addProductToCart = async (userId, productId, quantity) => {
   try {
-    // Validate product availability
-    const product = await Product.findById(productId);
-    if (!product) {
-      throw new AppError("Product not found", 404);
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
+    // Fetch the branch by name
+    const branch = await getBranchByName("Website Branch");
+
+    // Check if the product exists in the branch stock
+    const productInBranch = branch.stock.find(
+      (item) => item.productId.toString() === productId
+    );
+    if (!productInBranch) {
+      throw new AppError("Product not found in branch stock", 404);
     }
 
     // Find the customer's cart
-    const cart = await Cart.findOne({ userId });
+    let cart = await Cart.findOne({ userId });
     if (!cart) {
-      throw new AppError("Cart not found", 404);
+      // If the cart doesn't exist, create a new one
+      cart = new Cart({ userId, products: [] });
     }
 
     // Check if the product is already in the cart
@@ -110,9 +55,9 @@ exports.addProductToCart = async (userId, productId, quantity) => {
     }
 
     // Validate that the total quantity does not exceed the available quantity
-    if (totalQuantity > product.quantity) {
+    if (totalQuantity > productInBranch.quantity) {
       throw new AppError(
-        `Cannot add more than ${product.quantity} units of this product. You already have ${cart.products[productIndex]?.quantity || 0} units in your cart.`,
+        `Cannot add more than ${productInBranch.quantity} units of this product. You already have ${cart.products[productIndex]?.quantity || 0} units in your cart.`,
         400
       );
     }
@@ -134,12 +79,188 @@ exports.addProductToCart = async (userId, productId, quantity) => {
   }
 };
 
+// Edit product quantity in cart
+exports.editProductQuantity = async (userId, productId, quantity) => {
+  try {
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
+    // Fetch the branch by name
+    const branch = await getBranchByName("Website Branch");
+
+    // Find the cart for the user
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      throw new AppError("Cart not found", 404);
+    }
+
+    // Find the product in the cart
+    const productIndex = cart.products.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (productIndex === -1) {
+      throw new AppError("Product not found in cart", 404);
+    }
+
+    // Fetch the product in the branch stock
+    const productInBranch = branch.stock.find(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (!productInBranch) {
+      throw new AppError("Product not found in branch stock", 404);
+    }
+
+    // Validate the new quantity
+    if (quantity > productInBranch.quantity) {
+      throw new AppError(
+        `Cannot add more than ${productInBranch.quantity} units of this product.`,
+        400
+      );
+    }
+
+    // Update the product quantity in the cart
+    cart.products[productIndex].quantity = quantity;
+
+    // Save the updated cart
+    await cart.save();
+
+    return cart;
+  } catch (error) {
+    throw new AppError("Error editing product quantity: " + error.message, 500);
+  }
+};
+
 // Remove product from cart
 exports.removeProductFromCart = async (userId, productId) => {
   try {
-    const cart = await removeProductFromCart(userId, productId);
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
+    // Find the cart for the user
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      throw new AppError("Cart not found", 404);
+    }
+
+    // Remove the product from the cart
+    cart.products = cart.products.filter(
+      (item) => item.productId.toString() !== productId
+    );
+
+    // Save the updated cart
+    await cart.save();
+
     return cart;
   } catch (error) {
     throw new AppError("Error removing product from cart: " + error.message, 500);
+  }
+};
+
+// Empty the cart (remove all products)
+exports.emptyCart = async (userId) => {
+  try {
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
+    // Find the cart for the user
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      throw new AppError("Cart not found", 404);
+    }
+
+    // Empty the cart by setting the products array to an empty array
+    cart.products = [];
+    await cart.save();
+
+    return cart;
+  } catch (error) {
+    throw new AppError("Error emptying cart: " + error.message, 500);
+  }
+};
+
+// Get cart by user ID
+exports.getCart = async (userId) => {
+  try {
+    // Fetch the user by userId and check if active
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.isActive) {
+      throw new AppError("This account has been deactivated", 403);
+    }
+
+    // Fetch the branch by name
+    const branch = await getBranchByName("Website Branch");
+
+    // Fetch the cart for the user and populate all product details
+    let cart = await Cart.findOne({ userId }).populate({
+      path: "products.productId",
+      select: "name costPrice soldPrice images description mainStock categoryId categoryName sellerId createdAt updatedAt", // Include all fields from the Product schema
+      transform: (product) => {
+        if (product.images) {
+          // Format the images array to combine fileId and filePath into a single full path
+          product.images = product.images.map((img) => ({
+            filePath: `${process.env.IMAGEKIT_ENDPOINT_URL}${img.fileId}/${img.filePath}`,
+          }));
+        }
+        return product;
+      },
+    });
+
+    // If the cart doesn't exist, create a new one
+    if (!cart) {
+      cart = new Cart({ userId, products: [] });
+      await cart.save();
+    }
+
+    // Array to store changes for products with insufficient stock or unavailability
+    const changes = [];
+
+    // Validate each product in the cart
+    for (const item of cart.products) {
+      const productInBranch = branch.stock.find(
+        (stockItem) => stockItem.productId.toString() === item.productId._id.toString()
+      );
+
+      if (!productInBranch) {
+        // Product is no longer available in the branch
+        changes.push({
+          productName: item.productId.name || "Unknown product",
+          status: "Product no longer available in branch stock",
+        });
+      } else if (productInBranch.quantity < item.quantity) {
+        // Product quantity in stock is less than the quantity in the cart
+        changes.push({
+          productName: item.productId.name,
+          status: `Only ${productInBranch.quantity} units available in branch stock (requested ${item.quantity})`,
+        });
+      }
+    }
+
+    // Return the cart and the changes (if any)
+    return { cart, changes };
+  } catch (error) {
+    throw new AppError("Error fetching cart: " + error.message, 500);
   }
 };
