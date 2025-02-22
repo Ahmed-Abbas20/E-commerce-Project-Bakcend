@@ -5,9 +5,9 @@ const router = express.Router();
 const { AppError } = require("../utils/errorHandler");
 const Branch = require("../models/branch.model"); 
 const productService = require('../services/product.service');
+const categoryService = require('../services/category.service');
 
-
-router.get('/', async (req, res, next) => {
+router.get('/products', async (req, res, next) => {
     try {
       const page = parseInt(req.query.page) || 1;
       
@@ -33,7 +33,7 @@ router.get('/', async (req, res, next) => {
   });
   
   
-  router.get('/search', async (req, res, next) => {
+  router.get('/products/search', async (req, res, next) => {
     try {
       const searchTerm = req.query.term;
       
@@ -58,7 +58,7 @@ router.get('/', async (req, res, next) => {
   });
   
   
-  router.get('/filter', async (req, res, next) => {
+  router.get('/products/filter', async (req, res, next) => {
     try {
       const { categoryId, min, max, page = 1 } = req.query;
   
@@ -93,7 +93,7 @@ router.get('/', async (req, res, next) => {
     }
   });
 
-  router.get('/:id', async (req, res, next) => {
+  router.get('/products/:id', async (req, res, next) => {
     try {
       const { id: productId } = req.params;
   
@@ -112,6 +112,33 @@ router.get('/', async (req, res, next) => {
       const product = await productService.getProductByIdFromWebsiteBranch(productId);
       res.json({ success: true, data: product });
   
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/categories' , async (req, res, next) => {
+    try {
+      const categories = await categoryService.getAllCategories();
+      res.json({ success: true, data: categories });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  router.get('/categories/search', async (req, res, next) => {
+    try {
+      const results = await categoryService.searchCategories(req.query.term);
+      res.json({ success: true, data: results });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  router.get('/categories/:id', async (req, res, next) => {
+    try {
+      const category = await categoryService.getCategory(req.params.id);
+      res.json({ success: true, data: category });
     } catch (error) {
       next(error);
     }
