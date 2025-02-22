@@ -63,7 +63,14 @@ const userSchema = Joi.object({
     then: Joi.string().trim().required(),
     otherwise: Joi.forbidden(),
   }),
-  guestCartId:Joi.string().optional()
+  cart: Joi.object({
+    products: Joi.array().items(
+      Joi.object({
+        productId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/, "valid ObjectId").required(),
+        quantity: Joi.number().min(1).required(),
+      })
+    ).optional(),
+  }).optional(),
 });
 
 // ✅ Middleware for validating user registration
