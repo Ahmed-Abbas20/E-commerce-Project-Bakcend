@@ -33,19 +33,52 @@ router.post("/", checkPermission("product","create"),validateProduct, async (req
   }
 });
 
-router.get('/', checkPermission("product","getAllMainStock"),async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const products = await productService.getAllProducts(page);
+    const userRole = req.user.role;
+
+    let filters = {};
+
+    if (userRole !== "super_admin") {
+      const websiteBranch = await Branch.findOne({ name: "Website Branch" });
+
+      if (!websiteBranch) {
+        throw new AppError("Website Branch not found.", 404);
+      }
+
+      // Filter by products available in the Website Branch stock
+      filters = { _id: { $in: websiteBranch.stock.map(item => item.productId) } };
+    }
+
+    const products = await productService.getAllProducts(page, filters);
+
     res.json({ success: true, data: products });
   } catch (error) {
     next(error);
   }
 });
 
-router.get('/search',checkPermission("product","searchAllMainStock"), async (req, res, next) => {
+
+router.get('/search', async (req, res, next) => {
   try {
-    const results = await productService.searchProducts(req.query.term);
+    const searchTerm = req.query.term;
+    const userRole = req.user.role;
+
+    let filters = {};
+
+    if (userRole !== "super_admin") {
+      const websiteBranch = await Branch.findOne({ name: "Website Branch" });
+
+      if (!websiteBranch) {
+        throw new AppError("Website Branch not found.", 404);
+      }
+
+      filters = { _id: { $in: websiteBranch.stock.map(item => item.productId) } };
+    }
+
+    const results = await productService.searchProducts(searchTerm, filters);
+
     res.json({ success: true, data: results });
   } catch (error) {
     next(error);
@@ -53,16 +86,15 @@ router.get('/search',checkPermission("product","searchAllMainStock"), async (req
 });
 
 
-router.get('/filter', checkPermission("product","filterAllMainStock"),async (req, res, next) => {
+
+router.get('/filter', async (req, res, next) => {
   try {
     const { categoryId, min, max, page = 1 } = req.query;
 
-    // Parse query parameters with default values
     const parsedMin = min ? parseFloat(min) : null;
     const parsedMax = max ? parseFloat(max) : null;
     const parsedPage = page ? parseInt(page) : 1;
 
-    // Validate parsed values
     if (parsedPage < 1) {
       return next(new AppError('Page number must be greater than 0', 400));
     }
@@ -70,15 +102,51 @@ router.get('/filter', checkPermission("product","filterAllMainStock"),async (req
       return next(new AppError('Min price cannot be greater than max price', 400));
     }
 
-    // Call the service function
-    const products = await productService.filterProductsService(categoryId, parsedMin, parsedMax, parsedPage);
+    const userRole = req.user.role;
+    let filters = {};
 
+    if (userRole !== "super_admin") {
+      const websiteBranch = await Branch.findOne({ name: "Website Branch" });
+
+      if (!websiteBranch) {
+        throw new AppError("Website Branch not found.", 404);
+      }
+
+      filters = { _id: { $in: websiteBranch.stock.map(item => item.productId) } };
+    }
+
+    const products = await productService.filterProductsService(categoryId, parsedMin, parsedMax, parsedPage, filters);
 
     res.json({ success: true, data: products });
   } catch (error) {
-    return next(error); 
+    return next(error);
   }
 });
+
+router.get('/website/:id', async (req, res, next) => {
+  try {
+    const { id: productId } = req.params;
+
+    const websiteBranch = await Branch.findOne({ name: "Website Branch" }).lean();
+
+    if (!websiteBranch) {
+      throw new AppError("Website Branch not found", 404);
+    }
+
+    const productInBranch = websiteBranch.stock.some(item => item.productId.toString() === productId);
+
+    if (!productInBranch) {
+      throw new AppError("Product not found in Website Branch", 404);
+    }
+
+    const product = await productService.getProductByIdFromWebsiteBranch(productId);
+    res.json({ success: true, data: product });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 
 
