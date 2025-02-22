@@ -103,9 +103,9 @@ const loginUser = async ({ email, password }) => {
       role: user.role,
       cartId: cart._id,
     };
-    // if (user.branchId) {
-    //   claims.branchId = user.branchId;
-    // }
+     if (user.branchId) {
+      claims.branchId = user.branchId;
+     }
     const token = signToken({ claims });
    
     return { token };
