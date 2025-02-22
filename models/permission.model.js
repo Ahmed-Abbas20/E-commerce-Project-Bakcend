@@ -26,7 +26,8 @@ const PermissionSchema = new mongoose.Schema(
       required: true,
       enum: [
         "create", "getAll", "getById", "updateById", "deleteById","getBranchById",
-        "filterProductsByBranchId", "searchProductsByBranchId","getProductsByBrnachId", "addProductToBranchId", "removeProductFromBranchId", "getCurrentBranchProducts",
+        "filterProductsByBranchId", "searchProductsByBranchId","getProductsByBrnachId", "addProductToBranchId", "removeProductFromBranchId",
+        "getAllMainStock","searchAllMainStock","filterAllMainStock",
         "getAddressByCustomerId", "addAddressByCustomerId", "addProduct", "createOfflineOrder",
         "getCustomerOrdersByCustomerId", "getSellerOrdersBySellerId", "updateOrderById", "cancelOrderById",
           "editById",
