@@ -23,7 +23,7 @@ const softDeleteUser = async (userId) => {
 };
 const registerUser = async (userData) => {
   try {
-    const { firstName, lastName, email, password, phone1, userType = "customer", companyName, companyRegistrationNumber, SSN, guestCartId } = userData;
+    const { firstName, lastName, email, password, phone1, userType = "customer", companyName, companyRegistrationNumber, SSN, cart: guestCart } = userData;
 
     if (!firstName || !lastName || !email || !password || !phone1) {
       throw new AppError("Missing required fields", 400);
@@ -44,25 +44,11 @@ const registerUser = async (userData) => {
       throw new AppError("Failed to create user", 500);
     }
 
-    let cart;
-
-    if (guestCartId) {
-      const guestCart = await Cart.findById(guestCartId);
-      if (guestCart) {
-        cart = new Cart({
-          userId: user._id,
-          products: guestCart.products,
-        });
-        await cart.save();
-        await Cart.findByIdAndDelete(guestCartId);
-      } else {
-        cart = new Cart({ userId: user._id, products: [] });
-        await cart.save();
-      }
-    } else {
-      cart = new Cart({ userId: user._id, products: [] });
-      await cart.save();
-    }
+    const cart = new Cart({
+      userId: user._id,
+      products: guestCart?.products || [],
+    });
+    await cart.save();
 
     const claims = {
       sub: user._id,
