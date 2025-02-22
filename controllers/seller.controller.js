@@ -7,7 +7,6 @@ const {
   updateSeller,
   getSellerAddresses,
   addSellerAddress,
-  deleteSeller,
   getSellerDashboardData,
 } = require("../repos/seller.repo");
 const { AppError } = require("../utils/errorHandler");
