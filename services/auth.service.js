@@ -5,15 +5,9 @@ const { createCustomer } = require("../repos/customer.repo");
 const { createSeller } = require("../repos/seller.repo");
 const User = require("../models/base.model");
 const Cart = require("../models/cart.model");
-const Branch = require("../models/branch.model"); 
 
-const getBranchByName = async (branchName) => {
-  const branch = await Branch.findOne({ name: branchName });
-  if (!branch) {
-    throw new AppError(`Branch with name "${branchName}" not found`, 404);
-  }
-  return branch;
-};
+
+
 const softDeleteUser = async (userId) => {
   try {
     const user = await User.findById(userId);
