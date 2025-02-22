@@ -31,28 +31,33 @@ const registerUser = async (userData) => {
   try {
     const { firstName, lastName, email, password, phone1, userType = "customer", companyName, companyRegistrationNumber, SSN, guestCartId } = userData;
 
+    if (!firstName || !lastName || !email || !password || !phone1) {
+      throw new AppError("Missing required fields", 400);
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     let user;
 
-    // Create the user based on their type (seller or customer)
     if (userType === "seller") {
       user = await createSeller({ firstName, lastName, email, phone1, password: hashedPassword, salt, companyName, companyRegistrationNumber, SSN });
     } else {
       user = await createCustomer({ firstName, lastName, email, phone1, password: hashedPassword, salt });
     }
 
+    if (!user) {
+      throw new AppError("Failed to create user", 500);
+    }
+
     let cart;
 
     if (guestCartId) {
-      // Find the guest cart
       const guestCart = await Cart.findById(guestCartId);
       if (guestCart) {
-        // Create a new cart for the customer and transfer products from the guest cart
         cart = new Cart({
           userId: user._id,
-          products: guestCart.products, // Transfer products
+          products: guestCart.products,
         });
         await cart.save();
         await Cart.findByIdAndDelete(guestCartId);
@@ -60,6 +65,9 @@ const registerUser = async (userData) => {
         cart = new Cart({ userId: user._id, products: [] });
         await cart.save();
       }
+    } else {
+      cart = new Cart({ userId: user._id, products: [] });
+      await cart.save();
     }
 
     const claims = {
@@ -71,6 +79,7 @@ const registerUser = async (userData) => {
 
     return { token: signToken({ claims }) };
   } catch (error) {
+    console.error("Error in registerUser:", error);
     throw new AppError(`Error registering user: ${error.message}`, 500);
   }
 };
@@ -93,6 +102,7 @@ const loginUser = async ({ email, password }) => {
     let cart = await Cart.findOne({ userId: user._id });
     if (!cart) {
       cart = new Cart({ userId: user._id, products: [] });
+
       await cart.save();
     }
 
@@ -103,9 +113,11 @@ const loginUser = async ({ email, password }) => {
       role: user.role,
       cartId: cart._id,
     };
+
      if (user.branchId) {
       claims.branchId = user.branchId;
      }
+
     const token = signToken({ claims });
    
     return { token };
