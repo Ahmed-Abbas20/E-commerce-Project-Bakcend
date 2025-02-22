@@ -8,6 +8,7 @@ const cashiersController = require("./controllers/cashier.controller");
 const categoryController = require('./controllers/category.controller');
 const productcontroller = require('./controllers/product.controller');
 const branchController = require('./controllers/branch.controller');
+const websiteController = require('./controllers/website.controller');
 const authenticationMiddleware = require("./middlewares/authentication.middleware");
 const { errorHandler } = require('./utils/errorHandler');
 const { notFound } = require('./utils/notFound');
@@ -47,6 +48,7 @@ app.use('/products', [authenticationMiddleware], productcontroller);
 app.use('/managers', [authenticationMiddleware], managersController);
 app.use('/branches', [authenticationMiddleware], branchController);
 app.use('/orders', [authenticationMiddleware], orderController);
+app.use('/online', websiteController);
 
 app.use(notFound);
 app.use(errorHandler);
