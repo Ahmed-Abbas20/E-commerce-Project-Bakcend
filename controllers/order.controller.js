@@ -19,14 +19,31 @@ const { getCustomerAddresses } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
 const checkPermission = require("../middlewares/authorization.middleware"); 
 // Check product availability in Branch
-router.post("/add-product",checkPermission("order","addProduct"), async (req, res, next) => {
+router.post("/add-product", checkPermission("order", "addProduct"), async (req, res, next) => {
+  try {
+    const userId = req.user.sub; 
+    const { productId } = req.body;
+
+    if (!productId) throw new AppError("Product ID is required", 400);
+
+    const product = await addProductToOrder(productId, userId);
+
+    res.status(200).json({ success: true, data: product });
+  } catch (error) {
+    next(error);
+  }
+});
+
+  //Add product to order by admin
+  router.post("/admin-add-product", checkPermission("order", "adminAddProduct"), async (req, res, next) => {
     try {
-      const userId = req.user.sub; 
-      const { productId } = req.body;
-      
-      if (!productId) throw new AppError("Product ID is required", 400);
+      const { branchId, productId } = req.body;
   
-      const product = await addProductToOrder(userId, productId); 
+      if (!branchId || !productId) {
+        throw new AppError("Branch ID and Product ID are required", 400);
+      }
+  
+      const product = await addProductToOrder(productId, null, branchId);
   
       res.status(200).json({ success: true, data: product });
     } catch (error) {
@@ -34,7 +51,8 @@ router.post("/add-product",checkPermission("order","addProduct"), async (req, re
     }
   });
   
-
+  
+  
 // Create Online Order (Uses Cart Data)
 router.post("/online", validateOnlineOrder, async (req, res, next) => {
   try {
@@ -127,10 +145,10 @@ router.get("/seller/:sellerId/orders",checkPermission("order","getSellerOrdersBy
 });
 
 // Get Orders of the Branch (from token)
-router.get("/branch/my/orders", async (req, res, next) => {
+router.get("/branch/my/orders", checkPermission("order","getMyBranchOrders"),async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const branchId = req.user.branchId; // Extract from token
+    const branchId = req.user.branchId; 
     const orders = await getBranchOrders(branchId,page);
     res.status(200).json({ success: true, data: orders });
   } catch (error) {

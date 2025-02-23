@@ -173,6 +173,29 @@ module.exports.addCustomerAddress = async (customerId, newAddress) => {
   }
 };
 
+// Delete a customer's address by index
+module.exports.deleteCustomerAddressByIndex = async (customerId, index) => {
+  try {
+    const customer = await User.findOne({ _id: customerId, userType: "customer" });
+
+    if (!customer) {
+      throw new AppError("Customer not found", 404);
+    }
+
+    if (index < 0 || index >= customer.addresses.length) {
+      throw new AppError("Address index out of bounds", 400);
+    }
+
+    customer.addresses.splice(index, 1);
+
+    await customer.save();
+
+    return customer.addresses; 
+  } catch (error) {
+    throw new AppError(`Error deleting address: ${error.message}`, 500);
+  }
+};
+
 
 //  Delete a customer
 module.exports.deleteCustomer = async (customerId) => {

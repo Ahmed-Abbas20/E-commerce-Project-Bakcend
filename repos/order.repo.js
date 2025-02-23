@@ -16,35 +16,39 @@ async function saveSellersOrders(sellersOrders) {
 
 
 
-// Check Product Availability in Branch
-module.exports.addProductToOrder = async (userId, productId) => {
-    try {
-      
+// Add Product to Order
+module.exports.addProductToOrder = async (productId, userId = null, branchId = null) => {
+  try {
+    let targetBranchId = branchId;
+
+    if (!targetBranchId) {
       const user = await Staff.findById(userId).select("branchId");
       if (!user || !user.branchId) throw new AppError("User's branch not found", 400);
-  
-      
-      const branch = await Branch.findById(user.branchId);
-      if (!branch) throw new AppError("Branch not found", 404);
-  
-      
-      const productInBranch = branch.stock.find(item => item.productId.toString() === productId);
-      if (!productInBranch) throw new AppError("Product not available in assigned branch stock", 404);
-  
-      
-      const product = await Product.findById(productId).select("name categoryName images").lean();
-      if (!product) throw new AppError("Product details not found", 404);
-  
-      return {
-        productId: product._id,
-        name: product.name,
-        category: product.categoryName,
-        quantityAvailable: productInBranch.quantity, 
-      };
-    } catch (error) {
-      throw new AppError(`Error fetching product details: ${error.message}`, 500);
+      targetBranchId = user.branchId;
     }
-  };
+
+    const branch = await Branch.findById(targetBranchId);
+    if (!branch) throw new AppError("Branch not found", 404);
+
+    const productInBranch = branch.stock.find(item => item.productId.toString() === productId);
+    if (!productInBranch) throw new AppError("Product not available in assigned branch stock", 404);
+
+    const product = await Product.findById(productId).select("name categoryName images").lean();
+    if (!product) throw new AppError("Product details not found", 404);
+
+    return {
+      productId: product._id,
+      name: product.name,
+      category: product.categoryName,
+      quantityAvailable: productInBranch.quantity,
+      price: product.soldPrice,
+    };
+  } catch (error) {
+    throw new AppError(`Error fetching product details: ${error.message}`, 500);
+  }
+};
+
+  
   
 // Create Online Order (Fetch Products from Cart)
 module.exports.createOnlineOrder = async (userId, addressIndex, paymentMethod, customerNotes,products) => {

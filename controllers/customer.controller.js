@@ -8,6 +8,7 @@ const {
   updateCustomer,
   deleteCustomer,
   getCustomerAddresses,
+  deleteCustomerAddressByIndex,
   addCustomerAddress,
 } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
@@ -137,6 +138,24 @@ router.post("/my/addresses", validateAddress, async (req, res, next) => {
     const newAddress = req.body;
 
     const updatedAddresses = await addCustomerAddress(customerId, newAddress);
+
+    res.status(200).json({ success: true, data: updatedAddresses });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+// Delete Address Using Token by Index
+router.delete("/my/addresses/:index", async (req, res, next) => {
+  try {
+    const customerId = req.user.sub; 
+    const addressIndex = parseInt(req.params.index, 10);
+
+    if (isNaN(addressIndex) || addressIndex < 0) {
+      throw new AppError("Invalid address index", 400);
+    }
+
+    const updatedAddresses = await deleteCustomerAddressByIndex(customerId, addressIndex);
 
     res.status(200).json({ success: true, data: updatedAddresses });
   } catch (error) {

@@ -2,6 +2,7 @@
 const Branch = require("../models/branch.model");
 const { AppError } = require("../utils/errorHandler");
 const mongoose=require('mongoose')
+const Product = require("../models/product.model");
 
 exports.createBranch = async (branchData) => {
   return await Branch.create(branchData);
@@ -40,11 +41,26 @@ exports.updateBranch = async (branchId, updatedData) => {
 };
 
 exports.deleteBranch = async (branchId) => {
-  const branch = await Branch.findByIdAndDelete(branchId);
-  if (!branch) throw new AppError("Branch not found", 404);
-  return branch;
 
+  const branch = await Branch.findById(branchId);
+  if (!branch) throw new AppError("Branch not found", 404);
+
+  if (branch.stock && branch.stock.length > 0) {
+    for (const stockItem of branch.stock) {
+      const product = await Product.findById(stockItem.productId);
+      if (product) {
+        product.mainStock += stockItem.quantity;
+        await product.save();
+      }
+    }
+  }
+
+  // Delete the branch after returning products to main stock
+  await Branch.findByIdAndDelete(branchId);
+
+  return { message: "Branch deleted and products returned to main stock successfully." };
 };
+
 exports.findBranchById = async (branchId, session = null) => {
   return Branch.findById(branchId).session(session);
 };
