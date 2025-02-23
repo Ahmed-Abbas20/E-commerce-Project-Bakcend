@@ -13,32 +13,7 @@ router.post('/' ,checkPermission("category","create"),validateCategory, async (r
   }
 });
 
-router.get('/' , async (req, res, next) => {
-  try {
-    const categories = await categoryService.getAllCategories();
-    res.json({ success: true, data: categories });
-  } catch (error) {
-    next(error);
-  }
-});
 
-router.get('/search', async (req, res, next) => {
-  try {
-    const results = await categoryService.searchCategories(req.query.term);
-    res.json({ success: true, data: results });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get('/:id', async (req, res, next) => {
-  try {
-    const category = await categoryService.getCategory(req.params.id);
-    res.json({ success: true, data: category });
-  } catch (error) {
-    next(error);
-  }
-});
 
 router.put('/:id', checkPermission("category","updateById"),validateCategory, async (req, res, next) => {
   try {

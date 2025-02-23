@@ -111,29 +111,25 @@ exports.updateProduct = async (id, updateData, uploadedFiles = [], imagesToRemov
 
 exports.deleteProduct = deleteProduct;
 exports.searchProducts = searchProducts;
-exports.filterProductsService = async (categoryId = null, min = null, max = null, page = 1) => {
+exports.filterProductsService = async (categoryId = null, min = null, max = null, page = 1, additionalFilters = {}) => {
   try {
-    const query = {};
+    const query = { ...additionalFilters };
 
-    // ✅ Add category filter if provided
     if (categoryId) {
       query.categoryId = categoryId;
     }
-                               
-    // ✅ Add price filters
+
     if (min !== null || max !== null) {
-      query.price = {};
-      if (min !== null) query.price.$gte = min;
-      if (max !== null) query.price.$lte = max;
+      query.soldPrice = {};
+      if (min !== null) query.soldPrice.$gte = min;
+      if (max !== null) query.soldPrice.$lte = max;
     }
 
-    // ✅ Fetch paginated results
     const products = await Product.find(query)
       .sort('-createdAt')
       .skip((page - 1) * 20)
       .limit(20);
 
-    // ✅ Transform images to full URLs
     return products.map(product => ({
       ...product.toObject(),
       images: product.images.map(img => ({
@@ -144,6 +140,26 @@ exports.filterProductsService = async (categoryId = null, min = null, max = null
 
   } catch (error) {
     throw new AppError(error.message || "Failed to filter products", 500);
+  }
+};
+exports.getProductByIdFromWebsiteBranch = async (productId) => {
+  try {
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      throw new AppError("Product not found", 404);
+    }
+
+    return {
+      ...product.toObject(),
+      images: product.images.map(img => ({
+        fileId: img.fileId,
+        filePath: `${BASE_IMAGE_URL}${img.filePath}`
+      }))
+    };
+
+  } catch (error) {
+    throw new AppError(`Failed to fetch product: ${error.message}`, 500);
   }
 };
 

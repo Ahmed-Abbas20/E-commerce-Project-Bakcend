@@ -10,20 +10,14 @@ const newPermissions = [
     effect: "allow",
     resource: "branch",
     action: [
-      "create", "getAll", "getById", "updateById", "deleteById",
+      "create", "getAll", "getBranchById", "updateById", "deleteById",
       "filterProductsByBranchId", "searchProductsByBranchId",
-      "addProductToBranchId", "removeProductFromBranchId", "getCurrentBranchProducts"
+      "addProductToBranchId", "removeProductFromBranchId", "getProductsByBrnachId"
     ],
     description: "Super Admin permissions for managing branches and products by branch.",
     condition: { role: { IN: ["super_admin"] } }
   },
-  {
-    effect: "allow",
-    resource: "branch",
-    action: ["getCurrentBranchProducts"],
-    description: "Managers can get current branch products.",
-    condition: { role: { IN: ["manager"] } }
-  },
+
 
   // Cashier Permissions
   {
@@ -100,7 +94,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "product",
-    action: ["create", "getAllMainStock", "searchAllMainStock", "filterAllMainStock", "deleteById", "editById"],
+    action: ["create", "deleteById", "editById", "getAllMainStock","searchAllMainStock","filterAllMainStock",],
     description: "Super Admin manages all products in the main stock.",
     condition: { role: { IN: ["super_admin"] } }
   },

@@ -14,9 +14,55 @@ const {
 const productService = require('../services/product.service');
 
 
+
+
+
+
+router.post("/bulk-upload", async (req, res, next) => {
+  try {
+    const productsData = req.body; // Assuming products are sent in JSON format
+
+    if (!Array.isArray(productsData) || productsData.length === 0) {
+      return res.status(400).json({ success: false, message: "No products provided for upload." });
+    }
+
+    // Validate and process products
+    const createdProducts = [];
+    for (const productData of productsData) {
+      const category = await getCategoryById(productData.categoryId);
+      if (!category) throw new AppError(`Category not found for product: ${productData.name}`, 404);
+
+      const existingProduct = await Product.findOne({
+        name: productData.name.trim(),
+        sellerId: productData.sellerId,
+      });
+      if (existingProduct) throw new AppError(`Product "${productData.name}" already exists`, 409);
+
+      const newProduct = await Product.create({
+        ...productData,
+        name: productData.name.trim(),
+        categoryName: category.name,
+      });
+
+      // Save images directly from provided paths
+      if (productData.images && productData.images.length > 0) {
+        newProduct.images = productData.images;
+        await newProduct.save();
+      }
+
+      createdProducts.push(newProduct);
+    }
+
+    res.status(201).json({ success: true, message: "Products uploaded successfully", data: createdProducts });
+  } catch (error) {
+    next(new AppError(error.message, 500));
+  }
+});
+
+
 // Create product
 router.post("/", checkPermission("product","create"),validateProduct, async (req, res, next) => {
-
+  
   try {
     const productData = req.body;
     const uploadedFiles = req.files?.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
@@ -36,16 +82,23 @@ router.post("/", checkPermission("product","create"),validateProduct, async (req
 router.get('/', checkPermission("product","getAllMainStock"),async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const products = await productService.getAllProducts(page);
+
+    let filters = {};
+    const products = await productService.getAllProducts(page, filters);
+
     res.json({ success: true, data: products });
   } catch (error) {
     next(error);
   }
 });
 
-router.get('/search',checkPermission("product","searchAllMainStock"), async (req, res, next) => {
+
+router.get('/search', checkPermission("product","searchAllMainStock"),async (req, res, next) => {
   try {
-    const results = await productService.searchProducts(req.query.term);
+    const searchTerm = req.query.term;
+    let filters = {};
+    const results = await productService.searchProducts(searchTerm, filters);
+
     res.json({ success: true, data: results });
   } catch (error) {
     next(error);
@@ -53,32 +106,32 @@ router.get('/search',checkPermission("product","searchAllMainStock"), async (req
 });
 
 
+
 router.get('/filter', checkPermission("product","filterAllMainStock"),async (req, res, next) => {
   try {
     const { categoryId, min, max, page = 1 } = req.query;
 
-    // Parse query parameters with default values
     const parsedMin = min ? parseFloat(min) : null;
     const parsedMax = max ? parseFloat(max) : null;
     const parsedPage = page ? parseInt(page) : 1;
 
-    // Validate parsed values
     if (parsedPage < 1) {
       return next(new AppError('Page number must be greater than 0', 400));
     }
     if (parsedMin !== null && parsedMax !== null && parsedMin > parsedMax) {
       return next(new AppError('Min price cannot be greater than max price', 400));
     }
-
-    // Call the service function
-    const products = await productService.filterProductsService(categoryId, parsedMin, parsedMax, parsedPage);
-
+    let filters = {};
+    const products = await productService.filterProductsService(categoryId, parsedMin, parsedMax, parsedPage, filters);
 
     res.json({ success: true, data: products });
   } catch (error) {
-    return next(error); 
+    return next(error);
   }
 });
+
+
+
 
 
 

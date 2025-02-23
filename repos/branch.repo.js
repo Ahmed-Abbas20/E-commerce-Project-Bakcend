@@ -19,7 +19,7 @@ exports.getBranchById = async (branchId) => {
 
 exports.getBranchByManagerId = async (managerId) => {
   try {
-    const branch = await Branch.findOne({ manager: managerId })
+    const branch = await Branch.findOne({ managerId: managerId })
       .populate("stock.productId")
       .populate("manager", "firstName lastName email"); // Optional: populate manager details
 

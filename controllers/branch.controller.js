@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 
-const { filterBranchProducts,searchBranchProducts  ,addProductToBranch,removeProductFromBranch} = require('../services/Branch.service');
+const { filterBranchProducts,searchBranchProducts  ,addProductToBranch,removeProductFromBranch,getProductsInBranch} = require('../services/Branch.service');
 const { AppError } = require('../utils/errorHandler');
 const checkPermission = require("../middlewares/authorization.middleware");
 
@@ -12,9 +12,11 @@ const {
   getBranchById,
   updateBranch,
   deleteBranch,
-  getBranchByManagerId,
+  
+
   getBranchProducts,
   getProductsInBranch
+
 } = require("../repos/branch.repo");
 const { validateBranch } = require("../middlewares/branchValidation.midleware");
 
@@ -36,7 +38,7 @@ router.get("/", checkPermission("branch","getAll"),async (req, res, next) => {
   }
 });
 
-router.get("/:branchId", checkPermission("branch","getById"),async (req, res, next) => {
+router.get("/:branchId", checkPermission("branch","getBranchById"),async (req, res, next) => {
   try {
     const branch = await getBranchById(req.params.branchId);
     res.status(200).json({ success: true, data: branch });
@@ -181,9 +183,9 @@ router.delete('/remove-product/:branchId/',checkPermission("branch","removeProdu
   }
 });
 
-router.get('BranchProducts/:branchId/',async (req, res, next) => {
+router.get('/BranchProducts/:branchId/', checkPermission("branch","getProductsByBrnachId"),async (req, res, next) => {
   try {
-    const products = await BranchService.getProductsInBranch(req.params.branchId);
+    const products = await getProductsInBranch(req.params.branchId);
     res.status(200).json({
       status: "success",
       results: products.length,
@@ -194,7 +196,26 @@ router.get('BranchProducts/:branchId/',async (req, res, next) => {
   }
 });
 
-router.get("/mybranch", async (req, res, next) => {
+router.get('/my/BranchProducts/',async (req, res, next) => {
+  try {
+
+    const branchId = req.user.branchId;
+    
+    if (!branchId) {
+      throw new AppError("Branch ID not found for the current user.", 400);
+    }
+    const products = await getProductsInBranch(branchId);
+    res.status(200).json({
+      status: "success",
+      results: products.length,
+      data: products
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* router.get("/mybranch", async (req, res, next) => {
   try {
     const managerId = req.user.sub; 
     const branch = await getBranchByManagerId(managerId);
@@ -202,7 +223,7 @@ router.get("/mybranch", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+}); */
 
 
 
