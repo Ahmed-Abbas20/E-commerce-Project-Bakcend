@@ -193,7 +193,7 @@ router.get('/BranchProducts/:branchId/', checkPermission("branch","getProductsBy
   }
 });
 
-router.get('/my/BranchProducts/',async (req, res, next) => {
+router.get('/my/BranchProducts/',checkPermission("branch","getMyBranchProducts"),async (req, res, next) => {
   try {
 
     const branchId = req.user.branchId;

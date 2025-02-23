@@ -8,6 +8,8 @@ const {
   getSellerAddresses,
   addSellerAddress,
   getSellerDashboardData,
+  deleteSellerAddressByIndex,
+  getSellerProductsWithBranches,
 } = require("../repos/seller.repo");
 const { AppError } = require("../utils/errorHandler");
 
@@ -157,6 +159,25 @@ router.post("/my/addresses", validateAddress, async (req, res, next) => {
   }
 });
 
+// Delete Address Using Token by Index for Seller
+router.delete("/my/addresses/:index", async (req, res, next) => {
+  try {
+    const sellerId = req.user.sub; // Extract from token
+    const addressIndex = parseInt(req.params.index, 10);
+
+    if (isNaN(addressIndex) || addressIndex < 0) {
+      throw new AppError("Invalid address index", 400);
+    }
+
+    const updatedAddresses = await deleteSellerAddressByIndex(sellerId, addressIndex);
+
+    res.status(200).json({ success: true, data: updatedAddresses });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+
 // Add Address (By Seller ID)
 router.post("/:sellerId/addresses",checkPermission("seller","addAddressToSellerById"), validateAddress, async (req, res, next) => {
   try {
@@ -170,6 +191,18 @@ router.post("/:sellerId/addresses",checkPermission("seller","addAddressToSellerB
     return next(new AppError(error.message, 500));
   }
 });
+
+// Get all products for a seller along with their branch details
+router.get("/my/products-with-branches", async (req, res, next) => {
+  try {
+    const sellerId = req.user.sub; 
+    const products = await getSellerProductsWithBranches(sellerId); 
+    res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
 
 
 // Delete a seller

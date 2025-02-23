@@ -17,6 +17,13 @@ const newPermissions = [
     description: "Super Admin permissions for managing branches and products by branch.",
     condition: { role: { IN: ["super_admin"] } }
   },
+  {
+    effect: "allow",
+    resource: "branch",
+    action: ["getMyBranchProducts","getMyBranchOrders"], 
+    description: "Super Admin and Manager can access their own branch products.",
+    condition: { role: { IN: ["super_admin", "manager"] } }
+  },
 
 
   // Cashier Permissions
@@ -75,7 +82,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "order",
-    action: ["getCustomerOrdersByCustomerId", "getSellerOrdersBySellerId","getAll","cancelOrderById"],
+    action: ["getCustomerOrdersByCustomerId", "getSellerOrdersBySellerId","getAll","cancelOrderById","adminAddProduct"],
     description: "Super Admin manages customer and seller orders.",
     condition: { role: { IN: ["super_admin"] } }
   },

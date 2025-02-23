@@ -5,6 +5,8 @@ const { AppError } = require("../utils/errorHandler");
 const mongoose = require("mongoose");
 const Product = require("../models/product.model");
 const SellersOrder = require("../models/sellersOrder.model");
+const Branch = require("../models/branch.model");
+const BASE_IMAGE_URL = process.env.IMAGEKIT_ENDPOINT_URL; 
 
 // Create a new seller
 module.exports.createSeller = async ({ firstName, lastName, email, phone1, password, companyName, companyRegistrationNumber, SSN, salt }) => {
@@ -84,7 +86,6 @@ module.exports.updateSeller = async (sellerId, updatedData, uploadedFile = []) =
     const existingSeller = await Seller.findOne({ _id: sellerId, userType: "seller" });
     if (!existingSeller) throw new AppError("Seller not found", 404);
 
-    // ✅ Handle image upload (if a new image is uploaded)
     const imageUpdate = await uploadUserImage(existingSeller.image?.fileId, uploadedFile);
     if (imageUpdate) updatedData.image = imageUpdate;
 
@@ -138,6 +139,85 @@ module.exports.addSellerAddress = async (sellerId, newAddress) => {
     return seller.addresses; // Return updated addresses
   } catch (error) {
     throw new AppError(`Error adding address: ${error.message}`, 500);
+  }
+};
+
+
+
+
+
+
+
+//Get all my products as a seller
+module.exports.getSellerProductsWithBranches = async (sellerId) => {
+  try {
+    const products = await Product.find({ sellerId }).select("-__v").lean();
+
+    if (!products || products.length === 0) {
+      throw new AppError("No products found for this seller", 404);
+    }
+
+    // Fetch branches containing those products
+    const productIds = products.map((product) => product._id);
+    const branches = await Branch.find({ "stock.productId": { $in: productIds } }).lean();
+
+    // Attach branch info to each product
+    const enrichedProducts = products.map((product) => {
+      const productBranches = branches
+        .filter((branch) =>
+          branch.stock.some((stockItem) => stockItem.productId.toString() === product._id.toString())
+        )
+        .map((branch) => {
+          const stockItem = branch.stock.find(
+            (stockItem) => stockItem.productId.toString() === product._id.toString()
+          );
+          return {
+            branchId: branch._id,
+            branchName: branch.name,
+            quantityAvailable: stockItem.quantity,
+          };
+        });
+
+      const images = product.images.map((img) => ({
+        fileId: img.fileId,
+        filePath: `${BASE_IMAGE_URL}${img.filePath}`,
+      }));
+
+      return {
+        ...product,
+        images,
+        branches: productBranches,
+      };
+    });
+
+    return enrichedProducts;
+  } catch (error) {
+    throw new AppError(`Error fetching seller products with branches: ${error.message}`, 500);
+  }
+};
+
+
+
+// Delete a seller's address by index
+module.exports.deleteSellerAddressByIndex = async (sellerId, index) => {
+  try {
+    const seller = await Seller.findOne({ _id: sellerId, userType: "seller" });
+
+    if (!seller) {
+      throw new AppError("Seller not found", 404);
+    }
+
+    if (index < 0 || index >= seller.addresses.length) {
+      throw new AppError("Address index out of bounds", 400);
+    }
+
+    seller.addresses.splice(index, 1);
+
+    await seller.save();
+
+    return seller.addresses; 
+  } catch (error) {
+    throw new AppError(`Error deleting address: ${error.message}`, 500);
   }
 };
 
