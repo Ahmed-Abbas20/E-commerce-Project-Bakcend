@@ -127,27 +127,59 @@ module.exports.getOnlineCustomerOrders = async (customerId) => {
 
 
 // Get Seller Orders by Seller ID (from params)
-module.exports.getSellerOrders = async (sellerId) => {
+module.exports.getSellerOrders = async (sellerId, page = 1, limit = 20) => {
   try {
-    return await SellersOrder.find({ sellerId });
+    const skip = (page - 1) * limit;
+
+    // Get total count of orders for pagination
+    const totalOrders = await SellersOrder.countDocuments({ sellerId });
+
+    // Fetch paginated orders
+    const orders = await SellersOrder.find({ sellerId })
+      .skip(skip)
+      .limit(limit);
+
+    return {
+      orders,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalOrders / limit),
+        totalOrders,
+      },
+    };
   } catch (error) {
     throw new AppError(`Error fetching seller orders: ${error.message}`, 500);
   }
 };
 
+
 // Get Orders of the Branch (from token)
-module.exports.getBranchOrders = async (branchId, page) => {
+module.exports.getBranchOrders = async (branchId, page = 1, limit = 20) => {
   try {
-    const limit = 20;
     const skip = (page - 1) * limit;
-    return await Order.find({ branchId }).populate("customerId", "firstName lastName phone1")
-    .skip(page)
-    .limit(limit);
-   
+
+    // Get total count of orders for pagination
+    const totalOrders = await Order.countDocuments({ branchId });
+
+    // Fetch paginated orders
+    const orders = await Order.find({ branchId })
+      .populate("customerId", "firstName lastName phone1")
+      .skip(skip) 
+      .limit(limit);
+
+    return {
+      orders,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalOrders / limit),
+        limit:totalOrders,
+      },
+    };
   } catch (error) {
     throw new AppError(`Error fetching branch orders: ${error.message}`, 500);
   }
 };
+
 
 module.exports.getOrderById = async (orderId) => {
   try {
