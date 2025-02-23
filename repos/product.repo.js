@@ -17,23 +17,28 @@ const imagekit = new ImageKit({
   urlEndpoint: IMAGEKIT_ENDPOINT_URL,
 });
 exports.createProduct = (productData) => Product.create(productData);
-exports.searchProducts = async (searchTerm) => {
+
+
+exports.searchProducts = async (searchTerm, additionalFilters = {}) => {
   const products = await Product.find({
+    ...additionalFilters, 
     $or: [
       { name: { $regex: searchTerm, $options: 'i' } },
       { description: { $regex: searchTerm, $options: 'i' } }
     ]
   });
 
-  
-  return products.map(product => ({
+  const updatedProducts = products.map(product => ({
     ...product.toObject(),
     images: product.images.map(img => ({
       fileId: img.fileId,
-      filePath: `${BASE_IMAGE_URL}/${img.filePath}`
+      filePath: `${BASE_IMAGE_URL}${img.filePath}`
     }))
   }));
+
+  return updatedProducts;
 };
+
 
 exports.getProductById = async (id) => {
   const product = await Product.findById(id);
@@ -55,22 +60,22 @@ exports.getProductById = async (id) => {
 
 
 exports.getAllProducts = async (page = 1, filters = {}) => {
-  const products = await Product.find(filters) 
+  const products = await Product.find(filters)
     .sort('-createdAt')
     .skip((page - 1) * 20)
     .limit(20);
 
-
   const updatedProducts = products.map(product => ({
-    ...product.toObject(),  
+    ...product.toObject(),
     images: product.images.map(img => ({
-      fileId: img.fileId, 
-      filePath: `${BASE_IMAGE_URL}${img.filePath}`  
+      fileId: img.fileId,
+      filePath: `${BASE_IMAGE_URL}${img.filePath}`
     }))
   }));
 
   return updatedProducts;
 };
+
 
 exports.updateProduct = (id, updateData) =>
   Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
