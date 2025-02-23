@@ -13,7 +13,10 @@ const {
   updateBranch,
   deleteBranch,
   getBranchByManagerId,
-  
+
+  getBranchProducts,
+
+
 } = require("../repos/branch.repo");
 const { validateBranch } = require("../middlewares/branchValidation.midleware");
 
@@ -163,13 +166,13 @@ router.post('/add-product/:branchId',checkPermission("branch","addProductToBranc
 router.delete('/remove-product/:branchId/',checkPermission("branch","removeProductFromBranchId"), async (req, res, next) => {
   try {
     const { branchId } = req.params;
-    const { productId, quantity } = req.body;
+    const { productId} = req.body;
 
-    if (!branchId || !productId || !quantity) {
+    if (!branchId || !productId ) {
       throw new AppError('Missing required parameters', 400);
     }
 
-    await removeProductFromBranch(branchId, productId, quantity);
+    await removeProductFromBranch(branchId, productId);
     
     res.status(200).json({
       status: 'success',
@@ -221,6 +224,8 @@ router.get('/my/BranchProducts/',checkPermission("branch","getMyBranchProducts")
     next(error);
   }
 }); */
+
+
 
 
 

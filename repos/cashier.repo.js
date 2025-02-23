@@ -45,14 +45,22 @@ module.exports.createCashier = async ({ firstName, lastName, email, password, ph
 
 
 // Get all cashiers
-module.exports.getAllCashiers = async () => {
+module.exports.getAllCashiers = async (page = 1, limit = 20) => {
   try {
+    const skip = (page - 1) * limit;
+
+    // Get total count of cashiers
+    const totalCashiers = await Staff.countDocuments({ role: "cashier" });
+
+    // Fetch cashiers with pagination
     const cashiers = await Staff.find({ role: "cashier" })
       .select("-password -salt") 
-      .populate("branchId", "name location phone");
+      .populate("branchId", "name location phone")
+      .skip(skip)
+      .limit(limit);
 
-   
-    return cashiers.map(cashier => {
+    // Format cashiers (update image file path)
+    const formattedCashiers = cashiers.map(cashier => {
       const formattedCashier = cashier.toObject();
 
       if (formattedCashier.image?.filePath) {
@@ -62,10 +70,20 @@ module.exports.getAllCashiers = async () => {
       return formattedCashier;
     });
 
+    return {
+      cashiers: formattedCashiers,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCashiers / limit),
+        limit:totalCashiers
+      }
+    };
+
   } catch (error) {
     throw new AppError(`Error fetching cashiers: ${error.message}`, 500);
   }
 };
+
 
 
 // Get a cashier by ID
