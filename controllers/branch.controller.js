@@ -163,7 +163,7 @@ router.post('/add-product/:branchId',checkPermission("branch","addProductToBranc
 });
 
 // DELETE /branches/:branchId/remove-product
-router.delete('/remove-product/:branchId/', async (req, res, next) => {
+router.delete('/remove-product/:branchId/',checkPermission("branch","removeProductFromBranchId"), async (req, res, next) => {
   try {
     const { branchId } = req.params;
     const { productId} = req.body;

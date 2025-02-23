@@ -56,25 +56,57 @@ exports.getProductById = async (id) => {
   };
 };
 
+exports.getAllProducts = async (page = 1, limit = 20, filters = {}) => {
+  try {
+    const skip = (page - 1) * limit;
 
+    // Get total count for pagination
+    const totalProducts = await Product.countDocuments(filters);
 
+    const products = await Product.find(filters)
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit);
 
-exports.getAllProducts = async (page = 1, filters = {}) => {
-  const products = await Product.find(filters)
-    .sort('-createdAt')
-    .skip((page - 1) * 20)
-    .limit(20);
+    const updatedProducts = products.map(product => ({
+      ...product.toObject(),
+      images: product.images.map(img => ({
+        fileId: img.fileId,
+        filePath: `${BASE_IMAGE_URL}${img.filePath}`
+      }))
+    }));
 
-  const updatedProducts = products.map(product => ({
-    ...product.toObject(),
-    images: product.images.map(img => ({
-      fileId: img.fileId,
-      filePath: `${BASE_IMAGE_URL}${img.filePath}`
-    }))
-  }));
-
-  return updatedProducts;
+    return {
+      products: updatedProducts,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+        limit:totalProducts
+      }
+    };
+  } catch (error) {
+    throw new AppError(`Error fetching products: ${error.message}`, 500);
+  }
 };
+
+
+
+// exports.getAllProducts = async (page = 1, filters = {}) => {
+//   const products = await Product.find(filters)
+//     .sort('-createdAt')
+//     .skip((page - 1) * 20)
+//     .limit(20);
+
+//   const updatedProducts = products.map(product => ({
+//     ...product.toObject(),
+//     images: product.images.map(img => ({
+//       fileId: img.fileId,
+//       filePath: `${BASE_IMAGE_URL}${img.filePath}`
+//     }))
+//   }));
+
+//   return updatedProducts;
+// };
 
 
 exports.updateProduct = (id, updateData) =>

@@ -181,15 +181,23 @@ router.put("/:orderId/cancel", checkPermission("order","cancelOrderById"),async 
 
 
 // Get All Orderss
-router.get("/", checkPermission("order","getAll"),async (req, res, next) => {
+router.get('/', checkPermission("order", "getAll"), async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const orders = await getAllOrders(page);
-    res.status(200).json({ success: true, data: orders });
+    const limit = parseInt(req.query.limit) || 20;
+
+    const { orders, pagination } = await getAllOrders(page, limit);
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+      pagination:pagination
+    });
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
 });
+
 
 
 module.exports = router;

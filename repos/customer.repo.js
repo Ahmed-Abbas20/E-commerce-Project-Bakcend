@@ -54,25 +54,36 @@ module.exports.createCustomer = async function ({
 
 
 //  Get all customers
-module.exports.getAllCustomers = async () => {
+module.exports.getAllCustomers = async (page = 1, limit = 20) => {
   try {
-    const customers = await User.find(
-      { userType: "customer", isActive: true },
-      { password: 0, salt: 0 } 
-    ).lean(); // Convert to plain objects to modify response
+    const filters = { userType: "customer", isActive: true };
 
-   
+    const totalCustomers = await User.countDocuments(filters); // Get total count for pagination
+    const customers = await User.find(filters, { password: 0, salt: 0 }) 
+      .skip((page - 1) * limit) 
+      .limit(limit)
+      .lean(); 
+
+    // Append full image URL
     customers.forEach(customer => {
       if (customer.image?.filePath) {
         customer.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${customer.image.filePath}`;
       }
     });
 
-    return customers;
+    return {
+      customers,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCustomers / limit),
+        limit:totalCustomers
+      }
+    };
   } catch (error) {
     throw new AppError(`Error fetching customers: ${error.message}`, 500);
   }
 };
+
 
 
 //  Get a customer by ID

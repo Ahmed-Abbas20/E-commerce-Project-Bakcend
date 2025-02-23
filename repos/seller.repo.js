@@ -45,21 +45,42 @@ module.exports.createSeller = async ({ firstName, lastName, email, phone1, passw
 
 
 // Get all sellers
-module.exports.getAllSellers = async () => {
+module.exports.getAllSellers = async (page = 1, limit = 20) => {
   try {
-    const sellers = await Seller.find({ userType: "seller", isActive: true }).select("-password -salt");
+    const skip = (page - 1) * limit;
 
-    return sellers.map(seller => {
+    // Get total count of active sellers
+    const totalSellers = await Seller.countDocuments({ userType: "seller", isActive: true });
+
+    // Fetch paginated sellers
+    const sellers = await Seller.find({ userType: "seller", isActive: true })
+      .select("-password -salt")
+      .skip(skip)
+      .limit(limit);
+
+    // Format seller image file paths
+    const formattedSellers = sellers.map(seller => {
       const formattedSeller = seller.toObject();
       if (formattedSeller.image?.filePath) {
         formattedSeller.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${formattedSeller.image.filePath}`;
       }
       return formattedSeller;
     });
+
+    return {
+      sellers: formattedSellers,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalSellers / limit),
+        limit:totalSellers
+      }
+    };
+
   } catch (error) {
     throw new AppError(`Error fetching sellers: ${error.message}`, 500);
   }
 };
+
 
 // Get a seller by ID
 module.exports.getSellerById = async (sellerId) => {
