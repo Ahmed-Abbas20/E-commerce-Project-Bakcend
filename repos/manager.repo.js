@@ -50,12 +50,21 @@ module.exports.createManager = async ({ firstName, lastName, email, password, ph
 
 
 // Get all managers
-module.exports.getAllManagers = async () => {
+module.exports.getAllManagers = async (page = 1, limit = 20) => {
   try {
+    const skip = (page - 1) * limit;
+
+    // Get total count of managers
+    const totalManagers = await Staff.countDocuments({ role: "manager" });
+
+    // Fetch paginated managers
     const managers = await Staff.find({ role: "manager" })
       .populate("branchId", "name location phone")
-      .select("-password -salt");
+      .select("-password -salt")
+      .skip(skip)
+      .limit(limit);
 
+    // Format managers (update image file path)
     const formattedManagers = managers.map(manager => {
       const formatted = manager.toObject();
       if (formatted.image?.filePath) {
@@ -64,11 +73,20 @@ module.exports.getAllManagers = async () => {
       return formatted;
     });
 
-    return formattedManagers;
+    return {
+      managers: formattedManagers,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalManagers / limit),
+        totalManagers
+      }
+    };
+
   } catch (error) {
     throw new AppError(`Error fetching managers: ${error.message}`, 500);
   }
 };
+
 
 
 // Get a manager by ID

@@ -204,21 +204,34 @@ module.exports.cancelOrder = async (orderId) => {
 };
 
 // Get All Orders
-module.exports.getAllOrders = async (page) => {
+module.exports.getAllOrders = async (page = 1, limit = 20) => {
   try {
-    const limit = 20;
     const skip = (page - 1) * limit;
 
-    return await Order.find()
+    // Get total count of orders
+    const totalOrders = await Order.countDocuments();
+
+    // Fetch orders with pagination
+    const orders = await Order.find()
       .populate("customerId", "firstName lastName email")
       .populate("cashierId", "firstName lastName")
       .populate("branchId", "name location")
       .skip(skip)
       .limit(limit);
+
+    return {
+      orders,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalOrders / limit),
+        limit:totalOrders
+      }
+    };
   } catch (error) {
     throw new AppError(`Error fetching all orders: ${error.message}`, 500);
   }
 };
+
 
   
 //  Process Products & Validate Stock
