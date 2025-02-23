@@ -113,10 +113,6 @@ router.get('/:id', checkPermission("product","getById"),async (req, res, next) =
 
 
 
-
-
-
-
 router.delete('/:id',checkPermission("product","deleteById"), async (req, res, next) => {
 
   try {

@@ -12,7 +12,9 @@ const {
   getBranchById,
   updateBranch,
   deleteBranch,
-  getBranchByManagerId
+  getBranchByManagerId,
+  getBranchProducts,
+  getProductsInBranch
 } = require("../repos/branch.repo");
 const { validateBranch } = require("../middlewares/branchValidation.midleware");
 
@@ -201,6 +203,8 @@ router.get("/mybranch", async (req, res, next) => {
     next(error);
   }
 });
+
+
 
 
 
