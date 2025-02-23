@@ -79,18 +79,26 @@ router.post("/", checkPermission("product","create"),validateProduct, async (req
   }
 });
 
-router.get('/', checkPermission("product","getAllMainStock"),async (req, res, next) => {
+router.get('/', checkPermission("product", "getAllMainStock"), async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20; // Allow dynamic limit
 
-    let filters = {};
-    const products = await productService.getAllProducts(page, filters);
+    let filters = {}; 
 
-    res.json({ success: true, data: products });
+    // Fetch paginated data with metadata
+    const { products, pagination } = await productService.getAllProducts(page, limit, filters);
+
+    res.status(200).json({
+      success: true,
+      data: products,
+      pagination:pagination
+    });
   } catch (error) {
     next(error);
   }
 });
+
 
 
 router.get('/search', checkPermission("product","searchAllMainStock"),async (req, res, next) => {
@@ -131,11 +139,6 @@ router.get('/filter', checkPermission("product","filterAllMainStock"),async (req
 });
 
 
-
-
-
-
-
 router.get('/:id', checkPermission("product","getById"),async (req, res, next) => {
   try {
     const { id: productId } = req.params;
@@ -166,10 +169,6 @@ router.get('/:id', checkPermission("product","getById"),async (req, res, next) =
 
 
 
-
-
-
-
 router.delete('/:id',checkPermission("product","deleteById"), async (req, res, next) => {
 
   try {
@@ -193,6 +192,25 @@ router.put('/:id', checkPermission("product","editById"),validateProduct, async 
       message: "Product updated successfully.",
       data: updatedProduct,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+ 
+
+router.get('/category/:categoryId', async (req, res, next) => {
+  try {
+    const { categoryId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+
+    if (!categoryId) {
+      return next(new AppError("Category ID is required", 400));
+    }
+
+    const filters = { categoryId };
+    const products = await productService.getAllProducts(page, filters);
+
+    res.json({ success: true, data: products });
   } catch (error) {
     next(error);
   }

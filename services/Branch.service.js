@@ -178,27 +178,23 @@ exports.filterBranchProducts = async (branchId, filters) => {
     }
   };
   
-  exports.removeProductFromBranch = async (branchId, productId, quantity) => {
+  exports.removeProductFromBranch = async (branchId, productId) => {
     const session = await mongoose.startSession();
     session.startTransaction();
   
     try {
       // 1. Validate branch stock
       const branch = await findBranchById(branchId, session);
-      const stockItem = branch.stock.find(item => 
-        item.productId.toString() === productId
-      );
-      
-      if (!stockItem || stockItem.quantity < quantity) {
-        throw new AppError('Insufficient branch stock', 400);
+      const stockItem = branch.stock.find(item => item.productId.toString() === productId);
+  
+      if (!stockItem) {
+        throw new AppError("Product not found in branch stock", 400);
       }
   
-      // 2. Update branch stock
-      if (stockItem.quantity === quantity) {
-        await removeProductFromBranch(branchId, productId, session);
-      } else {
-        await updateBranchStockRemove(branchId, productId, quantity, session);
-      }
+      const quantity = stockItem.quantity; // Get full quantity
+  
+      // 2. Remove the product from branch stock
+      await removeProductFromBranch(branchId, productId, session);
   
       // 3. Update main inventory
       await updateMainStock(productId, quantity, session);
@@ -212,6 +208,7 @@ exports.filterBranchProducts = async (branchId, filters) => {
       session.endSession();
     }
   };
+  
   
   exports.getProductsInBranch = async (branchId) => {
     const branch = await Branch.findById(branchId)

@@ -61,8 +61,11 @@ router.get("/my/profile", async (req, res, next) => {
 // Get all customers
 router.get("/", checkPermission("customer","getAll"),async (req, res, next) => {
   try {
-    const customers = await getAllCustomers();
-    res.status(200).json({ success: true, data: customers });
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 20; 
+    const { customers, pagination } = await getAllCustomers(page, limit);
+
+    res.status(200).json({ success: true, data: customers ,pagination:pagination });
   } catch (error) {
     return next(new AppError(error.message, 500));
   }

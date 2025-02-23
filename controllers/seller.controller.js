@@ -64,14 +64,23 @@ router.get("/dashboard", async (req, res, next) => {
   }
 });
 // Get all sellers
-router.get("/", checkPermission("seller","getAll"),async (req, res, next) => {
+router.get("/", checkPermission("seller", "getAll"), async (req, res, next) => {
   try {
-    const sellers = await getAllSellers();
-    res.status(200).json({ success: true, data: sellers });
+    const page = parseInt(req.query.page) || 1; // Default page 1
+    const limit = parseInt(req.query.limit) || 20; // Default limit 20
+
+    const { sellers, pagination } = await getAllSellers(page, limit);
+
+    res.status(200).json({
+      success: true,
+      data: sellers,
+      pagination: pagination,
+    });
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
 });
+
 
 // Get seller profile (from token)
 router.get("/my/profile", async (req, res, next) => {

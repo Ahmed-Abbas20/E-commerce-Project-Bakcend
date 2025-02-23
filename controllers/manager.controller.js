@@ -29,14 +29,23 @@ router.post("/",checkPermission("manager","create"), async (req, res, next) => {
 });
 
 // Get all managers
-router.get("/", checkPermission("manager","getAll"),async (req, res, next) => {
+router.get("/", checkPermission("manager", "getAll"), async (req, res, next) => {
   try {
-    const managers = await getAllManagers();
-    res.status(200).json({ success: true, data: managers });
+    const page = parseInt(req.query.page) || 1; // Default page 1
+    const limit = parseInt(req.query.limit) || 20; // Default limit 20
+
+    const { managers, pagination } = await getAllManagers(page, limit);
+
+    res.status(200).json({
+      success: true,
+      data: managers,
+      pagination: pagination,
+    });
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
 });
+
 // Get manager profile (from token)
 router.get("/my/profile", async (req, res, next) => {
   try {

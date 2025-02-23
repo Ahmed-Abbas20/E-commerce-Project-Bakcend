@@ -36,14 +36,23 @@ router.post("/",checkPermission("cashier","create"), async (req, res, next) => {
 });
 
 // Get all cashiers
-router.get("/", checkPermission("cashier","getAll"),async (req, res, next) => {
+router.get("/", checkPermission("cashier", "getAll"), async (req, res, next) => {
   try {
-    const cashiers = await getAllCashiers();
-    res.status(200).json({ success: true, data: cashiers });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const { cashiers, pagination } = await getAllCashiers(page, limit);
+
+    res.status(200).json({
+      success: true,
+      data: cashiers,
+      pagination: pagination,
+    });
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
 });
+
 
 // Get cashier details using the ID from the token
 router.get("/my/profile", async (req, res, next) => {
