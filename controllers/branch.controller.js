@@ -141,7 +141,7 @@ router.get('/searchproducts/:branchId',checkPermission("branch","searchProductsB
 
 
 // POST /branches/:branchId/add-product
-router.post('/add-product/:branchId',checkPermission("branch","addProductToBranchId"),  async (req, res, next) => {
+router.post('/add-product/:branchId', checkPermission("branch","addProductToBranchId"),async (req, res, next) => {
   try {
     const { branchId } = req.params;
     const { productId, quantity } = req.body;
@@ -161,6 +161,7 @@ router.post('/add-product/:branchId',checkPermission("branch","addProductToBranc
     next(error);
   }
 });
+
 
 // DELETE /branches/:branchId/remove-product
 router.delete('/remove-product/:branchId/',checkPermission("branch","removeProductFromBranchId"), async (req, res, next) => {
