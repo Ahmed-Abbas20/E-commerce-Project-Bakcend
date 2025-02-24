@@ -83,25 +83,34 @@ router.get("/checkout", async (req, res, next) => {
 });
 
 // Get Customer Orders by Customer ID (from params)
-router.get("/customer/:customerId",checkPermission("order","getCustomerOrdersByCustomerId"), async (req, res, next) => {
+router.get("/customer/:customerId", checkPermission("order", "getCustomerOrdersByCustomerId"), async (req, res, next) => {
   try {
     const { customerId } = req.params;
-    const orders = await getCustomerOrders(customerId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const orders = await getCustomerOrders(customerId, page, limit);
+
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
 });
 
+
 // Get Customer Orders by Customer ID (from token)
 router.get("/customer/my/orders", async (req, res, next) => {
   try {
-    const customerId = req.user.sub; 
-    const orders = await getOnlineCustomerOrders(customerId);
-    res.status(200).json({ success: true, data: orders });
-  } catch (error) {
-    return next(new AppError(error.message, 500));
-  }
+  const { customerId } = req.user.sub;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+
+  const orders = await getCustomerOrders(customerId, page, limit);
+
+  res.status(200).json({ success: true, data: orders });
+} catch (error) {
+  return next(new AppError(error.message, 500));
+}
 });
 
 // Get Seller Orders by Seller ID (from token)

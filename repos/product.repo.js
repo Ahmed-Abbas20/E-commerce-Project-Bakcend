@@ -166,7 +166,7 @@ exports.filterProducts = (query, page = 1) =>  Product.find(query).skip((page - 
 exports.findProductById = async (productId, session = null) => {
   return Product.findById(productId).session(session);
 };
-exports.updateMainStock = async (productId, quantity, session = null) => {
+exports.updateMainStock = async (productId, quantity,session=null) => {
   return Product.findByIdAndUpdate(
     productId,
     { $inc: { mainStock: quantity } },

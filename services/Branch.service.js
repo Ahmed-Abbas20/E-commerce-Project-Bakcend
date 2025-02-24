@@ -7,7 +7,8 @@ const {
   updateBranchStockAdd,
   addNewProductToBranch,
   updateBranchStockRemove,
-  removeProductFromBranch
+  removeProductFromBranch,
+  findBranchProduct
 } = require('../repos/branch.repo');
 const { 
   findProductById,
@@ -154,6 +155,11 @@ exports.filterBranchProducts = async (branchId, filters) => {
       const product = await findProductById(productId, session);
       if (!product) throw new AppError('Product not found', 404);
       if (product.mainStock < quantity) throw new AppError('Insufficient main stock', 400);
+
+      const existingProduct = await findBranchProduct(branchId, productId);
+      if (existingProduct) {
+        throw new AppError("Product already exists in the branch", 400);
+      }
   
       // Try to update existing product in branch
       let branch = await updateBranchStockAdd(branchId, productId, quantity, session);
