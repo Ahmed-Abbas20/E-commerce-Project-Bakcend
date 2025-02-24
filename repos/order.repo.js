@@ -111,13 +111,28 @@ module.exports.createOfflineOrder = async (cashierId, customerName, phone, payme
 
 
 // Get Customer Orders by Customer ID
-module.exports.getCustomerOrders = async (customerId) => {
+module.exports.getCustomerOrders = async (customerId, page = 1, limit = 20) => {
   try {
-    return await Order.find({ customerId }).populate("branchId", "name location");
+    const skip = (page - 1) * limit;
+    
+    const orders = await Order.find({ customerId })
+      .populate("branchId", "name location")
+      .skip(skip)
+      .limit(limit);
+
+    const totalOrders = await Order.countDocuments({ customerId });
+
+    return {
+      orders,
+      totalOrders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+    };
   } catch (error) {
     throw new AppError(`Error fetching customer orders: ${error.message}`, 500);
   }
 };
+
 
 // Get Online Customer Orders
 module.exports.getOnlineCustomerOrders = async (customerId) => {
