@@ -255,37 +255,33 @@ module.exports.deleteSeller = async (sellerId) => {
 
 module.exports.getSellerDashboardData = async (sellerId) => {
   try {
-    // 1. Fetch Seller's Products
     const sellerProducts = await Product.find({ sellerId }).select("name soldPrice costPrice");
 
-    // 2. Fetch Seller's Orders
     const sellerOrders = await SellersOrder.find({ sellerId }).populate({
       path: "products.productId",
       select: "name soldPrice costPrice",
     });
 
-    // 3. Initialize Yearly Data Object
     const yearlyData = {};
 
-    // 4. Array of month names for easy lookup
     const monthNames = [
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ];
 
-    // 5. Process Orders and Group by Year and Month
+    //Process Orders and Group by Year and Month
     sellerOrders.forEach(order => {
       const orderDate = new Date(order.createdAt);
-      const orderYear = orderDate.getFullYear(); // Get year (e.g., 2023)
-      const orderMonth = orderDate.getMonth(); // Get month (0-11)
+      const orderYear = orderDate.getFullYear();
+      const orderMonth = orderDate.getMonth();
 
       // Initialize the year if it doesn't exist
       if (!yearlyData[orderYear]) {
         yearlyData[orderYear] = Array.from({ length: 12 }, (_, index) => ({
-          monthName: monthNames[index], // Add month name
+          monthName: monthNames[index],
           ordersCount: 0,
           totalProfit: 0,
-          orders: [], // Array to store order details for each month
+          orders: [],
         }));
       }
 
@@ -317,7 +313,7 @@ module.exports.getSellerDashboardData = async (sellerId) => {
       });
     });
 
-    // 6. Calculate Most Sold Products
+    // Calculate Most Sold Products
     const productSales = {};
     sellerOrders.forEach(order => {
       order.products.forEach(product => {
@@ -339,7 +335,7 @@ module.exports.getSellerDashboardData = async (sellerId) => {
 
     const mostSoldProducts = Object.values(productSales).sort((a, b) => b.soldQty - a.soldQty);
 
-    // 7. Calculate Total Profit
+    // Calculate Total Profit
     let totalProfit = 0;
     sellerOrders.forEach(order => {
       order.products.forEach(product => {
@@ -347,13 +343,12 @@ module.exports.getSellerDashboardData = async (sellerId) => {
       });
     });
 
-    // 8. Return Dashboard Data
     return {
       sellerProducts,
       sellerOrders,
       mostSoldProducts,
       totalProfit,
-      yearlyData, // Add yearly data to the response
+      yearlyData,
     };
   } catch (error) {
     throw new AppError(`Error fetching seller dashboard data: ${error.message}`, 500);
