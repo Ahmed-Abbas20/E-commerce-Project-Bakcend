@@ -135,13 +135,28 @@ module.exports.getCustomerOrders = async (customerId, page = 1, limit = 20) => {
 
 
 // Get Online Customer Orders
-module.exports.getOnlineCustomerOrders = async (customerId) => {
+module.exports.getOnlineCustomerOrders = async (customerId, page = 1, limit = 10) => {
   try {
-    return await Order.find({ customerId, orderType: "online" }).select("-branchId");
+    const skip = (page - 1) * limit;
+
+    const orders = await Order.find({ customerId, orderType: "online" })
+      .select("-branchId")
+      .skip(skip)
+      .limit(limit);
+
+    const totalOrders = await Order.countDocuments({ customerId, orderType: "online" });
+
+    return {
+      orders,
+      totalOrders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+    };
   } catch (error) {
     throw new AppError(`Error fetching online customer orders: ${error.message}`, 500);
   }
 };
+
 
 
 

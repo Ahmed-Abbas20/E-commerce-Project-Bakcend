@@ -123,7 +123,7 @@ router.get("/customer/my/orders", async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
 
-  const orders = await getCustomerOrders(customerId, page, limit);
+  const orders = await getOnlineCustomerOrders(customerId, page, limit);
 
   res.status(200).json({ success: true, data: orders });
 } catch (error) {
