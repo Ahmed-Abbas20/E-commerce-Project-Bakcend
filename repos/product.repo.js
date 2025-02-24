@@ -1,5 +1,4 @@
 const Product = require('../models/product.model');
-
 const BASE_IMAGE_URL = "https://ik.imagekit.io/cwe4zwtml"; 
 const {AppError} = require("../utils/errorHandler"); 
 const { deleteProductImages} = require("../services/media.service");
@@ -88,25 +87,6 @@ exports.getAllProducts = async (page = 1, limit = 20, filters = {}) => {
     throw new AppError(`Error fetching products: ${error.message}`, 500);
   }
 };
-
-
-
-// exports.getAllProducts = async (page = 1, filters = {}) => {
-//   const products = await Product.find(filters)
-//     .sort('-createdAt')
-//     .skip((page - 1) * 20)
-//     .limit(20);
-
-//   const updatedProducts = products.map(product => ({
-//     ...product.toObject(),
-//     images: product.images.map(img => ({
-//       fileId: img.fileId,
-//       filePath: `${BASE_IMAGE_URL}${img.filePath}`
-//     }))
-//   }));
-
-//   return updatedProducts;
-// };
 
 
 exports.updateProduct = (id, updateData) =>

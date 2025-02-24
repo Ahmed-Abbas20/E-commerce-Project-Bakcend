@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 
 
-const { filterBranchProducts,searchBranchProducts  ,addProductToBranch,removeProductFromBranch,getProductsInBranch} = require('../services/Branch.service');
 const { AppError } = require('../utils/errorHandler');
 const checkPermission = require("../middlewares/authorization.middleware");
 
@@ -12,9 +11,8 @@ const {
   getBranchById,
   updateBranch,
   deleteBranch,
-  getBranchByManagerId,
+  filterBranchProducts,searchBranchProducts  ,addProductToBranch,removeProductFromBranch,getProductsInBranch,
 
-  getBranchProducts,
 
 
 } = require("../repos/branch.repo");
@@ -66,19 +64,19 @@ router.delete("/:branchId",checkPermission("branch","deleteById"), async (req, r
 });
 
 
-//////////products operation for single branch////////////////
+
 
 //filter by categoryname or soldprice max or min and with the page ll of them optional
 
-router.get('/filterproducts/:branchId',checkPermission("branch","filterProductsByBranchId"), async (req, res, next) => {
+router.get('/filterproducts/:branchId' ,checkPermission("branch","filterProductsByBranchId"), async (req, res, next) => {
   try {
-    // Validate parameters
+   
     const { branchId } = req.params;
     const { category, min, max, page = 1 } = req.query;
 
     if (!branchId) throw new AppError("Branch ID is required", 400);
     
-    // Validate numeric parameters
+  
     const numericFilters = {};
     if (min !== undefined) {
       numericFilters.min = parseFloat(min);
@@ -141,7 +139,7 @@ router.get('/searchproducts/:branchId',checkPermission("branch","searchProductsB
 
 
 // POST /branches/:branchId/add-product
-router.post('/add-product/:branchId', checkPermission("branch", "addProductToBranchId"), async (req, res, next) => {
+router.post('/add-product/:branchId' , checkPermission("branch", "addProductToBranchId"), async (req, res, next) => {
   try {
     const { branchId } = req.params;
     const { productId, quantity } = req.body;
@@ -166,7 +164,7 @@ router.post('/add-product/:branchId', checkPermission("branch", "addProductToBra
 
 
 // DELETE /branches/:branchId/remove-product
-router.delete('/remove-product/:branchId/',checkPermission("branch","removeProductFromBranchId"), async (req, res, next) => {
+router.delete('/remove-product/:branchId/' ,checkPermission("branch","removeProductFromBranchId"), async (req, res, next) => {
   try {
     const { branchId } = req.params;
     const { productId} = req.body;
@@ -217,18 +215,6 @@ router.get('/my/BranchProducts/',checkPermission("branch","getMyBranchProducts")
     next(error);
   }
 });
-
-/* router.get("/mybranch", async (req, res, next) => {
-  try {
-    const managerId = req.user.sub; 
-    const branch = await getBranchByManagerId(managerId);
-    res.status(200).json({ success: true, data: branch });
-  } catch (error) {
-    next(error);
-  }
-}); */
-
-
 
 
 
