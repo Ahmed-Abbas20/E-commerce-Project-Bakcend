@@ -92,6 +92,7 @@ exports.addNewProductToBranch = async (branchId, productId, quantity, session = 
   );
 };
 
+
 exports.updateBranchStockAdd = async (branchId, productId, quantity, session = null) => {
   return Branch.findOneAndUpdate(
     {
@@ -124,7 +125,12 @@ exports.removeProductFromBranch = async (branchId, productId, session = null) =>
 };
 
 
-
+exports.findBranchProduct = async (branchId, productId) => {
+  return await Branch.findOne({
+    _id: branchId,
+    "stock.productId": productId, // Check if product exists in branch
+  });
+};
 
 
 

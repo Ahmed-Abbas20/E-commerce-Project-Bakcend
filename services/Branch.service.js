@@ -7,7 +7,8 @@ const {
   updateBranchStockAdd,
   addNewProductToBranch,
   updateBranchStockRemove,
-  removeProductFromBranch
+  removeProductFromBranch,
+  findBranchProduct
 } = require('../repos/branch.repo');
 const { 
   findProductById,
@@ -146,29 +147,42 @@ exports.filterBranchProducts = async (branchId, filters) => {
   };
 
 
+
+  
+  // Function to add a product to a branch
   exports.addProductToBranch = async (branchId, productId, quantity) => {
     const session = await mongoose.startSession();
     session.startTransaction();
   
     try {
-      const product = await findProductById(productId, session);
+
+      const product = await Product.findById(productId).session(session);
       if (!product) throw new AppError('Product not found', 404);
       if (product.mainStock < quantity) throw new AppError('Insufficient main stock', 400);
   
-      // Try to update existing product in branch
-      let branch = await updateBranchStockAdd(branchId, productId, quantity, session);
-      
-      // Add new product only if not exists
-      if (!branch) {
-        branch = await addNewProductToBranch(branchId, productId, quantity, session);
+      const branch = await Branch.findById(branchId).session(session);
+      if (!branch) throw new AppError('Branch not found', 404);
+  
+      const existingProduct = branch.stock.find(item => item.productId.toString() === productId);
+      if (existingProduct) {
+        throw new AppError("Product already exists in the branch", 400);
       }
   
-      await updateMainStock(productId, -quantity, session);
+      branch.stock.push({
+        productId: productId,
+        quantity: quantity
+      });
+  
+      await branch.save({ session });
+  
+      product.mainStock -= quantity;
+      await product.save({ session });
+  
       await session.commitTransaction();
-      
-      return { 
+      return {
         success: true,
-        action: branch ? 'updated' : 'added'
+        action: 'added',
+        newQuantity: quantity
       };
     } catch (error) {
       await session.abortTransaction();
@@ -177,6 +191,7 @@ exports.filterBranchProducts = async (branchId, filters) => {
       session.endSession();
     }
   };
+  
   
   exports.removeProductFromBranch = async (branchId, productId) => {
     const session = await mongoose.startSession();
