@@ -123,9 +123,9 @@ router.get("/customer/my/orders", async (req, res, next) => {
 });
 
 // Get Seller Orders by Seller ID (from token)
-router.get("/my/orders", checkPermission("seller", "getSellerOrders"), async (req, res, next) => {
+router.get("/seller/my/orders", async (req, res, next) => {
   try {
-    const { sellerId } = req.user.sub;
+    const  sellerId  = req.user.sub;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
 
