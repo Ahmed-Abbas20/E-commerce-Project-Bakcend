@@ -33,13 +33,6 @@ router.delete('/:id',checkPermission("category","deleteById"), async (req, res, 
   }
 });
 
-router.get('/',  async (req, res, next) => {
-  try {
-    const categories = await categoryService.getAllCategories();
-    res.json({ success: true, data: categories });
-  } catch (error) {
-    next(error);
-  }
-});
+
 
 module.exports = router;
