@@ -10,6 +10,7 @@ const {
   getSellerDashboardData,
   deleteSellerAddressByIndex,
   getSellerProductsWithBranches,
+  getAdminDashboardData,
 } = require("../repos/seller.repo");
 const { AppError } = require("../utils/errorHandler");
 
@@ -63,6 +64,18 @@ router.get("/dashboard", async (req, res, next) => {
     next(new AppError(error.message, 500));
   }
 });
+
+// Admin Dashboard Route with Filters
+router.get("/admin/dashboard", checkPermission("seller", "getSellersAnalysis"),async (req, res, next) => {
+  try {
+    const { year, sellerId, productId } = req.query;
+    const dashboardData = await getAdminDashboardData({ year, sellerId, productId });
+    res.status(200).json({ success: true, data: dashboardData });
+  } catch (error) {
+    next(new AppError(error.message, 500));
+  }
+});
+
 // Get all sellers
 router.get("/", checkPermission("seller", "getAll"), async (req, res, next) => {
   try {

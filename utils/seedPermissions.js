@@ -117,7 +117,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "seller",
-    action: ["create", "getAll", "getById", "editById", "getSellerAddressesBySellerId", "addAddressToSellerById"],
+    action: ["create", "getAll", "getById", "editById", "getSellerAddressesBySellerId", "addAddressToSellerById","getSellersAnalysis"],
     description: "Super Admin manages all seller-related actions.",
     condition: { role: { IN: ["super_admin"] } }
   }

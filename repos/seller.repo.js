@@ -354,3 +354,122 @@ module.exports.getSellerDashboardData = async (sellerId) => {
     throw new AppError(`Error fetching seller dashboard data: ${error.message}`, 500);
   }
 };
+
+
+// Get Admin Dashboard Data
+module.exports.getAdminDashboardData = async (filters) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    const { year, sellerId, productId } = filters;
+    const filterQuery = {};
+
+    // Apply filters dynamically
+    if (year || sellerId || productId) {
+      if (year) {
+        const startDate = new Date(`${year}-01-01`);
+        const endDate = new Date(`${parseInt(year) + 1}-01-01`);
+        filterQuery.createdAt = { $gte: startDate, $lt: endDate };
+      }
+      if (sellerId) filterQuery.sellerId = sellerId;
+      if (productId) filterQuery["products.productId"] = productId;
+    } else {
+      // Default: Current year, all sellers, all products
+      const startDate = new Date(`${currentYear}-01-01`);
+      const endDate = new Date(`${currentYear + 1}-01-01`);
+      filterQuery.createdAt = { $gte: startDate, $lt: endDate };
+    }
+
+    // Fetch orders based on filters
+    const orders = await SellersOrder.find(filterQuery).populate({
+      path: "products.productId",
+      select: "name soldPrice costPrice",
+    });
+
+    const yearlyData = {};
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    let totalProfit = 0;
+    let totalOrders = 0;
+
+    // Process Orders for the Dashboard
+    orders.forEach((order) => {
+      const orderDate = new Date(order.createdAt);
+      const orderYear = orderDate.getFullYear();
+      const orderMonth = orderDate.getMonth();
+
+      if (!yearlyData[orderYear]) {
+        yearlyData[orderYear] = Array.from({ length: 12 }, (_, index) => ({
+          monthName: monthNames[index],
+          ordersCount: 0,
+          totalProfit: 0,
+          orders: [],
+        }));
+      }
+
+      let monthlyProfit = 0;
+      order.products.forEach((product) => {
+        const profit = (product.productId.soldPrice - product.productId.costPrice) * product.requiredQty;
+        monthlyProfit += profit;
+      });
+
+      yearlyData[orderYear][orderMonth].ordersCount += 1;
+      yearlyData[orderYear][orderMonth].totalProfit += monthlyProfit;
+      totalProfit += monthlyProfit;
+      totalOrders += 1;
+
+      yearlyData[orderYear][orderMonth].orders.push({
+        orderId: order._id,
+        createdAt: order.createdAt,
+        totalPrice: order.totalPrice,
+        totalQty: order.totalQty,
+        status: order.status,
+        products: order.products.map((product) => ({
+          productId: product.productId._id,
+          productName: product.productId.name,
+          price: product.price,
+          requiredQty: product.requiredQty,
+          totalPrice: product.totalPrice,
+        })),
+      });
+    });
+
+    // Calculate Most Sold Products
+    const productSales = {};
+    orders.forEach((order) => {
+      order.products.forEach((product) => {
+        const productId = product.productId._id.toString();
+        if (!productSales[productId]) {
+          productSales[productId] = {
+            productId: product.productId._id,
+            productName: product.productId.name,
+            soldQty: 0,
+            totalRevenue: 0,
+            totalProfit: 0,
+          };
+        }
+        productSales[productId].soldQty += product.requiredQty;
+        productSales[productId].totalRevenue += product.totalPrice;
+        productSales[productId].totalProfit += (product.productId.soldPrice - product.productId.costPrice) * product.requiredQty;
+      });
+    });
+
+    const mostSoldProducts = Object.values(productSales)
+      .sort((a, b) => b.soldQty - a.soldQty)
+      .slice(0, 3); 
+
+    return {
+      orders,
+      mostSoldProducts,
+      yearlyData,
+      totalProfit,
+      totalOrders,
+    };
+  } catch (error) {
+    throw new AppError(`Error fetching admin dashboard data: ${error.message}`, 500);
+  }
+};
+
+
