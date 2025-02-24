@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 
 
-const { filterBranchProducts,searchBranchProducts  ,addProductToBranch,removeProductFromBranch,getProductsInBranch} = require('../services/Branch.service');
 const { AppError } = require('../utils/errorHandler');
 const checkPermission = require("../middlewares/authorization.middleware");
 
@@ -12,9 +11,8 @@ const {
   getBranchById,
   updateBranch,
   deleteBranch,
+  filterBranchProducts,searchBranchProducts  ,addProductToBranch,removeProductFromBranch,getProductsInBranch,
   getBranchByManagerId,
-
-  getBranchProducts,
 
 
 } = require("../repos/branch.repo");
