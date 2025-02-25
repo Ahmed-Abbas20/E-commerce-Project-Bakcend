@@ -8,7 +8,7 @@ const checkPermission = require("../middlewares/authorization.middleware");
 const {
   createBranch,
   getAllBranches,
-  getBranchById,
+  findBranchById,
   updateBranch,
   deleteBranch,
   filterBranchProducts,searchBranchProducts  ,addProductToBranch,removeProductFromBranch,getProductsInBranch,
@@ -38,7 +38,7 @@ router.get("/", checkPermission("branch","getAll"),async (req, res, next) => {
 
 router.get("/:branchId", checkPermission("branch","getBranchById"),async (req, res, next) => {
   try {
-    const branch = await getBranchById(req.params.branchId);
+    const branch = await findBranchById(req.params.branchId);
     res.status(200).json({ success: true, data: branch });
   } catch (error) {
     next(error);

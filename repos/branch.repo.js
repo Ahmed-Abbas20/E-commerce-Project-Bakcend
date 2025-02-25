@@ -13,7 +13,7 @@ exports.createBranch = async (branchData) => {
 exports.getAllBranches = async () => {
   return await Branch.find().populate("stock.productId");
 };
-const findBranchById = async (branchId, session = null) => {
+exports.findBranchById = async (branchId, session = null) => {
   return Branch.findById(branchId).session(session);
 };
 
@@ -349,12 +349,24 @@ exports.filterBranchProducts = async (branchId, filters) => {
       .lean();
   
     if (!branch) throw new AppError("Branch not found", 404);
-    
-    return branch.stock.map(item => ({
-      product: item.productId,
-      quantity: item.quantity
-    }));
+  
+    return branch.stock.map(item => {
+      const product = item.productId;
+  
+      if (product && product.images) {
+        product.images = product.images.map(img => ({
+          fileId: img.fileId,
+          filePath: `${process.env.IMAGEKIT_ENDPOINT_URL}${img.filePath}`
+        }));
+      }
+  
+      return {
+        product,
+        quantity: item.quantity
+      };
+    });
   };
+  
 
 
 
