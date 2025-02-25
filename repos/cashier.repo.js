@@ -84,6 +84,39 @@ module.exports.getAllCashiers = async (page = 1, limit = 20) => {
   }
 };
 
+//Get all cashiers in a branch using the branch ID from the token
+module.exports.getCashiersByBranch = async (branchId, page = 1, limit = 20) => {
+  try {
+    const skip = (page - 1) * limit;
+
+    const totalCashiers = await Staff.countDocuments({ role: "cashier", branchId });
+
+    const cashiers = await Staff.find({ role: "cashier", branchId })
+      .select("-password -salt") 
+      .populate("branchId", "name location phone")
+      .skip(skip)
+      .limit(limit);
+
+    const formattedCashiers = cashiers.map(cashier => {
+      const formattedCashier = cashier.toObject();
+      if (formattedCashier.image?.filePath) {
+        formattedCashier.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${formattedCashier.image.filePath}`;
+      }
+      return formattedCashier;
+    });
+
+    return {
+      cashiers: formattedCashiers,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCashiers / limit),
+        totalCashiers,
+      },
+    };
+  } catch (error) {
+    throw new AppError(`Error fetching cashiers by branch: ${error.message}`, 500);
+  }
+};
 
 
 // Get a cashier by ID

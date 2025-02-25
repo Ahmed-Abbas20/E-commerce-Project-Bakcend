@@ -6,6 +6,7 @@ const {
   createCashier,
   updateCashier,
   deleteCashier,
+  getCashiersByBranch,
 } = require("../repos/cashier.repo");
 const { AppError } = require("../utils/errorHandler");
 const checkPermission = require("../middlewares/authorization.middleware");
@@ -42,6 +43,30 @@ router.get("/", checkPermission("cashier", "getAll"), async (req, res, next) => 
     const limit = parseInt(req.query.limit) || 20;
 
     const { cashiers, pagination } = await getAllCashiers(page, limit);
+
+    res.status(200).json({
+      success: true,
+      data: cashiers,
+      pagination: pagination,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+});
+
+//Get all cashiers in a branch using the branch ID from the token
+router.get("/my-branch-cashiers", checkPermission("cashier", "getAllByMyBranch"), async (req, res, next) => {
+  try {
+    const branchId = req.user.branchId; 
+
+    if (!branchId) {
+      throw new AppError("Branch ID not found in the token", 400);
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const { cashiers, pagination } = await getCashiersByBranch(branchId, page, limit);
 
     res.status(200).json({
       success: true,

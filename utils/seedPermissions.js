@@ -30,7 +30,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "cashier",
-    action: ["create", "getById", "updateById", "deleteById"],
+    action: ["create", "getById", "updateById", "deleteById","getAllByMyBranch"],
     description: "Super Admin and Managers can create and manage cashiers in their branch.",
     condition: { role: { IN: ["super_admin", "manager"] } }
   }
