@@ -13,7 +13,7 @@ const {
   getOrderById,
   cancelOrder
 } = require("../repos/order.repo");
-const { validateOnlineOrder, validateOfflineOrder } = require("../middlewares/orderValidation.midleware"); 
+const { validateOnlineOrder, validateOfflineOrder,validatePartialOrderUpdate  } = require("../middlewares/orderValidation.midleware"); 
 const { getCart } = require("../services/cart.service");
 const { getCustomerAddresses } = require("../repos/customer.repo");
 const { AppError } = require("../utils/errorHandler");
@@ -213,7 +213,7 @@ router.get("/branch/my/orders", checkPermission("order", "getBranchOrders"), asy
 
 
 // Update Order Status (also update related Seller Orders)
-router.put("/:orderId",checkPermission("order","updateOrderById"), async (req, res, next) => {
+router.put("/:orderId",checkPermission("order","updateOrderById"),validatePartialOrderUpdate, async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const updatedData = req.body;
@@ -227,7 +227,7 @@ router.put("/:orderId",checkPermission("order","updateOrderById"), async (req, r
         throw new AppError("Order not found", 404);
       }
 
-      if (order.branchId.toString() !== userBranchId) {
+      if (order.branchId._id.toString() !== userBranchId.toString()) {
         throw new AppError("You are not authorized to update this order", 403);
       }
     }

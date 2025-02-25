@@ -82,7 +82,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "order",
-    action: ["getCustomerOrdersByCustomerId", "getSellerOrdersBySellerId","getAll","cancelOrderById","adminAddProduct","getBranchOrders"],
+    action: ["getCustomerOrdersByCustomerId", "getSellerOrdersBySellerId","getAll","adminAddProduct","getBranchOrders"],
     description: "Super Admin manages customer and seller orders.",
     condition: { role: { IN: ["super_admin"] } }
   },
@@ -91,7 +91,7 @@ const newPermissions = [
   effect: "allow",
   resource: "order",
   action: [
-    "updateOrderById","getMyBranchOrders",
+    "updateOrderById","getMyBranchOrders","cancelOrderById",
   ],
   description: "Super Admin and Manager can update and cancel orders.",
   condition: { role: { IN: ["super_admin", "manager"] } }

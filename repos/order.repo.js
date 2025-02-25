@@ -229,74 +229,184 @@ module.exports.getOrderById = async (orderId) => {
 
 // Update Order (also update related Seller Orders)
 module.exports.updateOrder = async (orderId, updatedData) => {
+  const session = await Order.startSession();
+  session.startTransaction();
+
   try {
-    const order = await Order.findByIdAndUpdate(orderId, updatedData, { new: true });
+    const order = await Order.findById(orderId)
+      .populate({ path: "products.productId", select: "name soldPrice" })
+      .populate("branchId")
+      .session(session);
 
     if (!order) throw new AppError("Order not found", 404);
 
-    if (updatedData.status) {
-      await SellersOrder.updateMany(
-        { _id: { $in: order.sellersOrders.map(sellerOrder => sellerOrder.order) } },
-        { status: updatedData.status }
-      );
+    const branch = await Branch.findById(order.branchId).session(session);
+    if (!branch) throw new AppError("Branch not found", 404);
+
+    let sellerOrderUpdates = new Map();
+    let totalPrice = 0;
+    let totalQty = 0;
+
+    if (updatedData.products && Array.isArray(updatedData.products)) {
+      for (const updatedProduct of updatedData.products) {
+        const productId = updatedProduct.productId;
+        const newQty = parseInt(updatedProduct.requiredQty, 10);
+
+        const existingProduct = order.products.find(
+          (p) => p.productId._id.toString() === productId
+        );
+
+        if (!existingProduct) {
+          throw new AppError(`Product ${productId} is not in the order`, 400);
+        }
+
+        if (!existingProduct.price) {
+          existingProduct.price = existingProduct.productId.soldPrice || 0;
+        }
+
+        const quantityDifference = newQty - existingProduct.requiredQty;
+        const stockItem = branch.stock.find(
+          (stock) => stock.productId.toString() === productId
+        );
+
+        if (quantityDifference > 0) {
+          if (!stockItem || stockItem.quantity < quantityDifference) {
+            throw new AppError(`Not enough stock available for product ${productId}`, 400);
+          }
+          stockItem.quantity -= quantityDifference;
+        } else if (quantityDifference < 0) {
+          stockItem ? (stockItem.quantity += Math.abs(quantityDifference)) :
+            branch.stock.push({ productId: existingProduct.productId._id, quantity: Math.abs(quantityDifference) });
+        }
+
+        existingProduct.requiredQty = newQty;
+        existingProduct.totalPrice = newQty * existingProduct.price;
+
+        totalQty += newQty;
+        totalPrice += existingProduct.totalPrice;
+
+        sellerOrderUpdates.set(productId, { newQty });
+      }
     }
 
-    return order;
+    updatedData.totalQty = totalQty;
+    updatedData.totalPrice = totalPrice;
+
+    const updatedOrder = await Order.findByIdAndUpdate(orderId, updatedData, { new: true, session });
+
+    const sellerOrders = await SellersOrder.find({
+      _id: { $in: order.sellersOrders.map((so) => so.order) },
+    }).session(session);
+
+    for (const sellerOrder of sellerOrders) {
+      for (const product of sellerOrder.products) {
+        const productId = product.productId.toString();
+        if (sellerOrderUpdates.has(productId)) {
+          const updateAction = sellerOrderUpdates.get(productId);
+          product.requiredQty = updateAction.newQty;
+          product.totalPrice = product.price * updateAction.newQty;
+        }
+      }
+
+      sellerOrder.totalQty = sellerOrder.products.reduce((sum, p) => sum + p.requiredQty, 0);
+      sellerOrder.totalPrice = sellerOrder.products.reduce((sum, p) => sum + p.totalPrice, 0);
+      await sellerOrder.save({ session });
+    }
+
+    await branch.save({ session });
+    await session.commitTransaction();
+    session.endSession();
+
+    return updatedOrder;
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     throw new AppError(`Error updating order: ${error.message}`, 500);
   }
 };
 
 
+
+
+
 // Cancel Order (also cancel related Seller Orders)
-module.exports.cancelOrder = async (orderId) => {
+module.exports.cancelOrder = async (orderId, userRole, userBranchId) => {
   try {
-    const order = await Order.findById(orderId);
+    const session = await Order.startSession();
+    session.startTransaction();
 
-    if (!order) throw new AppError("Order not found", 404);
+    try {
+      let order = await Order.findById(orderId)
+        .populate({
+          path: "products.productId",
+          select: "name soldPrice",
+        })
+        .populate("branchId")
+        .session(session);
 
-    order.status = "cancelled";
-    await order.save();
+      if (!order) throw new AppError("Order not found", 404);
 
-    await SellersOrder.updateMany(
-      { _id: { $in: order.sellersOrders.map(sellerOrder => sellerOrder.order) } },
-      { status: "cancelled" }
-    );
+      if (userRole === "manager" && order.branchId.toString() !== userBranchId) {
+        throw new AppError("You are not authorized to cancel this order", 403);
+      }
 
-    return order;
+      for (const item of order.products) {
+        if (!item.price) {
+          item.price = item.productId.soldPrice || 0;
+        }
+      }
+
+      order.status = "cancelled";
+      await order.save({ session });
+
+      await SellersOrder.updateMany(
+        { _id: { $in: order.sellersOrders.map(sellerOrder => sellerOrder.order) } },
+        { status: "cancelled" },
+        { session }
+      );
+
+      const branch = await Branch.findById(order.branchId).session(session);
+      if (!branch) throw new AppError("Branch not found", 404);
+
+      for (const item of order.products) {
+        const stockItem = branch.stock.find(stock => stock.productId.toString() === item.productId._id.toString());
+
+        if (stockItem) {
+          stockItem.quantity += item.requiredQty;
+        } else {
+          branch.stock.push({
+            productId: item.productId._id,
+            quantity: item.requiredQty,
+          });
+        }
+      }
+
+      await branch.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
+
+      const updatedOrder = await Order.findById(orderId)
+        .populate({
+          path: "products.productId",
+          select: "name soldPrice",
+        })
+        .populate("branchId")
+        .populate("sellersOrders.order"); 
+
+      return updatedOrder; 
+
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw new AppError(`Error cancelling order: ${error.message}`, 500);
+    }
   } catch (error) {
     throw new AppError(`Error cancelling order: ${error.message}`, 500);
   }
 };
 
-// Get All Orders
-module.exports.getAllOrders = async (page = 1, limit = 20) => {
-  try {
-    const skip = (page - 1) * limit;
 
-    // Get total count of orders
-    const totalOrders = await Order.countDocuments();
-
-    // Fetch orders with pagination
-    const orders = await Order.find()
-      .populate("customerId", "firstName lastName email")
-      .populate("cashierId", "firstName lastName")
-      .populate("branchId", "name location")
-      .skip(skip)
-      .limit(limit);
-
-    return {
-      orders,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalOrders / limit),
-        limit:totalOrders
-      }
-    };
-  } catch (error) {
-    throw new AppError(`Error fetching all orders: ${error.message}`, 500);
-  }
-};
 
 
   

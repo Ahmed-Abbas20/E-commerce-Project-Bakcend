@@ -72,5 +72,39 @@ exports.validateOnlineOrder = async (req, res, next) => {
   }
 };
 
+
+
+
+const updateOrderSchema = Joi.object({
+  paymentMethod: Joi.string().valid("Cash", "Card"),
+  status: Joi.string().valid("pending", "confirmed", "shipped", "delivered", "cancelled"),
+  customerName: Joi.string().trim().min(2).max(50),
+  phone: Joi.string().trim().min(10).max(15),
+  products: Joi.array().items(
+    Joi.object({
+      productId: Joi.string().required(),
+      requiredQty: Joi.number().integer().positive().required(),
+    })
+  ),
+  customerNotes: Joi.string().allow(""), 
+}).min(1); 
+
+//Middleware for validating order updates
+exports.validatePartialOrderUpdate = async (req, res, next) => {
+  try {
+    const { error, value } = updateOrderSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
+
+    if (error) {
+      return next(new AppError(error.details.map((detail) => detail.message).join("; "), 400));
+    }
+
+    req.body = value; 
+    next();
+  } catch (err) {
+    next(new AppError(`Error validating order update: ${err.message}`, 500));
+  }
+};
+
+
 // Middleware for Offline Order Validation
 exports.validateOfflineOrder = validateSchema(offlineOrderSchema, "offline");

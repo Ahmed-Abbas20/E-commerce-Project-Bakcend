@@ -57,26 +57,23 @@ router.get("/", checkPermission("cashier", "getAll"), async (req, res, next) => 
 //Get all cashiers in a branch using the branch ID from the token
 router.get("/my-branch-cashiers", checkPermission("cashier", "getAllByMyBranch"), async (req, res, next) => {
   try {
-    const branchId = req.user.branchId; 
+    const branchId = req.user.branchId;
 
     if (!branchId) {
       throw new AppError("Branch ID not found in the token", 400);
     }
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-
-    const { cashiers, pagination } = await getCashiersByBranch(branchId, page, limit);
+    const cashiers = await getCashiersByBranch(branchId);
 
     res.status(200).json({
       success: true,
       data: cashiers,
-      pagination: pagination,
     });
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
 });
+
 
 
 // Get cashier details using the ID from the token
