@@ -33,7 +33,7 @@ module.exports.addProductToOrder = async (productId, userId = null, branchId = n
     const productInBranch = branch.stock.find(item => item.productId.toString() === productId);
     if (!productInBranch) throw new AppError("Product not available in assigned branch stock", 404);
 
-    const product = await Product.findById(productId).select("name categoryName images").lean();
+    const product = await Product.findById(productId).select("name categoryName images soldPrice").lean();
     if (!product) throw new AppError("Product details not found", 404);
 
     return {
