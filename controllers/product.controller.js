@@ -179,7 +179,7 @@ router.delete('/:id',checkPermission("product","deleteById"), async (req, res, n
   }
 });
 
-router.put('/:id', checkPermission("product","editById"),validateProduct, async (req, res, next) => {
+router.put('/:id', checkPermission("product","updateById"),validateProduct, async (req, res, next) => {
   try {
     const productId = req.params.id;
     const productData = req.body;

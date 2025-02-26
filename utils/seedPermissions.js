@@ -101,7 +101,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "product",
-    action: ["create", "deleteById", "editById", "getAllMainStock","searchAllMainStock","filterAllMainStock",],
+    action: ["create", "deleteById", "updateById", "getAllMainStock","searchAllMainStock","filterAllMainStock",],
     description: "Super Admin manages all products in the main stock.",
     condition: { role: { IN: ["super_admin"] } }
   },
