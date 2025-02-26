@@ -184,7 +184,7 @@ router.delete('/remove-product/:branchId/' ,checkPermission("branch","removeProd
   }
 });
 
-router.get('/BranchProducts/:branchId/', checkPermission("branch","getProductsByBrnachId"),async (req, res, next) => {
+router.get('/BranchProducts/:branchId/', checkPermission("branch","getProductsByBranchId"),async (req, res, next) => {
   try {
     const products = await getProductsInBranch(req.params.branchId);
     res.status(200).json({

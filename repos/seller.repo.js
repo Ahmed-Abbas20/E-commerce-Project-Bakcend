@@ -360,26 +360,24 @@ module.exports.getSellerDashboardData = async (sellerId) => {
 module.exports.getAdminDashboardData = async (filters) => {
   try {
     const currentYear = new Date().getFullYear();
-    const { year, sellerId, productId } = filters;
+    const { year, sellerId, branchId } = filters;
     const filterQuery = {};
 
-    // Apply filters dynamically
-    if (year || sellerId || productId) {
+    if (year || sellerId || branchId) {
       if (year) {
         const startDate = new Date(`${year}-01-01`);
         const endDate = new Date(`${parseInt(year) + 1}-01-01`);
         filterQuery.createdAt = { $gte: startDate, $lt: endDate };
       }
       if (sellerId) filterQuery.sellerId = sellerId;
-      if (productId) filterQuery["products.productId"] = productId;
+      if (branchId) filterQuery.branchId = branchId; 
     } else {
-      // Default: Current year, all sellers, all products
+      // Default: Current year, all sellers, all branches
       const startDate = new Date(`${currentYear}-01-01`);
       const endDate = new Date(`${currentYear + 1}-01-01`);
       filterQuery.createdAt = { $gte: startDate, $lt: endDate };
     }
 
-    // Fetch orders based on filters
     const orders = await SellersOrder.find(filterQuery).populate({
       path: "products.productId",
       select: "name soldPrice costPrice",
@@ -471,5 +469,6 @@ module.exports.getAdminDashboardData = async (filters) => {
     throw new AppError(`Error fetching admin dashboard data: ${error.message}`, 500);
   }
 };
+
 
 

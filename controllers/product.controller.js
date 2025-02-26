@@ -82,7 +82,7 @@ router.post("/", checkPermission("product","create"),validateProduct, async (req
 router.get('/', checkPermission("product", "getAllMainStock"), async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20; // Allow dynamic limit
+    const limit = parseInt(req.query.limit) || 20; 
 
     let filters = {}; 
 

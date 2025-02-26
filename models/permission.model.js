@@ -26,12 +26,11 @@ const PermissionSchema = new mongoose.Schema(
       required: true,
       enum: [
         "create", "getAll", "getById", "updateById", "deleteById","getBranchById",
-        "filterProductsByBranchId", "searchProductsByBranchId","getProductsByBrnachId","getMyBranchProducts", "addProductToBranchId", "removeProductFromBranchId",
+        "filterProductsByBranchId", "searchProductsByBranchId","getProductsByBranchId","getMyBranchProducts", "addProductToBranchId", "removeProductFromBranchId",
         "getMyBranchOrders","getBranchOrders","getSellersAnalysis","getAllByMyBranch",
         "getAllMainStock","searchAllMainStock","filterAllMainStock",
-        "getAddressByCustomerId", "addAddressByCustomerId", "addProduct", "createOfflineOrder","adminAddProduct",
+        "getAddressByCustomerId", "addAddressByCustomerId", "addProductOffline", "createOfflineOrder","adminAddProduct",
         "getCustomerOrdersByCustomerId", "getSellerOrdersBySellerId", "updateOrderById", "cancelOrderById",
-          "editById",
         "getSellerAddressesBySellerId", "addAddressToSellerById"
       ],
     },
@@ -42,8 +41,8 @@ const PermissionSchema = new mongoose.Schema(
     },
 
     condition: {
-      type: Object, // ✅ Flexible to store any object
-      default: {},  // Simplified with no specific conditions required
+      type: Object, 
+      default: {},  
     },
   },
   { timestamps: true }

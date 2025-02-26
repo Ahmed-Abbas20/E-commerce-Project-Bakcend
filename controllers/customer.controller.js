@@ -85,7 +85,7 @@ router.get("/:customerId",checkPermission("customer","getById"), async (req, res
 // Fetch Addresses Using Token
 router.get("/my/addresses", async (req, res, next) => {
   try {
-    const customerId = req.user.sub; // Extract from token
+    const customerId = req.user.sub; 
     const addresses = await getCustomerAddresses(customerId);
     res.status(200).json({ success: true, data: addresses });
   } catch (error) {
@@ -108,7 +108,7 @@ router.get("/:customerId/addresses",checkPermission("customer","getAddressByCust
 // Update Customer Using Token
 router.put("/my/profile", async (req, res, next) => {
   try {
-    const customerId = req.user.sub; // Extract from token
+    const customerId = req.user.sub; 
     const updatedData = req.body;
     const uploadedFile = req.files?.image ? [req.files.image] : [];
 
@@ -137,7 +137,7 @@ router.put("/:customerId", checkPermission("customer","updateById"),async (req, 
 // Add Address Using Token
 router.post("/my/addresses", validateAddress, async (req, res, next) => {
   try {
-    const customerId = req.user.sub; // Extract from token
+    const customerId = req.user.sub; 
     const newAddress = req.body;
 
     const updatedAddresses = await addCustomerAddress(customerId, newAddress);
@@ -182,16 +182,18 @@ router.post("/:customerId/addresses",checkPermission("customer","addAddressByCus
 
 
 
-// //  Delete a customer
-// router.delete("/:customerId", async (req, res, next) => {
-//   try {
-//     const { customerId } = req.params;
-//     const deletedCustomer = await deleteCustomer(customerId);
-//     res.status(200).json({ success: true, data: deletedCustomer });
-//   } catch (error) {
-//     return next(new AppError(error.message, 500));
-//   }
-// });
+//  Delete a customer by id
+ router.delete("/:customerId",checkPermission("customer","deleteById"), async (req, res, next) => {
+   try {
+    const { customerId } = req.params;
+     const deletedCustomer = await deleteCustomer(customerId);
+     res.status(200).json({ success: true, data: deletedCustomer });
+   } catch (error) {
+     return next(new AppError(error.message, 500));
+   }
+ });
+
+
 router.delete("/", async (req, res, next) => {
   try {
     const  userId  = req.user.sub;

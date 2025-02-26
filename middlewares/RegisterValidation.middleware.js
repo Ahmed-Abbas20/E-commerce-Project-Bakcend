@@ -27,7 +27,7 @@ const userSchema = Joi.object({
     // }),
   userType: Joi.string().valid("staff", "customer", "seller").default("customer"),
 
-  // ✅ Staff-specific validation
+  // Staff-specific validation
   role: Joi.when("userType", {
     is: "staff",
     then: Joi.string().valid("super_admin", "cashier", "manager").required(),
@@ -47,7 +47,7 @@ const userSchema = Joi.object({
     otherwise: Joi.forbidden(),
   }),
 
-  // ✅ Seller-specific validation
+  // Seller-specific validation
   companyName: Joi.when("userType", {
     is: "seller",
     then: Joi.string().trim().required(),
@@ -73,7 +73,7 @@ const userSchema = Joi.object({
   }).optional(),
 });
 
-// ✅ Middleware for validating user registration
+// Middleware for validating user registration
 exports.validateUserRegistration = (req, res, next) => {
   const { error } = userSchema.validate(req.body, { abortEarly: false });
 

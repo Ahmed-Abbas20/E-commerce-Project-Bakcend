@@ -64,7 +64,6 @@ module.exports.getAllManagers = async (page = 1, limit = 20) => {
       .skip(skip)
       .limit(limit);
 
-    // Format managers (update image file path)
     const formattedManagers = managers.map(manager => {
       const formatted = manager.toObject();
       if (formatted.image?.filePath) {

@@ -64,7 +64,6 @@ module.exports.getAllCustomers = async (page = 1, limit = 20) => {
       .limit(limit)
       .lean(); 
 
-    // Append full image URL
     customers.forEach(customer => {
       if (customer.image?.filePath) {
         customer.image.filePath = `${process.env.IMAGEKIT_ENDPOINT_URL}${customer.image.filePath}`;

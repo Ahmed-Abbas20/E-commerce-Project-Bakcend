@@ -3,7 +3,7 @@ const Product = require("../models/product.model");
 const Branch = require("../models/branch.model");
 const { AppError } = require("../utils/errorHandler");
 
-// ✅ Validation Schema for Branch Creation
+// Validation Schema for Branch Creation
 const branchCreationSchema = Joi.object({
   name: Joi.string().trim().required().min(2).max(100),
   location: Joi.string().trim().required(),
@@ -16,7 +16,7 @@ const branchCreationSchema = Joi.object({
   ),
 });
 
-// ✅ Validation Schema for Branch Update (All fields optional)
+// Validation Schema for Branch Update (All fields optional)
 const branchUpdateSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100),
   location: Joi.string().trim(),
@@ -29,7 +29,7 @@ const branchUpdateSchema = Joi.object({
   ),
 });
 
-// ✅ Middleware for Validating Branch Creation or Update
+// Middleware for Validating Branch Creation or Update
 exports.validateBranch = async (req, res, next) => {
   try {
     const branchId = req.params.branchId;
@@ -60,11 +60,11 @@ exports.validateBranch = async (req, res, next) => {
       }
     }
 
-    // ✅ Handle stock updates if stock data is provided
+    // Handle stock updates if stock data is provided
     if (req.body.stock && req.body.stock.length > 0) {
       const productIds = req.body.stock.map((item) => item.productId);
 
-      // ✅ Validate product existence
+      // Validate product existence
       const products = await Product.find({ _id: { $in: productIds } });
       if (products.length !== productIds.length) {
         const foundProductIds = products.map((product) => product._id.toString());
@@ -87,7 +87,7 @@ exports.validateBranch = async (req, res, next) => {
 
         const quantityDifference = item.quantity - oldQuantity;
 
-        // ✅ Adjust main stock
+        // Adjust main stock
         if (quantityDifference > 0) {
           if (product.mainStock < quantityDifference) {
             throw new AppError(`Not enough stock for product ${product.name}`, 400);
@@ -100,7 +100,7 @@ exports.validateBranch = async (req, res, next) => {
         stockUpdates.push(product);
       }
 
-      // ✅ Save updated products
+      // Save updated products
       await Promise.all(stockUpdates.map((product) => product.save()));
     }
 

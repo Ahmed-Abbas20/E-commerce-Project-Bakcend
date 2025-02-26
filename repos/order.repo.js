@@ -229,101 +229,33 @@ module.exports.getOrderById = async (orderId) => {
 
 // Update Order (also update related Seller Orders)
 module.exports.updateOrder = async (orderId, updatedData) => {
-  const session = await Order.startSession();
-  session.startTransaction();
-
   try {
-    const order = await Order.findById(orderId)
-      .populate({ path: "products.productId", select: "name soldPrice" })
-      .populate("branchId")
-      .session(session);
+    const order = await Order.findById(orderId);
 
     if (!order) throw new AppError("Order not found", 404);
 
-    const branch = await Branch.findById(order.branchId).session(session);
-    if (!branch) throw new AppError("Branch not found", 404);
-
-    let sellerOrderUpdates = new Map();
-    let totalPrice = 0;
-    let totalQty = 0;
-
-    if (updatedData.products && Array.isArray(updatedData.products)) {
-      for (const updatedProduct of updatedData.products) {
-        const productId = updatedProduct.productId;
-        const newQty = parseInt(updatedProduct.requiredQty, 10);
-
-        const existingProduct = order.products.find(
-          (p) => p.productId._id.toString() === productId
-        );
-
-        if (!existingProduct) {
-          throw new AppError(`Product ${productId} is not in the order`, 400);
-        }
-
-        if (!existingProduct.price) {
-          existingProduct.price = existingProduct.productId.soldPrice || 0;
-        }
-
-        const quantityDifference = newQty - existingProduct.requiredQty;
-        const stockItem = branch.stock.find(
-          (stock) => stock.productId.toString() === productId
-        );
-
-        if (quantityDifference > 0) {
-          if (!stockItem || stockItem.quantity < quantityDifference) {
-            throw new AppError(`Not enough stock available for product ${productId}`, 400);
-          }
-          stockItem.quantity -= quantityDifference;
-        } else if (quantityDifference < 0) {
-          stockItem ? (stockItem.quantity += Math.abs(quantityDifference)) :
-            branch.stock.push({ productId: existingProduct.productId._id, quantity: Math.abs(quantityDifference) });
-        }
-
-        existingProduct.requiredQty = newQty;
-        existingProduct.totalPrice = newQty * existingProduct.price;
-
-        totalQty += newQty;
-        totalPrice += existingProduct.totalPrice;
-
-        sellerOrderUpdates.set(productId, { newQty });
-      }
+    if (order.orderType !== "online") {
+      throw new AppError("Only online orders can have status updates", 400);
     }
 
-    updatedData.totalQty = totalQty;
-    updatedData.totalPrice = totalPrice;
-
-    const updatedOrder = await Order.findByIdAndUpdate(orderId, updatedData, { new: true, session });
-
-    const sellerOrders = await SellersOrder.find({
-      _id: { $in: order.sellersOrders.map((so) => so.order) },
-    }).session(session);
-
-    for (const sellerOrder of sellerOrders) {
-      for (const product of sellerOrder.products) {
-        const productId = product.productId.toString();
-        if (sellerOrderUpdates.has(productId)) {
-          const updateAction = sellerOrderUpdates.get(productId);
-          product.requiredQty = updateAction.newQty;
-          product.totalPrice = product.price * updateAction.newQty;
-        }
-      }
-
-      sellerOrder.totalQty = sellerOrder.products.reduce((sum, p) => sum + p.requiredQty, 0);
-      sellerOrder.totalPrice = sellerOrder.products.reduce((sum, p) => sum + p.totalPrice, 0);
-      await sellerOrder.save({ session });
+    if (updatedData.status === "cancelled") {
+      throw new AppError("You cannot update the order status to cancelled", 400);
     }
 
-    await branch.save({ session });
-    await session.commitTransaction();
-    session.endSession();
+    order.status = updatedData.status;
+    await order.save();
 
-    return updatedOrder;
+    await SellersOrder.updateMany(
+      { _id: { $in: order.sellersOrders.map(sellerOrder => sellerOrder.order) } },
+      { status: updatedData.status }
+    );
+
+    return order;
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     throw new AppError(`Error updating order: ${error.message}`, 500);
   }
 };
+
 
 
 

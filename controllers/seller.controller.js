@@ -57,7 +57,7 @@ router.post("/", checkPermission("seller","create"),async (req, res, next) => {
 
 router.get("/dashboard", async (req, res, next) => {
   try {
-    const sellerId = req.user.sub; // Extract seller ID from token
+    const sellerId = req.user.sub; 
     const dashboardData = await getSellerDashboardData(sellerId);
     res.status(200).json({ success: true, data: dashboardData });
   } catch (error) {
@@ -79,8 +79,8 @@ router.get("/admin/dashboard", checkPermission("seller", "getSellersAnalysis"),a
 // Get all sellers
 router.get("/", checkPermission("seller", "getAll"), async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Default page 1
-    const limit = parseInt(req.query.limit) || 20; // Default limit 20
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 20; 
 
     const { sellers, pagination } = await getAllSellers(page, limit);
 
@@ -98,7 +98,7 @@ router.get("/", checkPermission("seller", "getAll"), async (req, res, next) => {
 // Get seller profile (from token)
 router.get("/my/profile", async (req, res, next) => {
   try {
-    const sellerId = req.user.sub; // Extract from token
+    const sellerId = req.user.sub; 
     const seller = await getSellerById(sellerId);
     res.status(200).json({ success: true, data: seller });
   } catch (error) {
@@ -120,7 +120,7 @@ router.get("/:sellerId",checkPermission("seller","getById"), async (req, res, ne
 // Update seller profile (from token)
 router.put("/my/profile", async (req, res, next) => {
   try {
-    const sellerId = req.user.sub; // Extract from token
+    const sellerId = req.user.sub; 
     const updatedData = req.body;
     const uploadedFile = req.files?.image ? [req.files.image] : [];
 
@@ -132,7 +132,7 @@ router.put("/my/profile", async (req, res, next) => {
 });
 
 // Update a seller
-router.put("/:sellerId", checkPermission("seller","editById"),async (req, res, next) => {
+router.put("/:sellerId", checkPermission("seller","updateById"),async (req, res, next) => {
   try {
     const { sellerId } = req.params;
     const updatedData = req.body;
@@ -148,7 +148,7 @@ router.put("/:sellerId", checkPermission("seller","editById"),async (req, res, n
 // Fetch Seller's Addresses Using Token
 router.get("/my/addresses", async (req, res, next) => {
   try {
-    const sellerId = req.user.sub; // Extract from token
+    const sellerId = req.user.sub; 
     const addresses = await getSellerAddresses(sellerId);
     res.status(200).json({ success: true, data: addresses });
   } catch (error) {
@@ -170,7 +170,7 @@ router.get("/:sellerId/addresses", checkPermission("seller","getSellerAddressesB
 // Add Address Using Token
 router.post("/my/addresses", validateAddress, async (req, res, next) => {
   try {
-    const sellerId = req.user.sub; // Extract from token
+    const sellerId = req.user.sub;
     const newAddress = req.body;
 
     const updatedAddresses = await addSellerAddress(sellerId, newAddress);
@@ -184,7 +184,7 @@ router.post("/my/addresses", validateAddress, async (req, res, next) => {
 // Delete Address Using Token by Index for Seller
 router.delete("/my/addresses/:index", async (req, res, next) => {
   try {
-    const sellerId = req.user.sub; // Extract from token
+    const sellerId = req.user.sub; 
     const addressIndex = parseInt(req.params.index, 10);
 
     if (isNaN(addressIndex) || addressIndex < 0) {
@@ -228,15 +228,15 @@ router.get("/my/products-with-branches", async (req, res, next) => {
 
 
 // Delete a seller
-// router.delete("/:sellerId",checkPermission("sellers","delete"), async (req, res, next) => {
-//   try {
-//     const { sellerId } = req.params;
-//     const deletedSeller = await deleteSeller(sellerId);
-//     res.status(200).json({ success: true, data: deletedSeller });
-//   } catch (error) {
-//     return next(new AppError(error.message, 500));
-//   }
-// });
+ router.delete("/:sellerId",checkPermission("seller","deleteById"), async (req, res, next) => {
+   try {
+     const { sellerId } = req.params;
+     const deletedSeller = await deleteSeller(sellerId);
+     res.status(200).json({ success: true, data: deletedSeller });
+   } catch (error) {
+     return next(new AppError(error.message, 500));
+   }
+ });
 
 
 router.delete("/", async (req, res, next) => {

@@ -12,7 +12,7 @@ const newPermissions = [
     action: [
       "create", "getAll", "getBranchById", "updateById", "deleteById",
       "filterProductsByBranchId", "searchProductsByBranchId",
-      "addProductToBranchId", "removeProductFromBranchId", "getProductsByBrnachId"
+      "addProductToBranchId", "removeProductFromBranchId", "getProductsByBranchId"
     ],
     description: "Super Admin permissions for managing branches and products by branch.",
     condition: { role: { IN: ["super_admin"] } }
@@ -57,7 +57,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "customer",
-    action: ["create", "getAll", "getById", "getAddressByCustomerId", "updateById", "addAddressByCustomerId"],
+    action: ["create", "getAll", "getById", "getAddressByCustomerId", "updateById", "addAddressByCustomerId","deleteById"],
     description: "Super Admin manages all customer-related actions.",
     condition: { role: { IN: ["super_admin"] } }
   },
@@ -75,7 +75,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "order",
-    action: ["addProduct", "createOfflineOrder"],
+    action: ["addProductOffline", "createOfflineOrder"],
     description: "Super Admin, Manager, and Cashier can add products and create offline orders.",
     condition: { role: { IN: ["super_admin", "manager", "cashier"] } }
   },
@@ -117,13 +117,13 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "seller",
-    action: ["create", "getAll", "getById", "editById", "getSellerAddressesBySellerId", "addAddressToSellerById","getSellersAnalysis"],
+    action: ["create", "getAll", "getById", "updateById", "getSellerAddressesBySellerId", "addAddressToSellerById","getSellersAnalysis","deleteById",],
     description: "Super Admin manages all seller-related actions.",
     condition: { role: { IN: ["super_admin"] } }
   }
 ];
 
-// ✅ Seed Permissions Function
+// Seed Permissions Function
 async function seedPermissions() {
   try {
     await Permission.deleteMany({});
@@ -134,7 +134,7 @@ async function seedPermissions() {
   }
 }
 
-// ✅ Seed Super Admin Function
+// Seed Super Admin Function
 async function seedSuperAdmin() {
   try {
     const existingAdmin = await User.findOne({ role: "super_admin" });
@@ -176,7 +176,7 @@ async function seedSuperAdmin() {
   }
 }
 
-// ✅ Combined Seeding Function
+// Combined Seeding Function
 async function seedData() {
   await seedPermissions();
   await seedSuperAdmin();

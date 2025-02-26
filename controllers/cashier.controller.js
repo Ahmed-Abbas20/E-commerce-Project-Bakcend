@@ -79,7 +79,7 @@ router.get("/my-branch-cashiers", checkPermission("cashier", "getAllByMyBranch")
 // Get cashier details using the ID from the token
 router.get("/my/profile", async (req, res, next) => {
   try {
-    const cashierId = req.user.sub; // Extract cashier ID from token
+    const cashierId = req.user.sub; 
     if (!cashierId) {
       throw new AppError("Cashier ID is missing from token", 400);
     }
@@ -115,7 +115,7 @@ router.get("/:cashierId", checkPermission("cashier","getById"),async (req, res, 
 
 router.put("/my/profile", async (req, res, next) => {
   try {
-    const cashierId = req.user.sub; // Extract from token
+    const cashierId = req.user.sub; 
     const updatedData = req.body;
     const uploadedFile = req.files?.image ? [req.files.image] : [];
 

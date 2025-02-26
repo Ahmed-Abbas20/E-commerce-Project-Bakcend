@@ -31,8 +31,8 @@ router.post("/",checkPermission("manager","create"), async (req, res, next) => {
 // Get all managers
 router.get("/", checkPermission("manager", "getAll"), async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Default page 1
-    const limit = parseInt(req.query.limit) || 20; // Default limit 20
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 20; 
 
     const { managers, pagination } = await getAllManagers(page, limit);
 
@@ -49,7 +49,7 @@ router.get("/", checkPermission("manager", "getAll"), async (req, res, next) => 
 // Get manager profile (from token)
 router.get("/my/profile", async (req, res, next) => {
   try {
-    const managerId = req.user.sub; // Extract from token
+    const managerId = req.user.sub; 
     const manager = await getManagerById(managerId);
     res.status(200).json({ success: true, data: manager });
   } catch (error) {

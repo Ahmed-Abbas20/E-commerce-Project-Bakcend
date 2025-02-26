@@ -14,7 +14,7 @@ const checkPermission = (resource, action) => {
       const decoded = verifyToken(token);
       const userRole = decoded.role || decoded.userType;
 
-      // ✅ Check if the user has permission for the resource
+      // Check if the user has permission for the resource
       const permission = await getPermissionByResourceName(
         resource,
         userRole,
@@ -25,7 +25,7 @@ const checkPermission = (resource, action) => {
         return next(new AppError(`You don't have permission to ${action} this ${resource}`, 403));
       }
 
-      next(); // Proceed if permission is valid
+      next(); 
     } catch (error) {
       if (error.name === "JsonWebTokenError") {
         return next(new AppError("Invalid token. Please log in again!", 401));
