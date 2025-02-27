@@ -125,12 +125,17 @@ exports.filterProductsService = async (categoryId = null, min = null, max = null
       if (max !== null) query.soldPrice.$lte = max;
     }
 
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const totalProducts = await Product.countDocuments(query);
+
     const products = await Product.find(query)
       .sort('-createdAt')
-      .skip((page - 1) * 20)
-      .limit(20);
+      .skip(skip)
+      .limit(limit);
 
-    return products.map(product => ({
+    const updatedProducts = products.map(product => ({
       ...product.toObject(),
       images: product.images.map(img => ({
         fileId: img.fileId,
@@ -138,10 +143,21 @@ exports.filterProductsService = async (categoryId = null, min = null, max = null
       }))
     }));
 
+    return {
+      products: updatedProducts,
+      pagination: {
+        currentPage: page,
+        totalPages: totalProducts > 0 ? Math.ceil(totalProducts / limit) : 1,
+        totalProducts,
+        limit
+      }
+    };
+
   } catch (error) {
     throw new AppError(error.message || "Failed to filter products", 500);
   }
 };
+
 exports.getProductByIdFromWebsiteBranch = async (productId) => {
   try {
     const product = await Product.findById(productId);
