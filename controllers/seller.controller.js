@@ -68,8 +68,8 @@ router.get("/dashboard", async (req, res, next) => {
 // Admin Dashboard Route with Filters
 router.get("/admin/dashboard", checkPermission("seller", "getSellersAnalysis"),async (req, res, next) => {
   try {
-    const { year, sellerId, productId } = req.query;
-    const dashboardData = await getAdminDashboardData({ year, sellerId, productId });
+    const { year, sellerId, branchId } = req.query;
+    const dashboardData = await getAdminDashboardData({ year, sellerId, branchId });
     res.status(200).json({ success: true, data: dashboardData });
   } catch (error) {
     next(new AppError(error.message, 500));

@@ -356,7 +356,6 @@ module.exports.getSellerDashboardData = async (sellerId) => {
 };
 
 
-// Get Admin Dashboard Data
 module.exports.getAdminDashboardData = async (filters) => {
   try {
     const currentYear = new Date().getFullYear();
@@ -370,14 +369,17 @@ module.exports.getAdminDashboardData = async (filters) => {
         filterQuery.createdAt = { $gte: startDate, $lt: endDate };
       }
       if (sellerId) filterQuery.sellerId = sellerId;
-      if (branchId) filterQuery.branchId = branchId; 
+      if (branchId) filterQuery["products.branchId"] = branchId; // ✅ Ensures filtering by branchId inside products
     } else {
-      // Default: Current year, all sellers, all branches
+      // Default to current year
       const startDate = new Date(`${currentYear}-01-01`);
       const endDate = new Date(`${currentYear + 1}-01-01`);
       filterQuery.createdAt = { $gte: startDate, $lt: endDate };
     }
 
+    console.log("Final Query Filters:", filterQuery); // Debugging
+
+    // Fetch filtered orders
     const orders = await SellersOrder.find(filterQuery).populate({
       path: "products.productId",
       select: "name soldPrice costPrice",
@@ -469,6 +471,7 @@ module.exports.getAdminDashboardData = async (filters) => {
     throw new AppError(`Error fetching admin dashboard data: ${error.message}`, 500);
   }
 };
+
 
 
 
