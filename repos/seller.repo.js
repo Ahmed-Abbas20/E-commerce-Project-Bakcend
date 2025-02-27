@@ -7,6 +7,8 @@ const Product = require("../models/product.model");
 const SellersOrder = require("../models/sellersOrder.model");
 const Branch = require("../models/branch.model");
 const BASE_IMAGE_URL = process.env.IMAGEKIT_ENDPOINT_URL; 
+const Order = require("../models/order.model");
+
 
 // Create a new seller
 module.exports.createSeller = async ({ firstName, lastName, email, phone1, password, companyName, companyRegistrationNumber, SSN, salt }) => {
@@ -369,18 +371,35 @@ module.exports.getAdminDashboardData = async (filters) => {
         filterQuery.createdAt = { $gte: startDate, $lt: endDate };
       }
       if (sellerId) filterQuery.sellerId = sellerId;
-      if (branchId) filterQuery["products.branchId"] = branchId; // ✅ Ensures filtering by branchId inside products
     } else {
-      // Default to current year
       const startDate = new Date(`${currentYear}-01-01`);
       const endDate = new Date(`${currentYear + 1}-01-01`);
       filterQuery.createdAt = { $gte: startDate, $lt: endDate };
     }
 
-    console.log("Final Query Filters:", filterQuery); // Debugging
+    let sellersOrderQuery = { ...filterQuery };
+
+    // ✅ If filtering by branch, first get related orders
+    if (branchId) {
+      const ordersWithBranch = await Order.find({ branchId }).select("sellersOrders");
+      const sellersOrderIds = ordersWithBranch.flatMap(order => order.sellersOrders.map(so => so.order));
+
+      if (sellersOrderIds.length === 0) {
+        return {
+          orders: [],
+          mostSoldProducts: [],
+          yearlyData: {},
+          totalProfit: 0,
+          totalOrders: 0
+        };
+      }
+      sellersOrderQuery._id = { $in: sellersOrderIds };
+    }
+
+    console.log("Final Query Filters:", sellersOrderQuery);
 
     // Fetch filtered orders
-    const orders = await SellersOrder.find(filterQuery).populate({
+    const orders = await SellersOrder.find(sellersOrderQuery).populate({
       path: "products.productId",
       select: "name soldPrice costPrice",
     });
@@ -394,7 +413,6 @@ module.exports.getAdminDashboardData = async (filters) => {
     let totalProfit = 0;
     let totalOrders = 0;
 
-    // Process Orders for the Dashboard
     orders.forEach((order) => {
       const orderDate = new Date(order.createdAt);
       const orderYear = orderDate.getFullYear();
@@ -458,7 +476,7 @@ module.exports.getAdminDashboardData = async (filters) => {
 
     const mostSoldProducts = Object.values(productSales)
       .sort((a, b) => b.soldQty - a.soldQty)
-      .slice(0, 3); 
+      .slice(0, 3);
 
     return {
       orders,
@@ -471,7 +489,6 @@ module.exports.getAdminDashboardData = async (filters) => {
     throw new AppError(`Error fetching admin dashboard data: ${error.message}`, 500);
   }
 };
-
 
 
 
