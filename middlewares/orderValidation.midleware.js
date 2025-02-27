@@ -2,7 +2,7 @@ const Joi = require("joi");
 const { AppError } = require("../utils/errorHandler");
 const Cart = require("../models/cart.model");
 
-const validStatuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+const validStatuses = ["pending", "onTheWay", "delivered", "cancelled"];
 const onlineOrderSchema = Joi.object({
   paymentMethod: Joi.string().valid("Cash", "Card").required(),
   addressIndex: Joi.number().integer().min(0).required(), 

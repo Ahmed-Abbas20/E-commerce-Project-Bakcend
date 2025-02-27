@@ -24,7 +24,7 @@ router.get('/products', async (req, res, next) => {
         // Filter by products available in the Website Branch stock
         filters = { _id: { $in: websiteBranch.stock.map(item => item.productId) } };
       
-      const products = await productService.getAllProducts(page, filters);
+      const products = await productService.getAllProducts(page,20,filters);
   
       res.json({ success: true, data: products });
     } catch (error) {

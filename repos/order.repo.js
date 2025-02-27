@@ -464,6 +464,7 @@ async function saveOfflineOrder(cashierId, branchId, paymentMethod, phone, produ
     products,
     totalPrice,
     totalQty,
+    status:"delivered",
     sellersOrders: sellerOrderIds.map(orderId => ({ order: orderId })), // Store references
   }).save();
 
