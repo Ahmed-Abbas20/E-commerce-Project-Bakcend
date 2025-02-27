@@ -85,7 +85,7 @@ router.get('/products', async (req, res, next) => {
         filters = { _id: { $in: websiteBranch.stock.map(item => item.productId) } };
       
   
-      const products = await productService.filterProductsService(categoryId, parsedMin, parsedMax, parsedPage, filters);
+      const products = await productService.filterProductsServiceM(categoryId, parsedMin, parsedMax, parsedPage, filters);
   
       res.json({ success: true, data: products });
     } catch (error) {

@@ -130,7 +130,7 @@ router.get('/filter', checkPermission("product","filterAllMainStock"),async (req
       return next(new AppError('Min price cannot be greater than max price', 400));
     }
     let filters = {};
-    const products = await productService.filterProductsService(categoryId, parsedMin, parsedMax, parsedPage, filters);
+    const products = await productService.filterProductsServiceS(categoryId, parsedMin, parsedMax, parsedPage, filters);
 
     res.json({ success: true, data: products });
   } catch (error) {

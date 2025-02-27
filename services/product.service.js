@@ -111,7 +111,38 @@ exports.updateProduct = async (id, updateData, uploadedFiles = [], imagesToRemov
 
 exports.deleteProduct = deleteProduct;
 exports.searchProducts = searchProducts;
-exports.filterProductsService = async (categoryId = null, min = null, max = null, page = 1, additionalFilters = {}) => {
+exports.filterProductsServiceS = async (categoryId = null, min = null, max = null, page = 1, additionalFilters = {}) => {
+  try {
+    const query = { ...additionalFilters };
+
+    if (categoryId) {
+      query.categoryId = categoryId;
+    }
+
+    if (min !== null || max !== null) {
+      query.soldPrice = {};
+      if (min !== null) query.soldPrice.$gte = min;
+      if (max !== null) query.soldPrice.$lte = max;
+    }
+
+    const products = await Product.find(query)
+      .sort('-createdAt')
+      .skip((page - 1) * 20)
+      .limit(20);
+
+    return products.map(product => ({
+      ...product.toObject(),
+      images: product.images.map(img => ({
+        fileId: img.fileId,
+        filePath: `${BASE_IMAGE_URL}${img.filePath}`
+      }))
+    }));
+
+  } catch (error) {
+    throw new AppError(error.message || "Failed to filter products", 500);
+  }
+};
+exports.filterProductsServiceM = async (categoryId = null, min = null, max = null, page = 1, additionalFilters = {}) => {
   try {
     const query = { ...additionalFilters };
 
@@ -158,7 +189,7 @@ exports.filterProductsService = async (categoryId = null, min = null, max = null
   }
 };
 
-exports.getProductByIdFromWebsiteBranch = async (productId) => {
+exports.getProductByIdFromWebsiteBranchS = async (productId) => {
   try {
     const product = await Product.findById(productId);
 
