@@ -4,7 +4,7 @@ const Product = require("../models/product.model");
 const Branch = require("../models/branch.model");
 const requestRepo = require("../repos/request.repo");
 
-// Joi Schema for Validation (Products Only)
+// Joi Schema for Request Validation
 const requestSchema = Joi.object({
   products: Joi.array()
     .items(
@@ -27,7 +27,7 @@ exports.validateRequestData = async (req, res, next) => {
 
     const { products } = req.body;
     const managerId = req.user.sub;
-    const branchId = req.user.branchId; 
+    const branchId = req.user.branchId;
 
     if (!branchId) {
       return next(new AppError("Manager does not belong to any branch.", 400));
@@ -38,18 +38,11 @@ exports.validateRequestData = async (req, res, next) => {
       return next(new AppError("Branch not found.", 404));
     }
 
-    const branchStockProductIds = branch.stock.map(item => item.productId.toString());
-
-    // Validate products (Check if they exist in the branch)
     const validatedProducts = [];
     for (const item of products) {
       const product = await Product.findById(item.productId);
       if (!product) {
         return next(new AppError(`Product not found: ${item.productId}`, 404));
-      }
-
-      if (!branchStockProductIds.includes(item.productId)) {
-        return next(new AppError(`Product "${product.name}" is not available in this branch.`, 400));
       }
 
       validatedProducts.push({
@@ -58,14 +51,12 @@ exports.validateRequestData = async (req, res, next) => {
       });
     }
 
-    // Prevent duplicate requests
     const existingRequest = await requestRepo.findExistingRequest(managerId, validatedProducts);
     if (existingRequest) {
       return next(new AppError("You have already requested these products. Please wait for approval.", 409));
     }
 
     req.validatedRequest = { managerId, branchId, products: validatedProducts };
-
     next();
   } catch (error) {
     next(error);

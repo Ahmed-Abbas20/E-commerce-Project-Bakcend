@@ -125,7 +125,7 @@ const newPermissions = [
   {
     effect: "allow",
     resource: "request",
-    action: ["create"],
+    action: ["create","getMyBranchProducts"],
     description: "Manager can create product requests.",
     condition: { role: { IN: ["super_admin","manager"] } },
   },

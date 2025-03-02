@@ -5,6 +5,30 @@ const requestRepo = require("../repos/request.repo");
 const { AppError } = require("../utils/errorHandler");
 const { validateRequestData } = require("../middlewares/requestValidation.middleware");
 
+
+
+
+
+// Get all products in branch & available products in main stock
+router.get('/branch/products', checkPermission("request", "getMyBranchProducts"), async (req, res, next) => {
+    try {
+        const branchId = req.user.branchId;
+        if (!branchId) {
+            throw new AppError("Branch ID not found for the current user.", 400);
+        }
+        const { branchProducts, availableMainStockProducts } = await requestRepo.getBranchAndMainStockProducts(branchId);
+
+        res.status(200).json({
+            success: true,
+            branchProducts,
+            availableMainStockProducts
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+
 // Manager creates a request (with validation middleware)
 router.post("/", checkPermission("request", "create"), validateRequestData, async (req, res, next) => {
     try {
