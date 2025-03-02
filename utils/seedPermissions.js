@@ -120,7 +120,22 @@ const newPermissions = [
     action: ["create", "getAll", "getById", "updateById", "getSellerAddressesBySellerId", "addAddressToSellerById","getSellersAnalysis","deleteById",],
     description: "Super Admin manages all seller-related actions.",
     condition: { role: { IN: ["super_admin"] } }
-  }
+  },
+  //Request Permissions
+  {
+    effect: "allow",
+    resource: "request",
+    action: ["create"],
+    description: "Manager can create product requests.",
+    condition: { role: { IN: ["super_admin","manager"] } },
+  },
+  {
+    effect: "allow",
+    resource: "request",
+    action: ["approveFull","approvePartial", "reject","getAll", "getById"],
+    description: "Admin can approve and manage product requests.",
+    condition: { role: { IN: ["super_admin"] } },
+  },
 ];
 
 // Seed Permissions Function
