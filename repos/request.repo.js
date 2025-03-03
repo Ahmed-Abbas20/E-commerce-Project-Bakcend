@@ -61,7 +61,7 @@ exports.createRequest = async (managerId, branchId, products) => {
 
         return await newRequest.save();
     } catch (error) {
-        throw new Error(`Failed to create request: ${error.message}`);
+        throw new AppError(`Failed to create request: ${error.message}`, 500);
     }
 };
 
@@ -151,7 +151,7 @@ exports.approveFullRequest = async (id, adminResponse = "") => {
     } catch (error) {
         await session.abortTransaction();
         session.endSession();
-        throw error;
+        throw new AppError(error.message || "Failed to approve full request", 500);
     }
 };
 
@@ -214,7 +214,7 @@ exports.approvePartialRequest = async (id, adminResponse = "", approvedProducts)
     } catch (error) {
         await session.abortTransaction();
         session.endSession();
-        throw error;
+        throw new AppError(error.message || "Failed to approve partial request", 500);
     }
 };
 

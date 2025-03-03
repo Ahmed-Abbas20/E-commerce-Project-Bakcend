@@ -189,7 +189,7 @@ exports.filterProductsServiceM = async (categoryId = null, min = null, max = nul
   }
 };
 
-exports.getProductByIdFromWebsiteBranchS = async (productId) => {
+exports.getProductByIdFromWebsiteBranch = async (productId) => {
   try {
     const product = await Product.findById(productId);
 

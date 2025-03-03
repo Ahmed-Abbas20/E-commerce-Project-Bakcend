@@ -379,7 +379,7 @@ module.exports.getAdminDashboardData = async (filters) => {
 
     let sellersOrderQuery = { ...filterQuery };
 
-    // ✅ If filtering by branch, first get related orders
+    // If filtering by branch, first get related orders
     if (branchId) {
       const ordersWithBranch = await Order.find({ branchId }).select("sellersOrders");
       const sellersOrderIds = ordersWithBranch.flatMap(order => order.sellersOrders.map(so => so.order));
@@ -395,8 +395,6 @@ module.exports.getAdminDashboardData = async (filters) => {
       }
       sellersOrderQuery._id = { $in: sellersOrderIds };
     }
-
-    console.log("Final Query Filters:", sellersOrderQuery);
 
     // Fetch filtered orders
     const orders = await SellersOrder.find(sellersOrderQuery).populate({
